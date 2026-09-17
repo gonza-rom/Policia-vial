@@ -1,0 +1,258 @@
+<!DOCTYPE html><html class="h-full" lang="es" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Acceso Operativo - Dirección de Seguridad Vial · Policía de Catamarca</title>
+<!-- Google Fonts: Space Grotesk & Public Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS CDN with forms & container-queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration matching the Design System -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary-fixed": "#d6e3ff",
+            "on-secondary-container": "#00476e",
+            "surface-container-high": "#dee8ff",
+            "on-tertiary-fixed": "#410002",
+            "outline": "#75777e",
+            "surface-container-lowest": "#ffffff",
+            "surface-container": "#e7eeff",
+            "primary-fixed-dim": "#b4c7ed",
+            "tertiary-fixed": "#ffdad6",
+            "surface-dim": "#cfdaf2",
+            "on-secondary-fixed-variant": "#004b73",
+            "tertiary-container": "#4d0003",
+            "on-primary-fixed": "#051b39",
+            "primary": "#000b21",
+            "on-primary-container": "#778aad",
+            "on-error": "#ffffff",
+            "background": "#f9f9ff",
+            "surface-tint": "#4c5f80",
+            "outline-variant": "#c4c6ce",
+            "on-tertiary": "#ffffff",
+            "surface": "#f9f9ff",
+            "secondary-container": "#5bb8fe",
+            "on-background": "#111c2d",
+            "secondary-fixed": "#cce5ff",
+            "inverse-surface": "#263143",
+            "secondary": "#006398",
+            "surface-container-low": "#f0f3ff",
+            "surface-bright": "#f9f9ff",
+            "on-tertiary-container": "#fe403a",
+            "on-secondary-fixed": "#001d31",
+            "inverse-primary": "#b4c7ed",
+            "on-surface-variant": "#44474e",
+            "tertiary": "#220001",
+            "on-surface": "#111c2d",
+            "error-container": "#ffdad6",
+            "on-primary-fixed-variant": "#344767",
+            "secondary-fixed-dim": "#93ccff",
+            "inverse-on-surface": "#ecf1ff",
+            "surface-variant": "#d8e3fb",
+            "on-primary": "#ffffff",
+            "error": "#ba1a1a",
+            "primary-container": "#0d2240",
+            "on-secondary": "#ffffff",
+            "on-error-container": "#93000a",
+            "surface-container-highest": "#d8e3fb",
+            "on-tertiary-fixed-variant": "#93000b",
+            "tertiary-fixed-dim": "#ffb4ab"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "pad-sm": "8px",
+            "gutter-mobile": "16px",
+            "pad-lg": "16px",
+            "pad-xl": "24px",
+            "touch-min": "48px",
+            "pad-2xl": "32px",
+            "pad-xs": "4px",
+            "gutter-tablet": "24px",
+            "pad-md": "12px"
+          },
+          "fontFamily": {
+            "label-sm": ["Space Grotesk"],
+            "headline-sm": ["Public Sans"],
+            "label-md": ["Space Grotesk"],
+            "code-num": ["Space Grotesk"],
+            "body-lg": ["Public Sans"],
+            "label-lg": ["Space Grotesk"],
+            "display-lg": ["Public Sans"],
+            "body-sm": ["Public Sans"],
+            "headline-md": ["Public Sans"],
+            "body-md": ["Public Sans"],
+            "headline-lg": ["Public Sans"]
+          },
+          "fontSize": {
+            "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600"}],
+            "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+            "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600"}],
+            "code-num": ["18px", {"lineHeight": "22px", "letterSpacing": "0.08em", "fontWeight": "700"}],
+            "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "500"}],
+            "label-lg": ["14px", {"lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+            "display-lg": ["30px", {"lineHeight": "38px", "fontWeight": "800"}],
+            "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+            "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+            "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+            "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md min-h-full flex flex-col antialiased selection:bg-secondary-container selection:text-on-secondary-container">
+<!-- Main Container: Linear / Authentication flow (BottomNavBar suppressed intentionally according to the Destination Rule) -->
+<main class="flex-1 flex flex-col justify-between max-w-md w-full mx-auto p-pad-lg sm:py-pad-xl min-h-screen">
+<!-- Top System Bar & Status Indicator -->
+<div>
+<div class="flex items-center justify-between py-pad-xs border-b border-outline-variant/50 mb-pad-lg text-on-surface-variant">
+<div class="flex items-center gap-pad-xs">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">SINCRONIZACIÓN ACTIVA</span>
+</div>
+<div class="flex items-center gap-pad-xs font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base">wifi</span>
+<span class="">SRV CATAMARCA-01</span>
+</div>
+</div>
+<!-- Institutional Identity Card / Crest Badge -->
+<div class="bg-primary-container text-on-primary rounded-xl p-pad-lg shadow-sm border border-primary relative overflow-hidden mb-pad-lg">
+<!-- Watermark / Background Texture Accent -->
+<div class="absolute -right-6 -bottom-6 w-32 h-32 opacity-10 rounded-full border-4 border-white pointer-events-none"></div>
+<div class="flex flex-col items-center text-center">
+<!-- Official Shield Emblem -->
+<div class="relative w-24 h-28 mb-pad-md p-1 bg-surface-container-lowest/10 rounded-lg border border-white/20 shadow-inner flex items-center justify-center">
+<img alt="Escudo Oficial Dirección de Seguridad Vial Policía de Catamarca" class="w-full h-full object-contain drop-shadow-md" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXpxHleruSbmwnyz_P9cT5_9gHmORnw9RIiC72uKnJCL2bfVkXH5DSQ7vgo37v69PrtAzzQ5vN9zuWWcXvzutpP2zY22aM3au6HEevuvY7GM5M8qeiDzF7kZws2sbkw99qTxhrGvGcoaCQzGnf0rwetMOowilTsJRnuXvH93w_GFZc_ibe247Mjqi5Lx14gmg0AMygjxio0lXVUY654f64p9NukHuk5AMJvag0UqafzJRHuTzWezX2vnxojYHVo_GD2g">
+</div>
+<span class="font-label-sm text-label-sm bg-secondary px-pad-md py-pad-xs rounded-full text-white tracking-widest uppercase mb-pad-xs">
+            Puesto Caminero / Fiscalización
+          </span>
+<h1 class="font-headline-md text-headline-md text-white font-bold leading-tight mt-pad-xs">
+            Dirección de Seguridad Vial
+          </h1>
+<p class="font-body-sm text-body-sm text-primary-fixed-dim mt-1 max-w-xs font-medium">Policía de Catamarca</p>
+<!-- Terminal Serial Ledger Indicator -->
+<div class="mt-pad-md pt-pad-xs border-t border-white/10 w-full flex justify-between items-center px-pad-xs font-label-sm text-label-sm text-surface-variant">
+
+
+</div>
+</div>
+</div>
+<!-- Authentication Form Ledger -->
+<section class="bg-surface-container-lowest rounded-xl border border-outline-variant/80 p-pad-lg shadow-sm">
+<div class="flex items-center justify-between pb-pad-sm mb-pad-md border-b border-outline-variant">
+<div class="flex items-center gap-pad-xs">
+<span class="material-symbols-outlined text-secondary text-xl">badge</span>
+<h2 class="font-label-lg text-label-lg uppercase tracking-wide text-primary-container">
+              Acceso a Guardia
+            </h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-low px-2 py-0.5 rounded">
+            ORD. N° 385/12
+          </span>
+</div>
+<form class="space-y-pad-md" id="guardia-login-form" onsubmit="event.preventDefault(); window.location.href='#';"><!-- Field 1: Usuario / Legajo -->
+<div>
+  <label class="block font-label-sm text-label-sm text-primary-container uppercase font-bold mb-1" for="legajo">
+    Usuario
+  </label>
+  <div class="relative">
+    <span class="material-symbols-outlined absolute left-pad-md top-1/2 -translate-y-1/2 text-on-surface-variant text-xl pointer-events-none">
+      account_circle
+    </span>
+    <input class="w-full h-touch-min pl-11 pr-pad-lg bg-surface-container-lowest border-2 border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:border-secondary focus:ring-0 font-medium" id="legajo" name="legajo" placeholder="Ej: guardia_a o LP-38.904" required="" type="text" value="LP-38.904">
+  </div>
+</div>
+
+<!-- Field 2: Contraseña -->
+<div>
+  <div class="flex justify-between items-center mb-1">
+    <label class="font-label-sm text-label-sm text-primary-container uppercase font-bold" for="password">
+      Contraseña
+    </label>
+  </div>
+  <div class="relative">
+    <span class="material-symbols-outlined absolute left-pad-md top-1/2 -translate-y-1/2 text-on-surface-variant text-xl pointer-events-none">
+      key
+    </span>
+    <input class="w-full h-touch-min pl-11 pr-12 bg-surface-container-lowest border-2 border-outline-variant rounded-lg font-code-num text-code-num text-on-surface tracking-widest focus:border-secondary focus:ring-0" id="password" name="password" placeholder="••••••••" required="" type="password" value="982341">
+    <button aria-label="Mostrar u ocultar clave" class="absolute right-0 top-0 h-touch-min w-12 flex items-center justify-center text-on-surface-variant hover:text-on-surface active:scale-95 transition-transform" id="toggle-password" type="button">
+      <span class="material-symbols-outlined text-xl" id="eye-icon">visibility</span>
+    </button>
+  </div>
+</div>
+
+<!-- Remember Device Checkbox -->
+<div class="flex items-center gap-pad-sm pt-1">
+  <input checked="" class="w-5 h-5 rounded border-2 border-outline-variant text-secondary focus:ring-0 focus:ring-offset-0" id="recordar" name="recordar" type="checkbox">
+  <label class="font-body-sm text-body-sm text-on-surface select-none font-medium" for="recordar">
+    Mantener sesión abierta en este dispositivo
+  </label>
+</div>
+
+<!-- Primary Submit Button -->
+<div class="pt-pad-sm">
+  <button class="w-full min-h-touch-min h-14 bg-primary-container hover:bg-primary text-on-primary rounded-lg font-headline-sm text-headline-sm flex items-center justify-center gap-pad-sm shadow-md active:scale-95 transition-transform duration-150 focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2" type="submit">
+    <span class="material-symbols-outlined text-2xl">local_police</span>
+    <span class="">Ingresar a Guardia Operativa</span>
+  </button>
+</div></form>
+<!-- Technical Assistance & Recovery -->
+<div class="mt-pad-lg pt-pad-md border-t border-outline-variant/60 text-center">
+<a class="inline-flex items-center gap-1 font-label-md text-label-md text-secondary hover:text-on-secondary-container hover:underline font-semibold" href="#">
+<span class="material-symbols-outlined text-base">support_agent</span>
+<span class="">Solicitar asistencia técnica o clave de puesto</span>
+</a>
+</div>
+</section>
+</div>
+<!-- Institutional Disclaimer & Legal Footer -->
+<footer class="mt-pad-lg pt-pad-md pb-pad-sm">
+<div class="bg-surface-container-low border border-outline-variant/80 rounded-lg p-pad-md text-center">
+<div class="flex items-center justify-center gap-1 text-on-surface-variant mb-1">
+<span class="material-symbols-outlined text-sm">verified_user</span>
+<span class="font-label-sm text-label-sm uppercase font-bold">Sistema Oficial de Fiscalización y Actas</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Leyes Nacionales 24.449 y 26.363 · Adhesión Municipal Ord. 385/12. Uso restringido y exclusivo para agentes de la Policía de Catamarca e Inspectores de Tránsito en servicio activo. Todo acceso queda auditado digitalmente con geolocalización.
+        </p>
+</div>
+<div class="flex justify-between items-center mt-pad-md px-pad-xs font-label-sm text-label-sm text-on-surface-variant">
+<span class="">VERSIÓN TÁCTICA 2.4.1</span>
+<span class="">HUILLAPIMA · CATAMARCA</span>
+</div>
+</footer>
+</main>
+<!-- Lightweight inline interaction for password visibility -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('toggle-password');
+      const passwordInput = document.getElementById('password');
+      const eyeIcon = document.getElementById('eye-icon');
+
+      if (toggleBtn && passwordInput && eyeIcon) {
+        toggleBtn.addEventListener('click', () => {
+          const isPassword = passwordInput.getAttribute('type') === 'password';
+          passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+          eyeIcon.textContent = isPassword ? 'visibility_off' : 'visibility';
+        });
+      }
+    });
+  </script>
+
+
+</body></html>

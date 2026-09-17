@@ -1,0 +1,418 @@
+<!DOCTYPE html><html class="light" lang="es" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Seguridad Vial Catamarca - Dashboard de Guardia</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Fonts: Public Sans & Space Grotesk -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS with Forms & Container Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary-fixed": "#d6e3ff",
+            "on-secondary-container": "#00476e",
+            "surface-container-high": "#dee8ff",
+            "on-tertiary-fixed": "#410002",
+            "outline": "#75777e",
+            "surface-container-lowest": "#ffffff",
+            "surface-container": "#e7eeff",
+            "primary-fixed-dim": "#b4c7ed",
+            "tertiary-fixed": "#ffdad6",
+            "surface-dim": "#cfdaf2",
+            "on-secondary-fixed-variant": "#004b73",
+            "tertiary-container": "#4d0003",
+            "on-primary-fixed": "#051b39",
+            "primary": "#000b21",
+            "on-primary-container": "#778aad",
+            "on-error": "#ffffff",
+            "background": "#f9f9ff",
+            "surface-tint": "#4c5f80",
+            "outline-variant": "#c4c6ce",
+            "on-tertiary": "#ffffff",
+            "surface": "#f9f9ff",
+            "secondary-container": "#5bb8fe",
+            "on-background": "#111c2d",
+            "secondary-fixed": "#cce5ff",
+            "inverse-surface": "#263143",
+            "secondary": "#006398",
+            "surface-container-low": "#f0f3ff",
+            "surface-bright": "#f9f9ff",
+            "on-tertiary-container": "#fe403a",
+            "on-secondary-fixed": "#001d31",
+            "inverse-primary": "#b4c7ed",
+            "on-surface-variant": "#44474e",
+            "tertiary": "#220001",
+            "on-surface": "#111c2d",
+            "error-container": "#ffdad6",
+            "on-primary-fixed-variant": "#344767",
+            "secondary-fixed-dim": "#93ccff",
+            "inverse-on-surface": "#ecf1ff",
+            "surface-variant": "#d8e3fb",
+            "on-primary": "#ffffff",
+            "error": "#ba1a1a",
+            "primary-container": "#0d2240",
+            "on-secondary": "#ffffff",
+            "on-error-container": "#93000a",
+            "surface-container-highest": "#d8e3fb",
+            "on-tertiary-fixed-variant": "#93000b",
+            "tertiary-fixed-dim": "#ffb4ab"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "pad-sm": "8px",
+            "gutter-mobile": "16px",
+            "pad-lg": "16px",
+            "pad-xl": "24px",
+            "touch-min": "48px",
+            "pad-2xl": "32px",
+            "pad-xs": "4px",
+            "gutter-tablet": "24px",
+            "pad-md": "12px"
+          },
+          "fontFamily": {
+            "label-sm": ["Space Grotesk"],
+            "headline-sm": ["Public Sans"],
+            "label-md": ["Space Grotesk"],
+            "code-num": ["Space Grotesk"],
+            "body-lg": ["Public Sans"],
+            "label-lg": ["Space Grotesk"],
+            "display-lg": ["Public Sans"],
+            "body-sm": ["Public Sans"],
+            "headline-md": ["Public Sans"],
+            "body-md": ["Public Sans"],
+            "headline-lg": ["Public Sans"]
+          },
+          "fontSize": {
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "code-num": ["18px", { "lineHeight": "22px", "letterSpacing": "0.08em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+            "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+            "display-lg": ["30px", { "lineHeight": "38px", "fontWeight": "800" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }]
+          }
+        },
+      },
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col pb-24 selection:bg-secondary selection:text-on-secondary">
+<!-- TopAppBar (Anchored to Shared Component JSON) -->
+<header class="sticky top-0 z-40 bg-primary-container dark:bg-primary text-on-primary dark:text-inverse-primary border-b border-primary dark:border-outline-variant shadow-sm dark:shadow-none w-full px-pad-lg h-touch-min flex justify-between items-center">
+<div class="flex items-center gap-pad-md">
+<!-- Institutional Patch Image -->
+<img alt="Escudo Dirección de Seguridad Vial Catamarca" class="w-10 h-10 object-contain rounded drop-shadow-sm border border-outline-variant/30 bg-primary/40 p-0.5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwLlXPMoOz6XTAiZzSe5RCTPL-V4sWtFfAs8K2FGm--zaSGEFOy350QDI05t2UWu7Iz13uJoy7-9ZhFkcbrrY5eAL6qWTfBHg6quploXMZ_mAVzp1kzv4FkilED7iY3Cg1USeG1jIwdmSTAfHlVOYZ2r7FS84H5U8WqjblPm0Xap9BjfNOyx2RYMuj4F13cLBsEG6eZI9PyNaZYMRFHq-9vbSS0dVcLL_8w-xAiVW-2-i9WoQJmiBC1UiUASFPi6TQOw">
+<div>
+<div class="flex items-center gap-1.5">
+<h1 class="text-headline-sm font-headline-sm font-bold text-on-primary dark:text-inverse-primary tracking-tight leading-none">
+            Seguridad Vial Catamarca
+          </h1>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-label-sm font-bold bg-secondary text-on-secondary uppercase">
+            HUILLAPIMA
+          </span>
+</div>
+
+</div>
+</div>
+<!-- Sync Indicator & Profile Badge -->
+<div class="flex items-center gap-pad-md">
+<button aria-label="Sincronizar Datos" class="flex items-center gap-1 text-on-primary-container hover:text-on-primary transition-colors p-1.5 rounded active:scale-95 duration-150" type="button">
+<span class="material-symbols-outlined text-xl text-secondary-container" data-icon="sync">sync</span>
+<span class="hidden md:inline font-label-sm text-label-sm text-on-primary-container">En Línea</span>
+</button>
+<div class="flex items-center gap-2 pl-pad-sm border-l border-on-primary-container/30">
+<div class="text-right hidden sm:block">
+<p class="text-label-sm font-label-sm font-bold text-on-primary leading-tight">Guardia A</p>
+<p class="text-label-sm font-label-sm text-on-primary-container text-[10px]">LP 42.110</p>
+</div>
+<div class="w-8 h-8 rounded-full bg-secondary text-on-secondary font-code-num text-label-md flex items-center justify-center font-bold ring-2 ring-secondary-container/40">
+          GL
+        </div>
+</div>
+</div>
+</header>
+<!-- Legal / Operational Banner Notification -->
+
+<!-- Main Container -->
+<main class="w-full max-w-5xl mx-auto px-pad-lg py-pad-lg flex-1 flex flex-col gap-pad-xl">
+<!-- 1. Tarjeta de Estado de Turno Activo -->
+<section aria-label="Resumen de Guardia" class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+<div class="bg-surface-container-low px-pad-lg py-pad-sm border-b border-outline-variant flex flex-wrap justify-between items-center gap-2">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="text-label-lg font-label-lg text-primary tracking-wide uppercase">Guardia en Curso</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant font-medium">| Turno Activo</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-label-sm font-label-sm font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+            En Servicio
+          </span>
+<span class="text-label-sm font-label-sm font-code-num text-on-surface-variant bg-surface-container-highest px-2 py-0.5 rounded">
+            Turno 06:00 - 14:00
+          </span>
+</div>
+</div>
+<div class="p-pad-lg flex flex-col md:flex-row md:items-center justify-between gap-pad-lg">
+<!-- Detalle de Oficial e Instalación -->
+<div class="space-y-1">
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase">Oficial Actuante a Cargo</p>
+<p class="text-headline-sm font-headline-sm font-bold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="badge">badge</span>
+            Of. Subinsp. Gómez L. · Leg. 42.110
+          </p>
+<p class="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="location_on">location_on</span>
+            Puesto Caminero Nueva Coneta · Huillapima (Km 572)
+          </p>
+</div>
+<!-- Metric Counters Strip (Bento High-Contrast Style) -->
+<div class="grid grid-cols-3 gap-2 sm:gap-4 bg-surface-container-low p-2.5 rounded-lg border border-outline-variant">
+<!-- Actas Hoy -->
+<div class="border-l-4 border-secondary px-3 py-1 bg-surface-container-lowest rounded shadow-xs">
+<span class="text-label-sm font-label-sm text-on-surface-variant block uppercase">Actas Hoy</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="text-headline-md font-code-num font-bold text-primary">18</span>
+<span class="text-label-sm font-label-sm text-secondary font-bold">reg.</span>
+</div>
+</div>
+<!-- Total Valorado -->
+<div class="border-l-4 border-primary px-3 py-1 bg-surface-container-lowest rounded shadow-xs">
+<span class="text-label-sm font-label-sm text-on-surface-variant block uppercase">Aforo Estim.</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="text-headline-md font-code-num font-bold text-primary">$524k</span>
+<span class="text-label-sm font-label-sm text-on-surface-variant font-medium">pesos</span>
+</div>
+</div>
+<!-- Alcoholemias Positivas -->
+<div class="border-l-4 border-error px-3 py-1 bg-surface-container-lowest rounded shadow-xs">
+<span class="text-label-sm font-label-sm text-error block uppercase">Alcoholemias</span>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="text-headline-md font-code-num font-bold text-error">4</span>
+<span class="text-label-sm font-label-sm text-error font-bold">pos.</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. SECCIÓN PRINCIPAL: BOTONES DE ACCIONES OPERATIVAS -->
+<section aria-label="Menú Operativo Principal">
+<div class="flex items-center justify-between mb-pad-md">
+<h2 class="text-label-lg font-label-lg text-primary uppercase tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="grid_view">grid_view</span>
+          Acciones Operativas de Tránsito
+        </h2>
+
+</div>
+<!-- Bento Grid de Acciones -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-pad-lg">
+<!-- 1. CARGAR NUEVA ACTA (Hero Action Card) -->
+<button class="group relative text-left bg-primary-container text-on-primary rounded-xl p-pad-xl border-2 border-primary shadow-md hover:bg-primary transition-all duration-200 active:scale-[0.99] flex flex-col justify-between min-h-[170px] overflow-hidden" type="button">
+<div class="absolute -right-6 -bottom-6 opacity-10 text-on-primary pointer-events-none group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[130px]" data-icon="edit_document">edit_document</span>
+</div>
+<div class="flex items-start justify-between">
+<div class="w-14 h-14 rounded-lg bg-secondary flex items-center justify-center text-on-secondary shadow-inner ring-2 ring-secondary-container/50">
+<span class="material-symbols-outlined text-3xl" data-icon="assignment_add">assignment_add</span>
+</div>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded font-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-sm" data-icon="bolt">bolt</span>
+              Acción Rápida
+            </span>
+</div>
+<div class="mt-pad-lg">
+<h3 class="text-headline-md font-headline-md font-bold text-on-primary tracking-tight group-hover:text-secondary-fixed transition-colors">
+              Cargar Nueva Acta
+            </h3>
+<p class="text-body-md font-body-md text-on-primary-container mt-1 font-normal line-clamp-2">
+              Labrar acta de comprobación a conductor e inspección vehicular con firma digital y alcoholemia.
+            </p>
+</div>
+<div class="mt-pad-md pt-pad-sm border-t border-on-primary-container/20 flex items-center justify-between text-label-sm font-label-sm text-secondary-fixed">
+<span class="font-bold">Emisión Inmediata (Ord. N° 385/12)</span>
+<span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</button>
+<!-- 2. ACTAS REALIZADAS -->
+<button class="group text-left bg-surface-container-lowest text-on-surface rounded-xl p-pad-xl border-1.5 border-outline-variant shadow-sm hover:border-secondary transition-all duration-200 active:scale-[0.99] flex flex-col justify-between min-h-[170px]" type="button">
+<div class="flex items-start justify-between">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high text-secondary flex items-center justify-center border border-outline-variant group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="verified">verified</span>
+</div>
+<span class="font-code-num text-label-sm font-bold bg-surface-container text-on-surface px-2 py-0.5 rounded border border-outline-variant">
+              18 Actas en Guardia
+            </span>
+</div>
+<div class="mt-pad-md">
+<h3 class="text-headline-sm font-headline-sm font-bold text-primary group-hover:text-secondary transition-colors">
+              Actas Realizadas
+            </h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+              Ver actas del turno actual, pendientes de firma presencial o remitidas al Juzgado de Faltas.
+            </p>
+</div>
+<div class="mt-pad-md pt-pad-sm border-t border-outline-variant/50 flex items-center justify-between text-label-sm font-label-sm text-secondary">
+<span class="font-bold">Consultar Estado de Remisión</span>
+<span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</button>
+<!-- 3. HISTORIAL Y CIERRE DE GUARDIA -->
+<button class="group text-left bg-surface-container-lowest text-on-surface rounded-xl p-pad-xl border-1.5 border-outline-variant shadow-sm hover:border-secondary transition-all duration-200 active:scale-[0.99] flex flex-col justify-between min-h-[170px]" type="button">
+<div class="flex items-start justify-between">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high text-on-surface-variant flex items-center justify-center border border-outline-variant group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="history">history</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-error bg-error-container/60 px-2 py-0.5 rounded border border-error/30">
+              3 Retenciones
+            </span>
+</div>
+<div class="mt-pad-md">
+<h3 class="text-headline-sm font-headline-sm font-bold text-primary group-hover:text-secondary transition-colors">
+              Historial y Cierre de Guardia
+            </h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+              Consultar partes diarios, vehículos remitidos al corralón municipal y descargar resumen de relevo.
+            </p>
+</div>
+<div class="mt-pad-md pt-pad-sm border-t border-outline-variant/50 flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant">
+<span class="font-bold">Acta de Entrega de Puesto</span>
+<span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</button>
+<!-- 4. ESTADÍSTICAS Y RENDICIÓN -->
+<button class="group text-left bg-surface-container-lowest text-on-surface rounded-xl p-pad-xl border-1.5 border-outline-variant shadow-sm hover:border-secondary transition-all duration-200 active:scale-[0.99] flex flex-col justify-between min-h-[170px]" type="button">
+<div class="flex items-start justify-between">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high text-secondary flex items-center justify-center border border-outline-variant group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="bar_chart">bar_chart</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded border border-outline-variant">
+              Mensual / Catamarca
+            </span>
+</div>
+<div class="mt-pad-md">
+<h3 class="text-headline-sm font-headline-sm font-bold text-primary group-hover:text-secondary transition-colors">
+              Estadísticas y Rendición
+            </h3>
+<p class="text-body-md font-body-md text-on-surface-variant mt-1">
+              Estimación de recaudación municipal, ranking de infracciones detectadas y comparativa operativa.
+            </p>
+</div>
+<div class="mt-pad-md pt-pad-sm border-t border-outline-variant/50 flex items-center justify-between text-label-sm font-label-sm text-secondary">
+<span class="font-bold">Informes a Dirección de Rentas</span>
+<span class="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</button>
+</div>
+</section>
+<!-- 3. SECCIÓN DE UTILIDADES OPERATIVAS RÁPIDAS (Atajos de Campo) -->
+<section aria-label="Utilidades Operativas">
+<div class="flex items-center justify-between mb-pad-sm">
+<h3 class="text-label-lg font-label-lg text-primary uppercase tracking-wide flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="construction">construction</span>
+          Herramientas y Consultas Rápidas en Puesto
+        </h3>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Sin salir de guardia</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-pad-md">
+<!-- Test Alcoholemia / Alcohostop -->
+<button class="bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant rounded-lg p-pad-md flex items-center gap-pad-md transition-colors text-left group" type="button">
+<div class="w-12 h-12 rounded bg-error-container/70 text-error flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="science">science</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2">
+<h4 class="text-headline-sm font-headline-sm font-bold text-on-surface leading-snug truncate">
+                Test de Alcoholemia
+              </h4>
+<span class="text-[10px] font-label-sm font-bold bg-error text-on-error px-1 rounded uppercase">0.00 g/l</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">
+              Protocolo Alcohostop &amp; Calibración de Boquillas
+            </p>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-secondary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+<!-- Consulta de Dominio / PNR -->
+<button class="bg-surface-container-lowest hover:bg-surface-container-low border border-outline-variant rounded-lg p-pad-md flex items-center gap-pad-md transition-colors text-left group" type="button">
+<div class="w-12 h-12 rounded bg-secondary-container/50 text-secondary flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="directions_car">directions_car</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center gap-2">
+<h4 class="text-headline-sm font-headline-sm font-bold text-on-surface leading-snug truncate">
+                Consulta Rápida de Dominio
+              </h4>
+<span class="text-[10px] font-label-sm font-bold bg-secondary text-on-secondary px-1 rounded uppercase">DNRPA</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-0.5">
+              Validar titularidad, impedimentos y pedido de secuestro
+            </p>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-secondary transition-colors" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Protocolo Legal y Aviso de Pago Voluntario -->
+<footer class="bg-surface-container-low rounded-lg p-pad-md border border-outline-variant text-on-surface-variant text-body-sm font-body-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-lg" data-icon="gavel">gavel</span>
+<span class="">Convenio de Tránsito Municipalidad de Huillapima - Policía de Catamarca (Ley Prov. N° 5.128)</span>
+</div>
+<span class="font-label-sm text-label-sm font-bold text-primary">
+        Descuento 40% Pago Voluntario (Ord. 385)
+      </span>
+</footer>
+</main>
+<!-- BottomNavBar (Anchored to Shared Component JSON) -->
+<nav aria-label="Navegación Primaria" class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-pad-sm py-pad-xs bg-surface-container-lowest dark:bg-inverse-surface border-t border-outline-variant dark:border-outline shadow-md dark:shadow-none">
+<!-- 1. Nueva Acta (Active Destination) -->
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-secondary text-on-primary dark:text-on-secondary rounded-lg px-pad-md py-pad-xs active:scale-95 transition-transform duration-150" href="#nueva-acta">
+<span class="material-symbols-outlined text-2xl" data-icon="assignment_add">assignment_add</span>
+<span class="text-label-sm font-label-sm mt-0.5">Nueva Acta</span>
+</a>
+<!-- 2. Actas -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-pad-md py-pad-xs hover:bg-surface-container dark:hover:bg-surface-variant hover:text-on-surface dark:hover:text-on-surface active:scale-95 transition-transform duration-150" href="#actas">
+<span class="material-symbols-outlined text-2xl" data-icon="verified">verified</span>
+<span class="text-label-sm font-label-sm mt-0.5">Actas</span>
+</a>
+<!-- 3. Historial -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-pad-md py-pad-xs hover:bg-surface-container dark:hover:bg-surface-variant hover:text-on-surface dark:hover:text-on-surface active:scale-95 transition-transform duration-150" href="#historial">
+<span class="material-symbols-outlined text-2xl" data-icon="history">history</span>
+<span class="text-label-sm font-label-sm mt-0.5">Historial</span>
+</a>
+<!-- 4. Estadísticas -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-surface-variant px-pad-md py-pad-xs hover:bg-surface-container dark:hover:bg-surface-variant hover:text-on-surface dark:hover:text-on-surface active:scale-95 transition-transform duration-150" href="#estadisticas">
+<span class="material-symbols-outlined text-2xl" data-icon="bar_chart">bar_chart</span>
+<span class="text-label-sm font-label-sm mt-0.5">Estadísticas</span>
+</a>
+</nav>
+<!-- Script for quick interactions & touch feedback -->
+<script>
+    document.querySelectorAll('button, a').forEach(elem => {
+      elem.addEventListener('click', function(e) {
+        // Subtle tactile feedback state
+        this.classList.add('opacity-90');
+        setTimeout(() => this.classList.remove('opacity-90'), 150);
+      });
+    });
+  </script>
+
+
+</body></html>

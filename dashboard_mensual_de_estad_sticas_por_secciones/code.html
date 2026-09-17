@@ -1,0 +1,1046 @@
+<!DOCTYPE html><html class="light" lang="es" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Dirección de Seguridad Vial - Dashboard Estadístico Mensual</title>
+<!-- Fonts: Public Sans & Space Grotesk -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS with form and container query plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-container-high": "#dee8ff",
+            "primary-container": "#0d2240",
+            "surface-dim": "#cfdaf2",
+            "on-tertiary-fixed": "#410002",
+            "on-tertiary-fixed-variant": "#93000b",
+            "tertiary-fixed-dim": "#ffb4ab",
+            "on-primary-fixed": "#051b39",
+            "on-surface": "#111c2d",
+            "surface-variant": "#d8e3fb",
+            "on-primary": "#ffffff",
+            "primary": "#000b21",
+            "on-tertiary-container": "#fe403a",
+            "secondary": "#006398",
+            "on-secondary-fixed-variant": "#004b73",
+            "on-primary-fixed-variant": "#344767",
+            "outline-variant": "#c4c6ce",
+            "on-secondary-fixed": "#001d31",
+            "outline": "#75777e",
+            "background": "#f9f9ff",
+            "tertiary-fixed": "#ffdad6",
+            "surface-tint": "#4c5f80",
+            "error": "#ba1a1a",
+            "surface-container-lowest": "#ffffff",
+            "on-background": "#111c2d",
+            "tertiary": "#220001",
+            "surface-container": "#e7eeff",
+            "inverse-on-surface": "#ecf1ff",
+            "on-error-container": "#93000a",
+            "inverse-primary": "#b4c7ed",
+            "on-error": "#ffffff",
+            "on-secondary-container": "#00476e",
+            "surface-container-low": "#f0f3ff",
+            "secondary-fixed": "#cce5ff",
+            "on-primary-container": "#778aad",
+            "tertiary-container": "#4d0003",
+            "secondary-container": "#5bb8fe",
+            "on-secondary": "#ffffff",
+            "surface-container-highest": "#d8e3fb",
+            "on-tertiary": "#ffffff",
+            "secondary-fixed-dim": "#93ccff",
+            "primary-fixed": "#d6e3ff",
+            "primary-fixed-dim": "#b4c7ed",
+            "surface-bright": "#f9f9ff",
+            "on-surface-variant": "#44474e",
+            "error-container": "#ffdad6",
+            "inverse-surface": "#263143",
+            "surface": "#f9f9ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "spacing": {
+            "gutter-mobile": "16px",
+            "pad-2xl": "32px",
+            "touch-min": "48px",
+            "gutter-tablet": "24px",
+            "pad-xl": "24px",
+            "pad-sm": "8px",
+            "pad-lg": "16px",
+            "pad-md": "12px",
+            "pad-xs": "4px"
+          },
+          "fontFamily": {
+            "label-sm": ["Space Grotesk"],
+            "headline-sm": ["Public Sans"],
+            "headline-lg": ["Public Sans"],
+            "body-md": ["Public Sans"],
+            "body-sm": ["Public Sans"],
+            "display-lg": ["Public Sans"],
+            "label-lg": ["Space Grotesk"],
+            "body-lg": ["Public Sans"],
+            "headline-md": ["Public Sans"],
+            "label-md": ["Space Grotesk"],
+            "code-num": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "display-lg": ["30px", { "lineHeight": "38px", "fontWeight": "800" }],
+            "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "500" }],
+            "headline-md": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "600" }],
+            "code-num": ["18px", { "lineHeight": "22px", "letterSpacing": "0.08em", "fontWeight": "700" }]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col pb-24 antialiased selection:bg-secondary-fixed selection:text-on-secondary-fixed">
+<!-- TOP APP BAR (Shared Component Anchor) -->
+<header class="bg-primary-container text-on-primary sticky top-0 z-40 w-full shadow-sm flex justify-between items-center px-pad-lg h-touch-min">
+<div class="flex items-center gap-pad-md">
+<div class="flex items-center justify-center w-9 h-9 rounded overflow-hidden bg-primary shadow-inner shrink-0 border border-outline-variant/40">
+<img alt="Escudo Policía de Catamarca - Dirección de Seguridad Vial" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcBYz1G4W23SCmaXMMfSwKguhuCHMhDBEiq7J8sSD8pJL9Kv9oYxaQvNk_8qYDmqhKKh8nEFNVzW7DY28rjP1cN_0sBTZB82dyHOtRo4Ptwb0KL0JxP4WpMGlwfZeuMb4hFPLZwmr7Ku2y8Eh_30tdRxQxHj3AykvWeXeStCBLRR2LO_ADgL8vfPJiVaPGpbJqQIWdtWArcJZDQI_Yl9uEnR0ZQ3z1-xK0VI-0-1iN78bne04wglORakIKI291ic7sYA">
+</div>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-headline-sm font-headline-sm font-bold tracking-tight text-on-primary">Dirección de Seguridad Vial</span>
+<span class="hidden sm:inline-block px-1.5 py-0.5 rounded bg-secondary text-[10px] font-label-sm uppercase tracking-wider text-on-secondary">Catamarca</span>
+</div>
+<p class="text-[10px] tracking-wide text-on-primary-container font-label-sm uppercase leading-none">POLICÍA DE CATAMARCA • DTO. CAPAYÁN</p>
+</div>
+</div>
+<!-- Right Controls: Period Selector & Municipal Sync/Export -->
+<div class="flex items-center gap-pad-sm">
+<div class="hidden md:flex items-center bg-primary rounded px-pad-md py-1 border border-outline-variant/30">
+<span class="material-symbols-outlined text-[16px] text-secondary-container mr-1.5">calendar_month</span>
+<span class="font-label-md text-label-md text-on-primary">Septiembre 2026</span>
+</div>
+<button class="p-2 rounded hover:bg-primary text-on-primary active:scale-95 transition-transform duration-150 flex items-center justify-center" title="Sincronizar base de datos">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+<button class="bg-secondary hover:bg-secondary/90 text-on-secondary px-pad-md py-1.5 rounded font-label-md text-label-md flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span class="hidden sm:inline">Exportar Informe</span>
+</button>
+</div>
+</header>
+<!-- MUNICIPAL LEGAL & AUDIT SUB-BANNER -->
+
+<!-- MAIN DASHBOARD CONTENT -->
+<main class="max-w-7xl mx-auto w-full px-pad-mobile md:px-pad-lg py-pad-lg space-y-pad-lg flex-1">
+<!-- HERO / TITLE & MONTH SELECTOR BAR -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div>
+<h1 class="text-headline-lg font-headline-lg text-primary tracking-tight">Estadísticas y Recaudación</h1>
+<p class="text-body-sm sm:text-body-md font-body-md text-on-surface-variant">Policía de Catamarca · Dirección de Seguridad Vial · Convenio Municipalidad de Huillapima.</p>
+</div>
+<div class="flex items-center gap-1.5 self-start sm:self-auto bg-surface-container-lowest border border-outline-variant rounded p-1 shadow-xs">
+<button aria-label="Mes anterior" class="px-2 py-1 text-xs font-label-md rounded hover:bg-surface-container text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<span class="px-2.5 py-1 text-xs font-label-lg text-primary uppercase font-bold tracking-wider">Septiembre 2026</span>
+<button aria-label="Mes siguiente" class="px-2 py-1 text-xs font-label-md rounded hover:bg-surface-container text-on-surface-variant flex items-center">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- NAVIGATION TABS / SEGMENTED CONTROL (MOBILE OPTIMIZED) -->
+<div class="sticky top-[48px] z-30 -mx-pad-mobile md:mx-0 px-pad-mobile md:px-0 bg-background/95 backdrop-blur-md pt-1 pb-2 border-b border-outline-variant/40 md:border-b-0">
+<div class="grid grid-cols-4 gap-1 p-1 bg-surface-container-low border border-outline-variant/60 rounded-xl shadow-xs">
+<!-- Tab 1: General -->
+<button class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1.5 sm:px-3 rounded-lg text-xs font-label-md font-bold transition-all bg-primary-container text-on-primary shadow-xs" id="tab-btn-general" onclick="switchTab('general')">
+<span class="material-symbols-outlined text-[18px] sm:text-[20px]">analytics</span>
+<span class="truncate">General</span>
+</button>
+<!-- Tab 2: Infracciones -->
+<button class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1.5 sm:px-3 rounded-lg text-xs font-label-md font-bold transition-all text-on-surface-variant hover:text-primary hover:bg-surface-container" id="tab-btn-infracciones" onclick="switchTab('infracciones')">
+<span class="material-symbols-outlined text-[18px] sm:text-[20px]">warning</span>
+<span class="truncate">Infracciones</span>
+</button>
+<!-- Tab 3: Guardias -->
+<button class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1.5 sm:px-3 rounded-lg text-xs font-label-md font-bold transition-all text-on-surface-variant hover:text-primary hover:bg-surface-container" id="tab-btn-guardias" onclick="switchTab('guardias')">
+<span class="material-symbols-outlined text-[18px] sm:text-[20px]">shield_person</span>
+<span class="truncate">Guardias</span>
+</button>
+<!-- Tab 4: Puestos -->
+<button class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1.5 sm:px-3 rounded-lg text-xs font-label-md font-bold transition-all text-on-surface-variant hover:text-primary hover:bg-surface-container" id="tab-btn-puestos" onclick="switchTab('puestos')">
+<span class="material-symbols-outlined text-[18px] sm:text-[20px]">location_on</span>
+<span class="truncate">Puestos</span>
+</button>
+</div>
+</div>
+<!-- TAB PANEL 1: GENERAL (KPIs + Comparativo Recaudación + Gravedad) -->
+<div class="tab-content space-y-pad-lg" id="tab-panel-general">
+<!-- 1. KPI CARDS: FINANCIEROS Y VOLUMEN OPERATIVO -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-pad-md">
+<!-- Card: Recaudación Mes -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg relative overflow-hidden shadow-sm flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-1">
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Recaudación del Mes</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">payments</span>
+</div>
+<div class="text-display-lg font-code-num text-primary tracking-tight font-extrabold">$3.840.000</div>
+</div>
+<div class="mt-3 pt-2 border-t border-surface-container flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-secondary font-semibold flex items-center text-xs">
+<span class="material-symbols-outlined text-[14px] mr-0.5">trending_up</span> +14.2% vs Agosto
+          </span>
+<span class="text-on-surface-variant text-[11px]">Meta: 108%</span>
+</div>
+</div>
+<!-- Card: Promedio Semanal -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg relative overflow-hidden shadow-sm flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-1">
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Promedio Semanal</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">date_range</span>
+</div>
+<div class="text-display-lg font-code-num text-primary tracking-tight font-extrabold">$960.000</div>
+</div>
+<div class="mt-3 pt-2 border-t border-surface-container flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant text-[11px]">4 Semanas operativas</span>
+<span class="text-primary font-label-sm text-xs font-semibold">Consistente</span>
+</div>
+</div>
+<!-- Card: Promedio Diario -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg relative overflow-hidden shadow-sm flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary-container"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-1">
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Promedio Diario</span>
+<span class="material-symbols-outlined text-secondary text-[20px]">today</span>
+</div>
+<div class="text-display-lg font-code-num text-primary tracking-tight font-extrabold">$128.000</div>
+</div>
+<div class="mt-3 pt-2 border-t border-surface-container flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant text-[11px]">Pico fines de semana</span>
+<span class="text-secondary font-label-sm text-xs font-bold">$184.000/Sáb</span>
+</div>
+</div>
+<!-- Card: Total Actas Emitidas -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg relative overflow-hidden shadow-sm flex flex-col justify-between">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-container"></div>
+<div>
+<div class="flex items-center justify-between text-on-surface-variant mb-1">
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Total Actas Emitidas</span>
+<span class="material-symbols-outlined text-primary text-[20px]">description</span>
+</div>
+<div class="text-display-lg font-code-num text-primary tracking-tight font-extrabold">142 <span class="text-headline-sm font-normal text-on-surface-variant">actas</span></div>
+</div>
+<div class="mt-3 pt-2 border-t border-surface-container flex items-center justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant text-[11px]">Pago Voluntario (-40%)</span>
+<span class="text-secondary font-semibold text-xs">88 actas (62%)</span>
+</div>
+</div>
+</div>
+<!-- REVENUE PERIODS & GRAVEDAD COMPARATIVE BENTO -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-pad-lg">
+<!-- Comparativo de Recaudación por Períodos (2 Cols) -->
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded p-pad-lg shadow-sm flex flex-col justify-between">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-surface-container-high gap-2">
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-secondary">Evolución Financiera</span>
+<h3 class="text-headline-md font-headline-md text-primary">Comparativo de Recaudación</h3>
+</div>
+<!-- Period switch tabs -->
+<div class="inline-flex rounded border border-outline-variant bg-surface-container-low p-0.5 text-xs font-label-sm self-start sm:self-auto">
+<button class="px-2.5 py-1 rounded bg-surface-container-lowest text-primary font-bold shadow-xs">Semanal (Sem 1-4)</button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-primary">Diario (7d)</button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-primary">Trimestral</button>
+</div>
+</div>
+<!-- Visual Bar Graph Mockup -->
+<div class="mt-6 space-y-4">
+<div class="flex justify-between items-baseline text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Distribución de ingresos por semana fiscal (Septiembre 2026):</span>
+<span class="font-code-num text-xs text-primary font-bold">Total: $3.840.000 ARS</span>
+</div>
+<!-- Weekly Bars Grid -->
+<div class="grid grid-cols-4 gap-3 items-end h-48 pt-4 pb-2 border-b border-outline-variant/60">
+<!-- Sem 1 -->
+<div class="flex flex-col items-center h-full justify-end group">
+<span class="text-[11px] font-code-num text-on-surface-variant group-hover:text-primary mb-1">$820k</span>
+<div class="w-full max-w-[64px] bg-surface-container-high group-hover:bg-secondary-container transition-all rounded-t" style="height: 68%;"></div>
+<span class="mt-2 text-label-sm font-label-sm text-on-surface-variant uppercase">Sem 01</span>
+</div>
+<!-- Sem 2 -->
+<div class="flex flex-col items-center h-full justify-end group">
+<span class="text-[11px] font-code-num text-on-surface-variant group-hover:text-primary mb-1">$940k</span>
+<div class="w-full max-w-[64px] bg-secondary-fixed group-hover:bg-secondary transition-all rounded-t" style="height: 78%;"></div>
+<span class="mt-2 text-label-sm font-label-sm text-on-surface-variant uppercase">Sem 02</span>
+</div>
+<!-- Sem 3 (Pico Operativo) -->
+<div class="flex flex-col items-center h-full justify-end group">
+<span class="text-[11px] font-code-num text-primary font-bold mb-1">$1.150k</span>
+<div class="w-full max-w-[64px] bg-primary group-hover:bg-primary-container transition-all rounded-t shadow-sm" style="height: 95%;"></div>
+<span class="mt-2 text-label-sm font-label-sm text-primary font-bold uppercase">Sem 03 *</span>
+</div>
+<!-- Sem 4 -->
+<div class="flex flex-col items-center h-full justify-end group">
+<span class="text-[11px] font-code-num text-on-surface-variant group-hover:text-primary mb-1">$930k</span>
+<div class="w-full max-w-[64px] bg-secondary-fixed group-hover:bg-secondary transition-all rounded-t" style="height: 77%;"></div>
+<span class="mt-2 text-label-sm font-label-sm text-on-surface-variant uppercase">Sem 04</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between text-[11px] font-body-sm text-on-surface-variant pt-1">
+<span class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 bg-primary rounded-xs"></span> Semana 03 con mayor secuestro preventivo en RP N° 14.
+            </span>
+<span class="font-code-num font-semibold text-secondary">Rendición Rentas OK</span>
+</div>
+</div>
+<!-- Recent 7 Days Mini Sparkline Metric -->
+
+</div>
+<!-- Resumen por Gravedad de Infracción (1 Col) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="pb-3 border-b border-surface-container-high">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-secondary">Tipificación Legal</span>
+<h3 class="text-headline-md font-headline-md text-primary">Montos por Gravedad</h3>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mt-2 mb-4">
+            Distribución según escala sancionatoria Ordenanza N° 385/12 y Unidades Fijas (UF).
+          </p>
+<div class="space-y-4">
+<!-- Infracciones Gravísimas -->
+<div class="p-3 rounded border border-error/20 bg-error-container/20">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-sm font-label-sm uppercase text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">error</span> Gravísimas (Alcoholemia)
+                </span>
+<span class="font-code-num text-error font-extrabold text-sm">$1.920.000</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded overflow-hidden">
+<div class="bg-error h-full rounded" style="width: 50%;"></div>
+</div>
+<div class="flex justify-between text-[11px] text-on-surface-variant mt-1.5 font-label-sm">
+<span class="">38 Actas Labradas</span>
+<span class="font-semibold text-primary">50% del total recaudado</span>
+</div>
+</div>
+<!-- Infracciones Graves -->
+<div class="p-3 rounded border border-secondary/30 bg-surface-container-low">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-sm font-label-sm uppercase text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span> Graves (Sin Casco)
+                </span>
+<span class="font-code-num text-primary font-extrabold text-sm">$1.344.000</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded overflow-hidden">
+<div class="bg-secondary h-full rounded" style="width: 35%;"></div>
+</div>
+<div class="flex justify-between text-[11px] text-on-surface-variant mt-1.5 font-label-sm">
+<span class="">68 Actas Labradas</span>
+<span class="font-semibold text-primary">35% del total recaudado</span>
+</div>
+</div>
+<!-- Infracciones Leves -->
+<div class="p-3 rounded border border-outline-variant/60 bg-surface-container-lowest">
+<div class="flex justify-between items-center mb-1">
+<span class="text-label-sm font-label-sm uppercase text-on-surface-variant font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">info</span> Leves (Estacionamiento)
+                </span>
+<span class="font-code-num text-primary font-extrabold text-sm">$576.000</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded overflow-hidden">
+<div class="bg-outline h-full rounded" style="width: 15%;"></div>
+</div>
+<div class="flex justify-between text-[11px] text-on-surface-variant mt-1.5 font-label-sm">
+<span class="">36 Actas Labradas</span>
+<span class="font-semibold text-primary">15% del total recaudado</span>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-surface-container text-[11px] text-on-surface-variant">
+          * Valores calculados conforme a valor litro de Nafta Súper vigente en Catamarca (YPF).
+        </div>
+</div>
+</div>
+</div>
+<!-- TAB PANEL 2: INFRACCIONES & VEHÍCULOS & PERFIL INFRACTOR -->
+<div class="tab-content hidden space-y-pad-lg" id="tab-panel-infracciones">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-pad-lg">
+<!-- Top Infracciones Más Frecuentes -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="pb-3 border-b border-surface-container-high flex justify-between items-start">
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-secondary">Matriz Contravencional</span>
+<h3 class="text-headline-md font-headline-md text-primary">Top Infracciones</h3>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">checklist</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant my-3">
+            Recuento jerárquico según formulario oficial de Acta de Comprobación:
+          </p>
+<div class="space-y-3.5">
+<!-- 1. Casco / Cinturón -->
+<div>
+<div class="flex justify-between text-body-sm font-body-md font-medium text-primary">
+<span class="flex items-center gap-1.5">
+<span class="font-code-num text-xs bg-primary text-on-primary w-5 h-5 rounded flex items-center justify-center">1</span>
+                  Sin casco / Falta cinturón
+                </span>
+<span class="font-code-num font-bold text-primary">34% <span class="font-normal text-on-surface-variant text-xs">(48)</span></span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1.5">
+<div class="bg-primary h-full rounded" style="width: 34%;"></div>
+</div>
+</div>
+<!-- 2. Alcoholemia / Negativa -->
+<div>
+<div class="flex justify-between text-body-sm font-body-md font-medium text-primary">
+<span class="flex items-center gap-1.5">
+<span class="font-code-num text-xs bg-secondary text-on-secondary w-5 h-5 rounded flex items-center justify-center">2</span>
+                  Alcoholemia / Negativa
+                </span>
+<span class="font-code-num font-bold text-error">26% <span class="font-normal text-on-surface-variant text-xs">(37)</span></span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1.5">
+<div class="bg-error h-full rounded" style="width: 26%;"></div>
+</div>
+</div>
+<!-- 3. Seguro / Cédula -->
+<div>
+<div class="flex justify-between text-body-sm font-body-md font-medium text-primary">
+<span class="flex items-center gap-1.5">
+<span class="font-code-num text-xs bg-outline text-surface-container-lowest w-5 h-5 rounded flex items-center justify-center">3</span>
+                  Falta de seguro / Cédula
+                </span>
+<span class="font-code-num font-bold text-primary">18% <span class="font-normal text-on-surface-variant text-xs">(26)</span></span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1.5">
+<div class="bg-secondary h-full rounded" style="width: 18%;"></div>
+</div>
+</div>
+<!-- 4. Escape Libre -->
+<div>
+<div class="flex justify-between text-body-sm font-body-md font-medium text-primary">
+<span class="flex items-center gap-1.5">
+<span class="font-code-num text-xs bg-outline text-surface-container-lowest w-5 h-5 rounded flex items-center justify-center">4</span>
+                  Caño de escape libre
+                </span>
+<span class="font-code-num font-bold text-primary">12% <span class="font-normal text-on-surface-variant text-xs">(17)</span></span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1.5">
+<div class="bg-outline h-full rounded" style="width: 12%;"></div>
+</div>
+</div>
+<!-- 5. Semáforo rojo / Contra mano -->
+<div>
+<div class="flex justify-between text-body-sm font-body-md font-medium text-primary">
+<span class="flex items-center gap-1.5">
+<span class="font-code-num text-xs bg-outline text-surface-container-lowest w-5 h-5 rounded flex items-center justify-center">5</span>
+                  Semáforo rojo / Contra mano
+                </span>
+<span class="font-code-num font-bold text-primary">10% <span class="font-normal text-on-surface-variant text-xs">(14)</span></span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1.5">
+<div class="bg-outline-variant h-full rounded" style="width: 10%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-surface-container flex items-center justify-between text-[11px] text-on-surface-variant font-label-sm">
+<span class="">SECUESTROS VEHICULARES: 29 UNIDADES</span>
+<span class="text-error font-bold">20.4% DEL TOTAL</span>
+</div>
+</div>
+<!-- Tipos de Vehículos Involucrados -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="pb-3 border-b border-surface-container-high flex justify-between items-start">
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-secondary">Parque Automotor</span>
+<h3 class="text-headline-md font-headline-md text-primary">Vehículos Involucrados</h3>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">two_wheeler</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant my-3">
+            Clasificación por tipo de rodado según registro de dominio fiscal:
+          </p>
+<div class="space-y-4">
+<!-- Segment Progress Meter -->
+<div class="w-full h-5 rounded flex overflow-hidden border border-outline-variant/60 shadow-xs">
+<div class="bg-primary hover:opacity-90 transition-opacity" style="width: 54%;" title="Motocicletas 54%"></div>
+<div class="bg-secondary hover:opacity-90 transition-opacity" style="width: 28%;" title="Automóviles 28%"></div>
+<div class="bg-secondary-container hover:opacity-90 transition-opacity" style="width: 12%;" title="Camionetas 12%"></div>
+<div class="bg-outline-variant hover:opacity-90 transition-opacity" style="width: 6%;" title="Transporte pesado 6%"></div>
+</div>
+<!-- Legend Grid -->
+<div class="grid grid-cols-1 gap-2.5 pt-1">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low border border-outline-variant/40">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-xs bg-primary"></div>
+<span class="text-body-sm font-medium text-primary">Motocicletas (110 - 250cc)</span>
+</div>
+<div class="text-right">
+<span class="font-code-num font-bold text-primary text-sm">54%</span>
+<span class="text-[11px] text-on-surface-variant block leading-none">77 rodados</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low border border-outline-variant/40">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-xs bg-secondary"></div>
+<span class="text-body-sm font-medium text-primary">Automóviles particulares</span>
+</div>
+<div class="text-right">
+<span class="font-code-num font-bold text-primary text-sm">28%</span>
+<span class="text-[11px] text-on-surface-variant block leading-none">40 rodados</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low border border-outline-variant/40">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-xs bg-secondary-container"></div>
+<span class="text-body-sm font-medium text-primary">Camionetas / Utilitarios</span>
+</div>
+<div class="text-right">
+<span class="font-code-num font-bold text-primary text-sm">12%</span>
+<span class="text-[11px] text-on-surface-variant block leading-none">17 rodados</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low border border-outline-variant/40">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-xs bg-outline-variant"></div>
+<span class="text-body-sm font-medium text-primary">Transporte pesado / Carga</span>
+</div>
+<div class="text-right">
+<span class="font-code-num font-bold text-primary text-sm">6%</span>
+<span class="text-[11px] text-on-surface-variant block leading-none">8 rodados</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-surface-container text-[11px] text-on-surface-variant flex items-center justify-between">
+<span class="">ALTO IMPACTO MOTOS EN CASCO URBANO</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">info</span>
+</div>
+</div>
+<!-- Perfil del Infractor por Rango de Edad & Demografía -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="pb-3 border-b border-surface-container-high flex justify-between items-start">
+<div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-secondary">Demografía y Conducta</span>
+<h3 class="text-headline-md font-headline-md text-primary">Perfil del Infractor</h3>
+</div>
+<span class="material-symbols-outlined text-outline text-[20px]">group</span>
+</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant my-3">
+            Cohortes etarias de conductores infraccionados en el mes:
+          </p>
+<!-- Cohort Bars -->
+<div class="space-y-3">
+<div>
+<div class="flex justify-between text-body-sm">
+<span class="font-medium text-primary">26 a 40 años (Adultos jóvenes)</span>
+<span class="font-code-num font-bold text-primary">42%</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1">
+<div class="bg-primary h-full rounded" style="width: 42%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-sm">
+<span class="font-medium text-primary">18 a 25 años (Jóvenes)</span>
+<span class="font-code-num font-bold text-secondary">38%</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1">
+<div class="bg-secondary h-full rounded" style="width: 38%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-sm">
+<span class="font-medium text-primary">41 a 60 años (Adultos)</span>
+<span class="font-code-num font-bold text-on-surface-variant">15%</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1">
+<div class="bg-outline h-full rounded" style="width: 15%;"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-body-sm">
+<span class="font-medium text-primary">+60 años (Adultos mayores)</span>
+<span class="font-code-num font-bold text-outline">5%</span>
+</div>
+<div class="w-full bg-surface-variant h-2 rounded mt-1">
+<div class="bg-outline-variant h-full rounded" style="width: 5%;"></div>
+</div>
+</div>
+</div>
+<!-- Género y Reincidencia Highlights -->
+<div class="mt-4 pt-3 border-t border-surface-container grid grid-cols-2 gap-2">
+<div class="bg-surface-container-low p-2.5 rounded border border-outline-variant/30">
+<div class="text-[11px] font-label-sm text-on-surface-variant uppercase">Distribución Género</div>
+<div class="text-body-md font-bold text-primary mt-0.5">76% M <span class="text-on-surface-variant font-normal text-xs">/ 24% F</span></div>
+<div class="text-[10px] text-on-surface-variant mt-0.5">Total DNI verificados</div>
+</div>
+<div class="bg-surface-container-low p-2.5 rounded border border-outline-variant/30">
+<div class="text-[11px] font-label-sm text-error uppercase font-bold">Reincidentes</div>
+<div class="text-body-md font-bold text-error mt-0.5">19 Casos <span class="text-[11px] text-on-surface-variant font-normal">(13.3%)</span></div>
+<div class="text-[10px] text-on-surface-variant mt-0.5">Inhabilitación remitida</div>
+</div>
+</div>
+</div>
+<div class="mt-4 pt-3 border-t border-surface-container text-[11px] text-on-surface-variant">
+          Datos cruzados con Sistema Provincial de Antecedentes de Tránsito.
+        </div>
+</div>
+</div>
+</div>
+<!-- TAB PANEL 3: GUARDIAS Y RENDIMIENTO DE EFECTIVOS POLICIALES -->
+<div class="tab-content hidden space-y-pad-lg" id="tab-panel-guardias">
+<section class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg shadow-sm space-y-pad-lg">
+<!-- Header with title and guard tabs -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-3 border-b border-surface-container-high gap-3">
+<div class="flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-[26px] mt-0.5">shield_person</span>
+<div>
+<div class="flex items-center gap-2">
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-secondary">Régimen Operativo 24/48hs</span>
+<span class="bg-primary text-on-primary text-[10px] font-label-sm px-1.5 py-0.5 rounded font-bold uppercase">Cuenta Institucional</span>
+</div>
+<h3 class="text-headline-md font-headline-md text-primary">Estadísticas por Guardia de Turno y Efectivos</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Monitoreo de rendimiento contravencional por dotación y efectivos policiales actuantes.</p>
+</div>
+</div>
+<!-- Guards selector tabs -->
+<div class="inline-flex flex-wrap rounded border border-outline-variant bg-surface-container-low p-0.5 text-xs font-label-sm self-start md:self-auto">
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-primary transition-colors">Todas</button>
+<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-bold shadow-xs flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+            Guardia A
+          </button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-primary transition-colors">Guardia B</button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-primary transition-colors">Guardia C</button>
+<button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-primary transition-colors">Guardia D</button>
+</div>
+</div>
+<!-- 4 Cards Comparativas por Guardia -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-pad-md">
+<!-- Guardia A (Activa / Destacada) -->
+<div class="p-3 rounded border-2 border-secondary bg-surface-container-low/60 relative flex flex-col justify-between shadow-xs">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-xs bg-primary text-on-primary px-1.5 py-0.5 rounded font-code-num">GDA A</span>
+<span class="text-xs font-bold text-primary">Of. Subinsp. Gómez L.</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-[18px]">star</span>
+</div>
+<div class="mt-2">
+<div class="flex items-baseline justify-between">
+<span class="text-headline-md font-code-num font-bold text-primary">42 <span class="text-xs font-normal text-on-surface-variant">actas</span></span>
+<span class="font-code-num text-xs font-bold text-secondary">29.5%</span>
+</div>
+<div class="text-body-sm font-code-num font-bold text-secondary mt-0.5">$1.150.000 <span class="text-[10px] font-normal text-on-surface-variant">recaudados</span></div>
+</div>
+<div class="mt-3 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[11px] text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-outline">badge</span> 5 Efectivos</span>
+<span class="text-secondary font-semibold">Turno Activo</span>
+</div>
+</div>
+<!-- Guardia B -->
+<div class="p-3 rounded border border-outline-variant bg-surface-container-lowest flex flex-col justify-between shadow-xs">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-xs bg-surface-container-high text-primary px-1.5 py-0.5 rounded font-code-num">GDA B</span>
+<span class="text-xs font-semibold text-primary">Sgto. 1° Bazán S.</span>
+</div>
+<span class="text-outline text-[11px] font-label-sm">4 Efect.</span>
+</div>
+<div class="mt-2">
+<div class="flex items-baseline justify-between">
+<span class="text-headline-md font-code-num font-bold text-primary">38 <span class="text-xs font-normal text-on-surface-variant">actas</span></span>
+<span class="font-code-num text-xs font-bold text-primary">26.8%</span>
+</div>
+<div class="text-body-sm font-code-num font-bold text-primary mt-0.5">$1.020.000 <span class="text-[10px] font-normal text-on-surface-variant">recaudados</span></div>
+</div>
+<div class="mt-3 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[11px] text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-outline">schedule</span> 48hs franco</span>
+<span class="font-semibold text-on-surface-variant">Conciliado</span>
+</div>
+</div>
+<!-- Guardia C -->
+<div class="p-3 rounded border border-outline-variant bg-surface-container-lowest flex flex-col justify-between shadow-xs">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-xs bg-surface-container-high text-primary px-1.5 py-0.5 rounded font-code-num">GDA C</span>
+<span class="text-xs font-semibold text-primary">Of. Ayte. Delgado M.</span>
+</div>
+<span class="text-outline text-[11px] font-label-sm">5 Efect.</span>
+</div>
+<div class="mt-2">
+<div class="flex items-baseline justify-between">
+<span class="text-headline-md font-code-num font-bold text-primary">35 <span class="text-xs font-normal text-on-surface-variant">actas</span></span>
+<span class="font-code-num text-xs font-bold text-primary">24.6%</span>
+</div>
+<div class="text-body-sm font-code-num font-bold text-primary mt-0.5">$940.000 <span class="text-[10px] font-normal text-on-surface-variant">recaudados</span></div>
+</div>
+<div class="mt-3 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[11px] text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-outline">schedule</span> En servicio</span>
+<span class="font-semibold text-on-surface-variant">Conciliado</span>
+</div>
+</div>
+<!-- Guardia D -->
+<div class="p-3 rounded border border-outline-variant bg-surface-container-lowest flex flex-col justify-between shadow-xs">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-xs bg-surface-container-high text-primary px-1.5 py-0.5 rounded font-code-num">GDA D</span>
+<span class="text-xs font-semibold text-primary">Sgto. Romero G.</span>
+</div>
+<span class="text-outline text-[11px] font-label-sm">4 Efect.</span>
+</div>
+<div class="mt-2">
+<div class="flex items-baseline justify-between">
+<span class="text-headline-md font-code-num font-bold text-primary">27 <span class="text-xs font-normal text-on-surface-variant">actas</span></span>
+<span class="font-code-num text-xs font-bold text-primary">19.1%</span>
+</div>
+<div class="text-body-sm font-code-num font-bold text-primary mt-0.5">$730.000 <span class="text-[10px] font-normal text-on-surface-variant">recaudados</span></div>
+</div>
+<div class="mt-3 pt-2 border-t border-outline-variant/40 flex items-center justify-between text-[11px] text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px] text-outline">schedule</span> Próx. ingreso</span>
+<span class="font-semibold text-on-surface-variant">Conciliado</span>
+</div>
+</div>
+</div>
+<!-- Gráfico de Contribución por Guardia -->
+<div class="bg-surface-container-low p-3.5 rounded border border-outline-variant/40">
+<div class="flex flex-wrap justify-between items-center text-xs font-label-sm mb-2 gap-1">
+<span class="text-primary font-bold uppercase">Aporte Porcentual al Total Mensual (142 Actas emitidas)</span>
+<span class="font-code-num text-secondary font-bold">100% Cobertura Jurisdiccional</span>
+</div>
+<div class="w-full h-3 rounded flex overflow-hidden border border-outline-variant/50">
+<div class="bg-primary h-full hover:opacity-90 transition-opacity" style="width: 29.5%;" title="Guardia A: 29.5%"></div>
+<div class="bg-secondary h-full hover:opacity-90 transition-opacity" style="width: 26.8%;" title="Guardia B: 26.8%"></div>
+<div class="bg-secondary-container h-full hover:opacity-90 transition-opacity" style="width: 24.6%;" title="Guardia C: 24.6%"></div>
+<div class="bg-outline-variant h-full hover:opacity-90 transition-opacity" style="width: 19.1%;" title="Guardia D: 19.1%"></div>
+</div>
+<div class="flex flex-wrap items-center justify-between text-[11px] text-on-surface-variant mt-2 font-label-sm gap-2">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-primary"></span> Guardia A (29.5%)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-secondary"></span> Guardia B (26.8%)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-secondary-container"></span> Guardia C (24.6%)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-xs bg-outline-variant"></span> Guardia D (19.1%)</span>
+</div>
+</div>
+<!-- Desglose Operativo por Efectivo Policial (Personal actuante Guardia A) -->
+<div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-2 mb-3 border-b border-surface-container-high gap-1.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">badge</span>
+<div>
+<h4 class="text-headline-sm font-headline-sm font-bold text-primary">Desglose Individual por Efectivo Policial (Guardia A)</h4>
+<span class="text-[11px] text-on-surface-variant">Registro nominal del talonario y comprobantes remitidos al Dpto. de Rentas</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-code-num text-xs bg-surface-container-high px-2 py-0.5 rounded border border-outline-variant font-bold text-primary">Usuario Turno: DSV-GDA-A</span>
+<span class="text-[11px] text-secondary font-bold font-label-sm uppercase">5 Efectivos Actuantes</span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-body-sm border-collapse min-w-[620px]">
+<thead>
+<tr class="border-b border-outline-variant font-label-sm text-[11px] uppercase tracking-wider text-on-surface-variant bg-surface-container-low/60">
+<th class="py-2 px-3">Jerarquía y Efectivo</th>
+<th class="py-2 px-3">Legajo Policial (LP)</th>
+<th class="py-2 px-3 text-center">Rol Guardia</th>
+<th class="py-2 px-3 text-center">Actas Labradas</th>
+<th class="py-2 px-3">Infracciones Prevalentes</th>
+<th class="py-2 px-3 text-right">Monto Generado</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm">
+<!-- 1. Gómez Lucas -->
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                  Of. Subinsp. Gómez, Lucas
+                </td>
+<td class="py-2.5 px-3 font-code-num text-xs text-on-surface-variant">LP 42.110</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[10px] font-label-sm bg-primary text-on-primary font-bold uppercase">Jefe de Guardia</span>
+</td>
+<td class="py-2.5 px-3 text-center font-code-num font-bold text-primary">12 <span class="text-[10px] text-on-surface-variant font-normal">(28.6%)</span></td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] bg-error-container/20 text-error px-1.5 py-0.5 rounded border border-error/20 font-medium mr-1">
+<span class="material-symbols-outlined text-[12px]">emergency</span> Alcoholemia (+)
+                  </span>
+<span class="inline-block text-[11px] text-on-surface-variant">Fuga / Desobediencia</span>
+</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$340.000</td>
+</tr>
+<!-- 2. Vega Rodrigo -->
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                  Cabo 1° Vega, Rodrigo
+                </td>
+<td class="py-2.5 px-3 font-code-num text-xs text-on-surface-variant">LP 48.920</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[10px] font-label-sm bg-surface-container-high text-primary font-bold uppercase">Puesto Caminero</span>
+</td>
+<td class="py-2.5 px-3 text-center font-code-num font-bold text-primary">10 <span class="text-[10px] text-on-surface-variant font-normal">(23.8%)</span></td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] bg-surface-container text-primary px-1.5 py-0.5 rounded border border-outline-variant/40 font-medium mr-1">
+<span class="material-symbols-outlined text-[12px]">two_wheeler</span> Sin Casco Protector
+                  </span>
+<span class="inline-block text-[11px] text-on-surface-variant">Alcoholemia</span>
+</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$280.000</td>
+</tr>
+<!-- 3. Morales Fernando -->
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+                  Agente Morales, Fernando
+                </td>
+<td class="py-2.5 px-3 font-code-num text-xs text-on-surface-variant">LP 53.415</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[10px] font-label-sm bg-surface-container-high text-primary font-bold uppercase">Móvil Cerrojo</span>
+</td>
+<td class="py-2.5 px-3 text-center font-code-num font-bold text-primary">9 <span class="text-[10px] text-on-surface-variant font-normal">(21.4%)</span></td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] bg-surface-container text-primary px-1.5 py-0.5 rounded border border-outline-variant/40 font-medium mr-1">
+<span class="material-symbols-outlined text-[12px]">description</span> Falta Seguro / Cédula
+                  </span>
+<span class="inline-block text-[11px] text-on-surface-variant">Sin Casco</span>
+</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$245.000</td>
+</tr>
+<!-- 4. Carrizo Daiana -->
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                  Agente Carrizo, Daiana
+                </td>
+<td class="py-2.5 px-3 font-code-num text-xs text-on-surface-variant">LP 55.102</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[10px] font-label-sm bg-surface-container-high text-primary font-bold uppercase">Control Acceso</span>
+</td>
+<td class="py-2.5 px-3 text-center font-code-num font-bold text-primary">6 <span class="text-[10px] text-on-surface-variant font-normal">(14.3%)</span></td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] bg-surface-container text-primary px-1.5 py-0.5 rounded border border-outline-variant/40 font-medium mr-1">
+<span class="material-symbols-outlined text-[12px]">no_crash</span> Cinturón de Seguridad
+                  </span>
+<span class="inline-block text-[11px] text-on-surface-variant">Licencia Vencida</span>
+</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$160.000</td>
+</tr>
+<!-- 5. Nieto Marcos -->
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+                  Cabo Nieto, Marcos
+                </td>
+<td class="py-2.5 px-3 font-code-num text-xs text-on-surface-variant">LP 50.312</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[10px] font-label-sm bg-surface-container-high text-primary font-bold uppercase">Patrulla Rutas</span>
+</td>
+<td class="py-2.5 px-3 text-center font-code-num font-bold text-primary">5 <span class="text-[10px] text-on-surface-variant font-normal">(11.9%)</span></td>
+<td class="py-2.5 px-3">
+<span class="inline-flex items-center gap-1 text-[11px] bg-surface-container text-primary px-1.5 py-0.5 rounded border border-outline-variant/40 font-medium mr-1">
+<span class="material-symbols-outlined text-[12px]">volume_up</span> Caño Escape Libre
+                  </span>
+<span class="inline-block text-[11px] text-on-surface-variant">Sin Chapa Patente</span>
+</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$125.000</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t-2 border-primary font-semibold bg-surface-container-low/30">
+<td class="py-2.5 px-3 text-primary uppercase font-label-sm" colspan="3">Subtotal Guardia A Consolidado (5 Efectivos)</td>
+<td class="py-2.5 px-3 text-center font-code-num font-bold text-primary">42 Actas</td>
+<td class="py-2.5 px-3 text-xs text-on-surface-variant">100% Carga en Sistema Municipal</td>
+<td class="py-2.5 px-3 text-right font-code-num font-extrabold text-base text-primary">$1.150.000</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+</section>
+</div>
+<!-- TAB PANEL 4: PUESTOS CAMINEROS Y RENDICIÓN OPERATIVA -->
+<div class="tab-content hidden space-y-pad-lg" id="tab-panel-puestos">
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-pad-lg shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-surface-container-high gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[24px]">verified</span>
+<div>
+<h3 class="text-headline-md font-headline-md text-primary">Rendición Operativa por Puesto de Control</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Jurisdicción Departamento Capayán - Catamarca (Huillapima, Chumbicha, Miraflores, San Pedro).</p>
+</div>
+</div>
+<span class="text-xs font-code-num bg-surface-container-low px-2.5 py-1 rounded border border-outline-variant font-bold text-primary self-start sm:self-auto">
+          3 Puestos Fijos • 1 Brigada Móvil
+        </span>
+</div>
+<div class="overflow-x-auto mt-4">
+<table class="w-full text-left text-body-sm border-collapse min-w-[620px]">
+<thead>
+<tr class="border-b border-outline-variant font-label-sm text-[11px] uppercase tracking-wider text-on-surface-variant bg-surface-container-low/60">
+<th class="py-2.5 px-3">Puesto / Zona Operativa</th>
+<th class="py-2.5 px-3">Actas Labradas</th>
+<th class="py-2.5 px-3">Alcoholemias (+)</th>
+<th class="py-2.5 px-3">Retenciones Rodados</th>
+<th class="py-2.5 px-3 text-right">Recaudado Estimado</th>
+<th class="py-2.5 px-3 text-center">Estado Auditoría</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-body-sm">
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                Puesto Caminero Nueva Coneta (Ruta Nac. 38)
+              </td>
+<td class="py-2.5 px-3 font-code-num">64</td>
+<td class="py-2.5 px-3 font-code-num text-error font-semibold">18</td>
+<td class="py-2.5 px-3 font-code-num">14</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$1.780.000</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-label-sm bg-surface-container-high text-primary font-bold">Rendido</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                Acceso Huillapima Centro (Av. Principal)
+              </td>
+<td class="py-2.5 px-3 font-code-num">48</td>
+<td class="py-2.5 px-3 font-code-num text-error font-semibold">12</td>
+<td class="py-2.5 px-3 font-code-num">11</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$1.220.000</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-label-sm bg-surface-container-high text-primary font-bold">Rendido</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                Ruta Prov. N° 14 - San Pablo / Miraflores
+              </td>
+<td class="py-2.5 px-3 font-code-num">22</td>
+<td class="py-2.5 px-3 font-code-num text-error font-semibold">5</td>
+<td class="py-2.5 px-3 font-code-num">3</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$580.000</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-label-sm bg-surface-container-high text-primary font-bold">Rendido</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/40">
+<td class="py-2.5 px-3 font-semibold text-primary flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                Operativos Nocturnos Móviles (Finde)
+              </td>
+<td class="py-2.5 px-3 font-code-num">8</td>
+<td class="py-2.5 px-3 font-code-num text-error font-semibold">2</td>
+<td class="py-2.5 px-3 font-code-num">1</td>
+<td class="py-2.5 px-3 text-right font-code-num font-bold text-primary">$260.000</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-block px-2 py-0.5 rounded text-[11px] font-label-sm bg-tertiary-fixed text-on-tertiary-fixed-variant font-bold">En Conciliación</span>
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr class="border-t-2 border-primary font-semibold bg-surface-container-low/30">
+<td class="py-2.5 px-3 text-primary uppercase font-label-sm">Total General Consolidado</td>
+<td class="py-2.5 px-3 font-code-num font-bold">142</td>
+<td class="py-2.5 px-3 font-code-num font-bold text-error">37</td>
+<td class="py-2.5 px-3 font-code-num font-bold">29</td>
+<td class="py-2.5 px-3 text-right font-code-num text-primary font-extrabold text-base">$3.840.000</td>
+<td class="py-2.5 px-3 text-center text-xs text-secondary font-bold">98.2% Ingresado</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+</div>
+<!-- LEGAL CITATION BOX (Styled after carbon copy template) -->
+<div class="bg-surface-container-low border border-outline-variant/60 rounded p-pad-md flex items-start gap-3 text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-[22px] shrink-0 mt-0.5">gavel</span>
+<div class="text-body-sm font-body-sm leading-relaxed">
+<p class="font-semibold text-primary">Disposición Municipal y Plazos Legales:</p>
+<p class="text-xs mt-0.5">
+        Conforme al Art. 65° y 70° de la Ordenanza N° 385/12, el infractor cuenta con un plazo de tres (3) días hábiles desde la emisión del acta de comprobación para presentar descargo o comparecer voluntariamente ante el Departamento de Rentas Municipal. Los contribuyentes que accedan al pago voluntario dentro del plazo gozan de un beneficio del 40% de descuento directo en el importe liquidado.
+      </p>
+</div>
+</div>
+</main>
+<!-- BOTTOM NAVBAR (Shared Component Anchor) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-pad-sm py-pad-xs bg-surface-container-lowest text-primary shadow-md">
+<!-- Item 1: Nueva Acta (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-pad-md py-pad-xs hover:bg-surface-container hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[24px]">assignment_add</span>
+<span class="text-label-sm font-label-sm">Nueva Acta</span>
+</button>
+<!-- Item 2: Actas (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-pad-md py-pad-xs hover:bg-surface-container hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[24px]">verified</span>
+<span class="text-label-sm font-label-sm">Actas</span>
+</button>
+<!-- Item 3: Historial (Inactive) -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant px-pad-md py-pad-xs hover:bg-surface-container hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[24px]">history</span>
+<span class="text-label-sm font-label-sm">Historial</span>
+</button>
+<!-- Item 4: Estadísticas (ACTIVE) -->
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary rounded-lg px-pad-md py-pad-xs shadow-sm active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: &quot;FILL&quot; 1;">bar_chart</span>
+<span class="text-label-sm font-label-sm font-bold">Estadísticas</span>
+</button>
+</nav>
+<!-- CLIENT-SIDE SCRIPT FOR TAB SWITCHING -->
+<script>
+  function switchTab(tabId) {
+    // Hide all tab panels
+    const panels = document.querySelectorAll('.tab-content');
+    panels.forEach(panel => {
+      panel.classList.add('hidden');
+    });
+
+    // Show target tab panel
+    const targetPanel = document.getElementById('tab-panel-' + tabId);
+    if (targetPanel) {
+      targetPanel.classList.remove('hidden');
+    }
+
+    // Reset button states
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach(btn => {
+      btn.className = "tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1.5 sm:px-3 rounded-lg text-xs font-label-md font-bold transition-all text-on-surface-variant hover:text-primary hover:bg-surface-container";
+    });
+
+    // Set active button style
+    const activeBtn = document.getElementById('tab-btn-' + tabId);
+    if (activeBtn) {
+      activeBtn.className = "tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 px-1.5 sm:px-3 rounded-lg text-xs font-label-md font-bold transition-all bg-primary-container text-on-primary shadow-xs";
+    }
+  }
+</script>
+
+
+</body></html>
