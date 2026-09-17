@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { InstalarApp } from "@/components/ui/InstalarApp";
 import { LoginForm } from "./LoginForm";
 
 export default function LoginPage() {
@@ -46,6 +47,8 @@ export default function LoginPage() {
 
           <LoginForm />
         </div>
+
+        <InstalarApp />
 
         <div className="bg-surface-container p-pad-md rounded border border-outline-variant text-body-sm text-on-surface-variant flex gap-2">
           <span className="material-symbols-outlined text-secondary shrink-0">

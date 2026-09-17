@@ -87,11 +87,15 @@ fueron la referencia visual — la app real vive en `src/`.
 
 ## Pendiente / a decisión del equipo
 
+- Revisar y ajustar los montos base de multas del catálogo de infracciones
+  (los cargados son valores de referencia, no la tarifa oficial de la
+  ordenanza).
+- Cargar los agentes y puestos camineros reales (hoy solo hay 3 legajos de
+  prueba, ver tabla más arriba).
+- Pantalla de administración para altas de agentes/puestos — hoy se hace a
+  mano editando `prisma/seed.ts` y volviendo a correr `npx prisma db seed`.
 - No hay modo offline/PWA — requiere conexión a internet (decisión tomada al
   planificar el proyecto, para mantener el alcance manejable).
-- El alta de nuevos agentes/puestos hoy se hace editando `prisma/seed.ts` y
-  volviendo a correr `npx prisma db seed` — no hay pantalla de administración
-  todavía.
 - Sin tests automatizados.
 
 Cloudinary ya está configurado y probado (subida de fotos y firmas

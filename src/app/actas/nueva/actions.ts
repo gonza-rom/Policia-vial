@@ -26,16 +26,43 @@ export async function crearActa(formData: FormData) {
   if (!guardia) redirect("/guardia");
 
   const texto = (campo: string) => String(formData.get(campo) ?? "").trim();
-  const numero = (campo: string) => {
+  // Numérico no-negativo: ante un valor inválido o negativo, se descarta
+  // (null) en vez de guardar NaN o un número fuera de rango.
+  const numero = (campo: string, max?: number) => {
     const v = formData.get(campo);
-    return v ? Number(v) : null;
+    if (!v) return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0) return null;
+    if (max != null && n > max) return null;
+    return n;
   };
 
   const infraccionIds = formData.getAll("infracciones").map(String);
   const detalleOtra = texto("detalleOtraInfraccion");
-  const alcoholemiaGraduacion = numero("alcoholemiaGraduacion");
+  const alcoholemiaGraduacion = numero("alcoholemiaGraduacion", 10);
 
-  const montoBase = numero("montoBase") ?? 0;
+  const catalogoSeleccionado = infraccionIds.length
+    ? await prisma.infraccionCatalogo.findMany({
+        where: { id: { in: infraccionIds } },
+        select: { montoBase: true },
+      })
+    : [];
+  const montoCatalogo = catalogoSeleccionado.reduce(
+    (acc, i) => acc + Number(i.montoBase),
+    0,
+  );
+
+  // El agente puede ajustar el monto a mano (discrecionalidad al labrar el
+  // acta), pero si el valor no es válido se usa el del catálogo como
+  // respaldo, y toda diferencia queda registrada para auditoría posterior.
+  const montoBaseIngresado = numero("montoBase");
+  const montoBase = montoBaseIngresado ?? montoCatalogo;
+  if (montoBaseIngresado !== null && montoBaseIngresado !== montoCatalogo) {
+    console.warn(
+      `[auditoria-monto] agente=${agente.legajo} infracciones=[${infraccionIds.join(",")}] montoCatalogo=${montoCatalogo} montoIngresado=${montoBaseIngresado}`,
+    );
+  }
+
   const porcentajeDescuento = 40;
   const montoConDescuento = Math.round(montoBase * (1 - porcentajeDescuento / 100));
 
@@ -53,7 +80,7 @@ export async function crearActa(formData: FormData) {
 
       conductorNombre: texto("conductorNombre"),
       conductorDni: texto("conductorDni"),
-      conductorEdad: numero("conductorEdad"),
+      conductorEdad: numero("conductorEdad", 120),
       conductorDomicilio: texto("conductorDomicilio") || null,
       conductorLicenciaNro: texto("conductorLicenciaNro") || null,
       conductorLicenciaClase: texto("conductorLicenciaClase") || null,
