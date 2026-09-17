@@ -17,7 +17,16 @@ export async function iniciarSesion(
     return { error: "Ingresá tu legajo y contraseña." };
   }
 
-  const agente = await prisma.agente.findUnique({ where: { legajo } });
+  let agente;
+  try {
+    agente = await prisma.agente.findUnique({ where: { legajo } });
+  } catch (err) {
+    console.error("[login] No se pudo conectar con la base de datos:", err);
+    return {
+      error:
+        "No se pudo conectar con la base de datos. Avisá al administrador (revisar DATABASE_URL / DIRECT_URL en las variables de entorno).",
+    };
+  }
 
   if (!agente || !agente.activo) {
     return { error: "Legajo no encontrado o usuario inactivo." };
