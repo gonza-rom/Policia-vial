@@ -87,11 +87,13 @@ fueron la referencia visual — la app real vive en `src/`.
 
 ## Pendiente / a decisión del equipo
 
-- **Completar las credenciales de Cloudinary** en `.env` para que las fotos y
-  firmas se suban de verdad (el resto de la app funciona sin esto).
 - No hay modo offline/PWA — requiere conexión a internet (decisión tomada al
   planificar el proyecto, para mantener el alcance manejable).
 - El alta de nuevos agentes/puestos hoy se hace editando `prisma/seed.ts` y
   volviendo a correr `npx prisma db seed` — no hay pantalla de administración
   todavía.
 - Sin tests automatizados.
+
+Cloudinary ya está configurado y probado (subida de fotos y firmas
+funcionando) — solo falta que cada quien complete sus propias credenciales en
+`.env` si levanta el proyecto de cero.
