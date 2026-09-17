@@ -1,0 +1,188 @@
+// Prisma schema — Sistema de Actas Viales, Huillapima (Policía de Catamarca)
+// docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum RolAgente {
+  AGENTE
+  JEFE
+  ADMIN
+}
+
+enum EstadoGuardia {
+  ACTIVA
+  CERRADA
+}
+
+enum CategoriaInfraccion {
+  DOCUMENTACION
+  ESTADO_RODADO
+  ALCOHOLEMIA_CONDUCTA
+  OTRA
+}
+
+enum GravedadInfraccion {
+  LEVE
+  GRAVE
+  GRAVISIMA
+}
+
+enum TipoRodado {
+  AUTO
+  MOTO
+  PICKUP
+  CARGA
+}
+
+enum TipoRetencion {
+  NINGUNA
+  LICENCIA
+  VEHICULO
+  LICENCIA_Y_VEHICULO
+}
+
+enum EstadoActa {
+  PENDIENTE_FIRMA
+  FIRMADA
+  REMITIDA_RENTAS
+  ANULADA
+}
+
+model Agente {
+  id             String    @id @default(cuid())
+  legajo         String    @unique
+  authEmail      String    @unique
+  nombreApellido String
+  grado          String?
+  rol            RolAgente @default(AGENTE)
+  activo         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+
+  guardias Guardia[]
+  actas    Acta[]
+}
+
+model Puesto {
+  id        String   @id @default(cuid())
+  nombre    String
+  kmRuta    String?
+  ubicacion String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  guardias Guardia[]
+  actas    Acta[]
+}
+
+model Guardia {
+  id          String        @id @default(cuid())
+  agenteId    String
+  agente      Agente        @relation(fields: [agenteId], references: [id])
+  puestoId    String
+  puesto      Puesto        @relation(fields: [puestoId], references: [id])
+  turnoInicio DateTime      @default(now())
+  turnoFin    DateTime?
+  horaCierre  DateTime?
+  estado      EstadoGuardia @default(ACTIVA)
+  notasCierre String?       @db.Text
+  createdAt   DateTime      @default(now())
+
+  actas Acta[]
+
+  @@index([agenteId, estado])
+}
+
+model InfraccionCatalogo {
+  id          String              @id @default(cuid())
+  categoria   CategoriaInfraccion
+  descripcion String
+  detalle     String?
+  gravedad    GravedadInfraccion
+  montoBase   Decimal             @db.Decimal(12, 2)
+  orden       Int                 @default(0)
+  activo      Boolean             @default(true)
+
+  actas ActaInfraccion[]
+}
+
+model Acta {
+  id     String @id @default(cuid())
+  numero Int    @unique @default(autoincrement())
+
+  guardiaId String
+  guardia   Guardia @relation(fields: [guardiaId], references: [id])
+  agenteId  String
+  agente    Agente  @relation(fields: [agenteId], references: [id])
+  puestoId  String
+  puesto    Puesto  @relation(fields: [puestoId], references: [id])
+
+  fecha        DateTime @default(now())
+  lugarControl String?
+
+  // Datos del conductor
+  conductorNombre        String
+  conductorDni           String
+  conductorEdad          Int?
+  conductorDomicilio     String?
+  conductorLicenciaNro   String?
+  conductorLicenciaClase String?
+  conductorExpedidoPor   String?
+
+  // Datos del vehículo
+  vehiculoDominio     String
+  vehiculoMarcaModelo String?
+  vehiculoTipo        TipoRodado
+  vehiculoRemitidoA   String?
+
+  otrosDatosAmpliatorios String? @db.Text
+
+  // Liquidación
+  montoBase           Decimal @db.Decimal(12, 2)
+  porcentajeDescuento Decimal @default(40) @db.Decimal(5, 2)
+  montoConDescuento   Decimal @db.Decimal(12, 2)
+
+  // Evidencia y firmas
+  fotoVehiculoUrl         String?
+  fotoDocumentoUrl        String?
+  firmaInfractorUrl       String?
+  firmaActuanteUrl        String?
+  infractorSeNiegaAFirmar Boolean @default(false)
+
+  // Retención preventiva
+  retencionPreventiva Boolean       @default(false)
+  tipoRetencion       TipoRetencion @default(NINGUNA)
+
+  // Alcoholemia
+  alcoholemiaGraduacion Decimal? @db.Decimal(4, 2)
+
+  estado EstadoActa @default(PENDIENTE_FIRMA)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  infracciones ActaInfraccion[]
+
+  @@index([fecha])
+  @@index([estado])
+  @@index([guardiaId])
+  @@index([vehiculoDominio])
+  @@index([conductorDni])
+}
+
+model ActaInfraccion {
+  id               String             @id @default(cuid())
+  actaId           String
+  acta             Acta               @relation(fields: [actaId], references: [id], onDelete: Cascade)
+  infraccionId     String
+  infraccion       InfraccionCatalogo @relation(fields: [infraccionId], references: [id])
+  detalleOperativo String?
+
+  @@unique([actaId, infraccionId])
+}
