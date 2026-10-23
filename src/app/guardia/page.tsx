@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
+import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -16,7 +16,7 @@ export default async function GuardiaPage() {
     return (
       <>
         <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-        <main className="flex-1 max-w-2xl w-full mx-auto px-pad-lg py-pad-xl space-y-4">
+        <main className="flex-1 max-w-2xl w-full mx-auto px-pad-lg pt-pad-xl pb-24 space-y-4">
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-xl text-center space-y-4">
             <span className="material-symbols-outlined text-5xl text-secondary">
               shield
@@ -46,12 +46,21 @@ export default async function GuardiaPage() {
               </Boton>
             </form>
           </div>
+          {esJefe(agente) && (
+            <TarjetaAccion
+              href="/agentes"
+              icono="groups"
+              titulo="Mis Agentes"
+              descripcion="Alta de usuarios, guardias y actas de tu personal."
+            />
+          )}
           <form action={cerrarSesion}>
             <Boton type="submit" variante="fantasma" fullWidth icono="logout">
               Cerrar sesión
             </Boton>
           </form>
         </main>
+        <BottomNav verAgentes={esJefe(agente)} />
       </>
     );
   }
@@ -192,6 +201,15 @@ export default async function GuardiaPage() {
               badge="Mensual"
               className="sm:col-span-2"
             />
+            {esJefe(agente) && (
+              <TarjetaAccion
+                href="/agentes"
+                icono="groups"
+                titulo="Mis Agentes"
+                descripcion="Alta de usuarios, guardias y actas de tu personal."
+                className="sm:col-span-2"
+              />
+            )}
           </div>
         </section>
 
@@ -201,7 +219,7 @@ export default async function GuardiaPage() {
           </Boton>
         </form>
       </main>
-      <BottomNav />
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

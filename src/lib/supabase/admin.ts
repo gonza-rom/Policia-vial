@@ -16,3 +16,18 @@ export function createAdminClient() {
     },
   );
 }
+
+/** Busca el usuario de Supabase Auth por email recorriendo todas las páginas. */
+export async function buscarUsuarioAuthPorEmail(email: string) {
+  const admin = createAdminClient();
+  for (let page = 1; ; page++) {
+    const { data, error } = await admin.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+    if (error) throw error;
+    const usuario = data.users.find((u) => u.email === email);
+    if (usuario) return usuario;
+    if (data.users.length < 200) return null;
+  }
+}

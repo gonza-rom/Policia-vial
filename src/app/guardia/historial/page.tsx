@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
+import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -37,7 +37,7 @@ export default async function HistorialGuardiaPage() {
           </p>
           <ListaGuardiasCerradas guardias={guardiasRecientes} />
         </main>
-        <BottomNav />
+        <BottomNav verAgentes={esJefe(agente)} />
       </>
     );
   }
@@ -174,7 +174,7 @@ export default async function HistorialGuardiaPage() {
 
         <ListaGuardiasCerradas guardias={guardiasRecientes} />
       </main>
-      <BottomNav />
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

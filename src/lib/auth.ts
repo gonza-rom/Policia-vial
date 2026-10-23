@@ -28,9 +28,36 @@ export async function getAgenteActual() {
   });
 
   if (!agente || !agente.activo) {
-    redirect("/login");
+    // Hay sesión de Supabase pero el agente fue dado de baja: se cierra la
+    // sesión en /salir (un Server Component no puede borrar cookies), si no
+    // el proxy rebotaría /login -> /guardia en un bucle.
+    redirect("/salir");
   }
 
+  return agente;
+}
+
+export type AgenteActual = Awaited<ReturnType<typeof getAgenteActual>>;
+
+export function esJefe(agente: Pick<AgenteActual, "rol">) {
+  return agente.rol === "JEFE" || agente.rol === "ADMIN";
+}
+
+/** Para las pantallas de gestión de agentes: solo JEFE o ADMIN. */
+export async function getJefeActual() {
+  const agente = await getAgenteActual();
+  if (!esJefe(agente)) redirect("/guardia");
+  return agente;
+}
+
+/**
+ * Busca un agente que el jefe puede gestionar: un JEFE solo a los suyos,
+ * un ADMIN a cualquiera (menos a sí mismo).
+ */
+export async function getAgenteACargo(jefe: AgenteActual, agenteId: string) {
+  const agente = await prisma.agente.findUnique({ where: { id: agenteId } });
+  if (!agente || agente.id === jefe.id) return null;
+  if (jefe.rol !== "ADMIN" && agente.jefeId !== jefe.id) return null;
   return agente;
 }
 

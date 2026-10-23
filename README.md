@@ -81,6 +81,11 @@ fueron la referencia visual — la app real vive en `src/`.
   infractor y del actuante, opción "se niega a firmar", cierre del acta.
 - `/actas` → listado y búsqueda de actas del turno activo.
 - `/guardia/historial` → parte diario del turno y cierre de guardia.
+- `/agentes` → solo JEFE/ADMIN: listado del personal a cargo (en guardia,
+  actas del mes, pendientes de firma), alta de agentes nuevos con su usuario
+  de acceso, edición de datos, restablecer contraseña, dar de baja/reactivar
+  y cerrar la guardia de un agente. Un JEFE ve solo a los agentes que dio de
+  alta; un ADMIN ve a todos.
 - `/estadisticas` → recaudación por día/semana/mes, montos por gravedad,
   ranking de infracciones, vehículos involucrados y edad de los infractores,
   navegable por mes.
@@ -92,8 +97,9 @@ fueron la referencia visual — la app real vive en `src/`.
   ordenanza).
 - Cargar los agentes y puestos camineros reales (hoy solo hay 3 legajos de
   prueba, ver tabla más arriba).
-- Pantalla de administración para altas de agentes/puestos — hoy se hace a
-  mano editando `prisma/seed.ts` y volviendo a correr `npx prisma db seed`.
+- Pantalla de administración para altas de puestos — hoy se hace a mano
+  editando `prisma/seed.ts` y volviendo a correr `npx prisma db seed` (los
+  agentes ya se dan de alta desde `/agentes`).
 - No hay modo offline/PWA — requiere conexión a internet (decisión tomada al
   planificar el proyecto, para mantener el alcance manejable).
 - Sin tests automatizados.

@@ -3,16 +3,16 @@ import { Public_Sans, Space_Grotesk } from "next/font/google";
 import { RegistrarServiceWorker } from "@/components/ui/RegistrarServiceWorker";
 import "./globals.css";
 
+// Fuentes variables (sin lista de pesos): con pesos sueltos Google devuelve
+// URLs /l/font?kit=… que Turbopack no puede resolver y rompe el build.
 const publicSans = Public_Sans({
   variable: "--font-public-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -60,7 +60,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-on-surface font-sans">
+      {/* Extensiones como ColorZilla agregan atributos al <body> antes de
+          hidratar; esto silencia solo ese aviso, no el de los hijos. */}
+      <body
+        className="min-h-full flex flex-col bg-background text-on-surface font-sans"
+        suppressHydrationWarning
+      >
         <RegistrarServiceWorker />
         {children}
       </body>

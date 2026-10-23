@@ -2,7 +2,13 @@ import Image from "next/image";
 import { InstalarApp } from "@/components/ui/InstalarApp";
 import { LoginForm } from "./LoginForm";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ baja?: string }>;
+}) {
+  const { baja } = await searchParams;
+
   return (
     <main className="flex-1 flex flex-col items-center justify-center bg-background px-pad-lg py-pad-2xl">
       <div className="w-full max-w-md space-y-4">
@@ -44,6 +50,12 @@ export default function LoginPage() {
               Ord. N° 385/12
             </span>
           </div>
+
+          {baja && (
+            <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
+              Tu usuario fue dado de baja. Consultá con tu jefe a cargo.
+            </p>
+          )}
 
           <LoginForm />
         </div>

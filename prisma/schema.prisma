@@ -65,8 +65,15 @@ model Agente {
   activo         Boolean   @default(true)
   createdAt      DateTime  @default(now())
 
+  // Jefe a cargo: el que dio de alta al agente y lo gestiona.
+  jefeId  String?
+  jefe    Agente?  @relation("JefeAgentes", fields: [jefeId], references: [id])
+  agentes Agente[] @relation("JefeAgentes")
+
   guardias Guardia[]
   actas    Acta[]
+
+  @@index([jefeId])
 }
 
 model Puesto {

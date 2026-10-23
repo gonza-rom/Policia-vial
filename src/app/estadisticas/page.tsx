@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAgenteActual } from "@/lib/auth";
+import { esJefe, getAgenteActual } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -260,7 +260,7 @@ export default async function EstadisticasPage({
           )}
         </section>
       </main>
-      <BottomNav />
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

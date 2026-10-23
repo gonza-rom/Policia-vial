@@ -77,6 +77,13 @@ async function main() {
     console.log(`  · ${a.legajo} -> ${authEmail}`);
   }
 
+  // Los agentes de prueba quedan a cargo del jefe (pantalla /agentes).
+  const jefeSeed = agentes.find((a) => a.rol === "JEFE")!;
+  await prisma.agente.updateMany({
+    where: { id: { in: agentes.filter((a) => a.rol === "AGENTE").map((a) => a.id) } },
+    data: { jefeId: jefeSeed.id },
+  });
+
   console.log("Sembrando catálogo de infracciones…");
   const catalogo = [
     // Documentación
