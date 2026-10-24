@@ -50,10 +50,11 @@ function parseMes(mesParam: string | undefined) {
 export default async function EstadisticasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string }>;
+  searchParams: Promise<{ mes?: string; puesto?: string }>;
 }) {
-  const { mes: mesParam } = await searchParams;
+  const { mes: mesParam, puesto: puestoParam } = await searchParams;
   const agente = await getAgenteActual();
+  const puedeVerRecaudacion = esJefe(agente);
   const { anio, mes } = parseMes(mesParam);
 
   const inicioMes = new Date(anio, mes, 1);
@@ -69,39 +70,54 @@ export default async function EstadisticasPage({
   // Las actas contravencionales no tienen monto ni infracciones tipificadas
   // de esta tabla — este dashboard (recaudación, gravedad, vehículos) es
   // específico del acta municipal.
+  const puestos = await prisma.puesto.findMany({
+    where: { activo: true },
+    orderBy: { orden: "asc" },
+  });
+
   const whereBase = {
     tipo: "MUNICIPAL" as const,
     fecha: { gte: inicioMes, lt: finMes },
     estado: { not: "ANULADA" as const },
+    ...(puestoParam ? { puestoId: puestoParam } : {}),
   };
 
-  const [actas, agregadoMesAnterior, actasContravencionales] = await Promise.all([
+  // La recaudación (este mes, mes anterior, evolución) es monetaria: solo se
+  // consulta a la base si quien mira el panel es jefe/admin — un agente ni
+  // siquiera dispara esas queries, no es solo una cuestión de qué se pinta.
+  const [actas, actasContravencionales, agregadoMesAnterior] = await Promise.all([
     prisma.acta.findMany({
       where: whereBase,
       include: { infracciones: { include: { infraccion: true } } },
       orderBy: { fecha: "asc" },
-    }),
-    prisma.acta.aggregate({
-      where: {
-        tipo: "MUNICIPAL",
-        fecha: { gte: inicioMesAnterior, lt: inicioMes },
-        estado: { not: "ANULADA" },
-      },
-      _sum: { montoConDescuento: true },
     }),
     prisma.acta.count({
       where: {
         tipo: "CONTRAVENCIONAL",
         fecha: { gte: inicioMes, lt: finMes },
         estado: { not: "ANULADA" },
+        ...(puestoParam ? { puestoId: puestoParam } : {}),
       },
     }),
+    puedeVerRecaudacion
+      ? prisma.acta.aggregate({
+          where: {
+            tipo: "MUNICIPAL",
+            fecha: { gte: inicioMesAnterior, lt: inicioMes },
+            estado: { not: "ANULADA" },
+            ...(puestoParam ? { puestoId: puestoParam } : {}),
+          },
+          _sum: { montoConDescuento: true },
+        })
+      : Promise.resolve(null),
   ]);
 
-  const totalMes = actas.reduce((acc, a) => acc + Number(a.montoConDescuento), 0);
-  const totalMesAnterior = Number(agregadoMesAnterior._sum.montoConDescuento ?? 0);
+  const totalMes = puedeVerRecaudacion
+    ? actas.reduce((acc, a) => acc + Number(a.montoConDescuento), 0)
+    : 0;
+  const totalMesAnterior = Number(agregadoMesAnterior?._sum.montoConDescuento ?? 0);
   const variacion =
-    totalMesAnterior > 0
+    puedeVerRecaudacion && totalMesAnterior > 0
       ? ((totalMes - totalMesAnterior) / totalMesAnterior) * 100
       : null;
 
@@ -142,7 +158,7 @@ export default async function EstadisticasPage({
 
         <div className="flex items-center justify-between bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
           <Link
-            href={`/estadisticas?mes=${mesAnteriorParam}`}
+            href={`/estadisticas?mes=${mesAnteriorParam}${puestoParam ? `&puesto=${puestoParam}` : ""}`}
             className="p-2 rounded hover:bg-surface-container"
             aria-label="Mes anterior"
           >
@@ -152,7 +168,7 @@ export default async function EstadisticasPage({
             {MESES[mes]} {anio}
           </span>
           <Link
-            href={`/estadisticas?mes=${mesSiguienteParam}`}
+            href={`/estadisticas?mes=${mesSiguienteParam}${puestoParam ? `&puesto=${puestoParam}` : ""}`}
             className="p-2 rounded hover:bg-surface-container"
             aria-label="Mes siguiente"
           >
@@ -160,29 +176,59 @@ export default async function EstadisticasPage({
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <StatTile
-            icono="payments"
-            label="Recaudación del Mes"
-            valor={formatoMoneda(totalMes)}
-            delta={variacion}
-          />
-          <StatTile
-            icono="calendar_view_week"
-            label="Promedio Semanal"
-            valor={formatoMoneda(promedioSemanal)}
-          />
-          <StatTile
-            icono="today"
-            label="Promedio Diario"
-            valor={formatoMoneda(promedioDiario)}
-          />
+        <form className="flex items-center gap-2">
+          <input type="hidden" name="mes" value={`${anio}-${String(mes + 1).padStart(2, "0")}`} />
+          <select
+            name="puesto"
+            defaultValue={puestoParam ?? ""}
+            className="bg-surface-container-low border border-outline rounded text-body-sm px-3 py-2 min-h-touch-min flex-1"
+          >
+            <option value="">Todos los puestos</option>
+            {puestos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="min-h-touch-min px-3 bg-surface-container border border-outline-variant rounded text-label-sm font-label-sm"
+          >
+            Filtrar
+          </button>
+        </form>
+
+        {puedeVerRecaudacion ? (
+          <div className="grid grid-cols-2 gap-3">
+            <StatTile
+              icono="payments"
+              label="Recaudación del Mes"
+              valor={formatoMoneda(totalMes)}
+              delta={variacion}
+            />
+            <StatTile
+              icono="calendar_view_week"
+              label="Promedio Semanal"
+              valor={formatoMoneda(promedioSemanal)}
+            />
+            <StatTile
+              icono="today"
+              label="Promedio Diario"
+              valor={formatoMoneda(promedioDiario)}
+            />
+            <StatTile
+              icono="description"
+              label="Actas Municipales"
+              valor={String(actas.length)}
+            />
+          </div>
+        ) : (
           <StatTile
             icono="description"
-            label="Actas Municipales"
+            label="Actas Municipales del Mes"
             valor={String(actas.length)}
           />
-        </div>
+        )}
 
         {actasContravencionales > 0 && (
           <Link
@@ -201,18 +247,24 @@ export default async function EstadisticasPage({
           </Link>
         )}
 
-        <EvolucionChart porSemana={porSemana} porDia={porDia} />
+        {puedeVerRecaudacion && (
+          <EvolucionChart porSemana={porSemana} porDia={porDia} />
+        )}
 
         <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
           <h2 className="text-label-lg font-label-lg text-primary uppercase">
-            Montos por Gravedad
+            {puedeVerRecaudacion ? "Montos por Gravedad" : "Actas por Gravedad"}
           </h2>
           {(["GRAVISIMA", "GRAVE", "LEVE"] as const).map((g) => (
             <BarraHorizontal
               key={g}
-              etiqueta={`${GRAVEDAD_LABEL[g]} — ${gravedad[g].cantidad} actas`}
+              etiqueta={GRAVEDAD_LABEL[g]}
               valor={gravedad[g].cantidad}
-              valorMostrado={formatoMoneda(gravedad[g].monto)}
+              valorMostrado={
+                puedeVerRecaudacion
+                  ? formatoMoneda(gravedad[g].monto)
+                  : `${gravedad[g].cantidad} actas`
+              }
               porcentaje={(gravedad[g].cantidad / totalGravedad) * 100}
               color={COLOR_GRAVEDAD[g]}
               icono={
@@ -238,7 +290,11 @@ export default async function EstadisticasPage({
               key={inf.descripcion}
               etiqueta={inf.descripcion}
               valor={inf.cantidad}
-              valorMostrado={`${inf.cantidad} · ${formatoMoneda(inf.montoBase)}`}
+              valorMostrado={
+                puedeVerRecaudacion
+                  ? `${inf.cantidad} · ${formatoMoneda(inf.montoBase)}`
+                  : String(inf.cantidad)
+              }
               porcentaje={(inf.cantidad / maxInfraccion) * 100}
               color="#2a78d6"
             />
@@ -257,7 +313,11 @@ export default async function EstadisticasPage({
               key={tipo}
               etiqueta={TIPO_RODADO_LABEL[tipo]}
               valor={datos.cantidad}
-              valorMostrado={`${datos.cantidad} · ${formatoMoneda(datos.monto)}`}
+              valorMostrado={
+                puedeVerRecaudacion
+                  ? `${datos.cantidad} · ${formatoMoneda(datos.monto)}`
+                  : String(datos.cantidad)
+              }
               porcentaje={(datos.cantidad / maxVehiculo) * 100}
               color={COLOR_VEHICULO[tipo as keyof typeof COLOR_VEHICULO]}
               icono={TIPO_RODADO_ICON[tipo]}

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import {
   getAgenteActual,
   getJefeActual,
-  puedeEditarRequerimiento,
+  puedeEditarRegistroPropio,
 } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
 
@@ -48,7 +48,7 @@ export async function actualizarRequerimiento(formData: FormData) {
   const agente = await getAgenteActual();
   const id = String(formData.get("id") ?? "");
   const actual = await prisma.requerimiento.findUnique({ where: { id } });
-  if (!actual || !puedeEditarRequerimiento(agente, actual)) {
+  if (!actual || !puedeEditarRegistroPropio(agente, actual)) {
     redirect("/requerimientos");
   }
 

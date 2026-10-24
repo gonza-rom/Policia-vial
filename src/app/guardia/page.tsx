@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
 import { formatoMoneda } from "@/lib/formato";
+import { NOMBRE_RELEVAMIENTOS } from "@/lib/config";
 import { cerrarSesion, iniciarGuardia } from "./actions";
 
 export default async function GuardiaPage() {
@@ -51,6 +52,12 @@ export default async function GuardiaPage() {
             icono="gpp_maybe"
             titulo="Requerimientos"
             descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
+          />
+          <TarjetaAccion
+            href="/relevamientos"
+            icono="groups"
+            titulo={NOMBRE_RELEVAMIENTOS}
+            descripcion="Conteos de Fines Largos y Día de la Virgen."
           />
           {esJefe(agente) && (
             <TarjetaAccion
@@ -217,6 +224,13 @@ export default async function GuardiaPage() {
               icono="gpp_maybe"
               titulo="Requerimientos"
               descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
+            />
+            <TarjetaAccion
+              href="/relevamientos"
+              icono="groups"
+              titulo={NOMBRE_RELEVAMIENTOS}
+              descripcion="Conteos de Fines Largos y Día de la Virgen."
+              className={esJefe(agente) ? undefined : "sm:col-span-2"}
             />
             {esJefe(agente) && (
               <TarjetaAccion

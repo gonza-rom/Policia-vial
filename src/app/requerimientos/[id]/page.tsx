@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { esJefe, getAgenteActual, puedeEditarRequerimiento } from "@/lib/auth";
+import { esJefe, getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BotonImprimir } from "@/components/ui/BotonImprimir";
@@ -24,7 +24,7 @@ export default async function DetalleRequerimientoPage({
   });
   if (!requerimiento) notFound();
 
-  const puedeEditar = puedeEditarRequerimiento(agente, requerimiento);
+  const puedeEditar = puedeEditarRegistroPropio(agente, requerimiento);
 
   return (
     <>

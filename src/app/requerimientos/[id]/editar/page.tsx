@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getAgenteActual, puedeEditarRequerimiento } from "@/lib/auth";
+import { getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { RequerimientoForm } from "../../RequerimientoForm";
@@ -15,7 +15,7 @@ export default async function EditarRequerimientoPage({
   const requerimiento = await prisma.requerimiento.findUnique({ where: { id } });
   if (!requerimiento) notFound();
 
-  if (!puedeEditarRequerimiento(agente, requerimiento)) {
+  if (!puedeEditarRegistroPropio(agente, requerimiento)) {
     redirect(`/requerimientos/${id}`);
   }
 

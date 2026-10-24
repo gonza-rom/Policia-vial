@@ -71,13 +71,14 @@ export function puedeEditarActa(
   return acta.agenteId === agente.id || esJefe(agente);
 }
 
-/** Un requerimiento lo puede editar su agente dueño o un jefe/admin — no
- * tiene estado de firma, así que no hay ventana de tiempo como en el acta. */
-export function puedeEditarRequerimiento(
+/** Regla compartida por requerimientos y relevamientos: los puede corregir
+ * su agente dueño o un jefe/admin — no tienen estado de firma, así que no
+ * hay ventana de tiempo como en el acta. */
+export function puedeEditarRegistroPropio(
   agente: Pick<AgenteActual, "id" | "rol">,
-  requerimiento: { agenteId: string },
+  registro: { agenteId: string },
 ) {
-  return requerimiento.agenteId === agente.id || esJefe(agente);
+  return registro.agenteId === agente.id || esJefe(agente);
 }
 
 export async function getGuardiaActiva(agenteId: string) {

@@ -72,6 +72,26 @@ enum TipoRequerimiento {
   VEHICULO
 }
 
+enum ModalidadRelevamiento {
+  FINES_LARGOS
+  DIA_VIRGEN
+}
+
+enum MedioTransporte {
+  VEHICULO
+  CAMINATA
+  BICICLETA
+  CABALLO
+  COLECTIVO
+  CAMION
+}
+
+enum Sexo {
+  FEMENINO
+  MASCULINO
+  NO_BINARIO
+}
+
 model Agente {
   id             String    @id @default(cuid())
   legajo         String    @unique
@@ -90,6 +110,7 @@ model Agente {
   guardias       Guardia[]
   actas          Acta[]
   requerimientos Requerimiento[]
+  relevamientos  Relevamiento[]
 
   @@index([jefeId])
 }
@@ -106,6 +127,7 @@ model Puesto {
   guardias       Guardia[]
   actas          Acta[]
   requerimientos Requerimiento[]
+  relevamientos  Relevamiento[]
 }
 
 model Guardia {
@@ -261,6 +283,35 @@ model Requerimiento {
   updatedAt DateTime @updatedAt
 
   @@index([tipo])
+  @@index([fecha])
+  @@index([puestoId])
+}
+
+/// Conteo rápido de personas en operativos puntuales (fin de semana largo,
+/// peregrinación), para no mezclarlo con las actas. Dos modalidades con
+/// campos distintos: Fines Largos (cantidad + procedencia) y Día de la
+/// Virgen (medio de transporte + sexo + procedencia). `cantidadPersonas`
+/// sirve para las dos — un registro puede representar a un grupo entero
+/// con los mismos datos, no necesariamente una persona por fila.
+model Relevamiento {
+  id        String                @id @default(cuid())
+  modalidad ModalidadRelevamiento
+
+  cantidadPersonas Int              @default(1)
+  procedencia      String?
+  medioTransporte  MedioTransporte?
+  sexo             Sexo?
+
+  puestoId String
+  puesto   Puesto   @relation(fields: [puestoId], references: [id])
+  agenteId String
+  agente   Agente   @relation(fields: [agenteId], references: [id])
+  fecha    DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([modalidad])
   @@index([fecha])
   @@index([puestoId])
 }

@@ -38,6 +38,8 @@ fueron la referencia visual — la app real vive en `src/`.
      prueba en el seed.
    - `NEXT_PUBLIC_DEVHUB_NOMBRE` / `NEXT_PUBLIC_DEVHUB_URL`: texto y enlace del
      footer "Desarrollado por…". Opcionales, tienen valor por defecto.
+   - `NEXT_PUBLIC_NOMBRE_RELEVAMIENTOS`: nombre de la sección de conteos
+     (Fines Largos / Día de la Virgen). Opcional, por defecto "Relevamientos".
 
 3. **Base de datos**
 
@@ -115,13 +117,25 @@ fueron la referencia visual — la app real vive en `src/`.
   alta; un ADMIN ve a todos.
 - `/estadisticas` → recaudación por día/semana/mes, montos por gravedad,
   ranking de infracciones, vehículos involucrados y edad de los infractores,
-  navegable por mes.
+  navegable por mes y filtrable por puesto. **La recaudación (recaudación
+  del mes, promedios, evolución, montos en $ de gravedad/infracciones/
+  vehículos) solo la ven JEFE/ADMIN** — un agente ve las mismas secciones
+  pero con cantidades, nunca con montos. Esas queries de recaudación ni
+  siquiera se disparan contra la base cuando quien mira es un agente (no es
+  solo una cuestión de qué se pinta en pantalla).
 - `/requerimientos` → pedidos de captura o secuestro sobre personas o
   vehículos. No depende de una guardia abierta — alcanza con tener un puesto
   elegido. 4 campos de texto libre (Descripción/Identificación, Datos de la
   Orden, Motivo, Observaciones), filtro por tipo, exportar a PDF. Cualquier
   agente carga y edita los suyos; solo jefe/admin edita los de otros y
   elimina (con confirmación).
+- `/relevamientos` ("Relevamientos", nombre configurable) → conteos rápidos
+  de personas en operativos puntuales, separados de las actas. Dos
+  modalidades: **Fines Largos** (cantidad de personas + provincia de
+  origen) y **Día de la Virgen** (medio de transporte, sexo y procedencia).
+  Tampoco depende de guardia abierta. Panel con totales y desgloses por
+  procedencia/medio/sexo, filtrable por puesto. Mismo esquema de permisos
+  que Requerimientos.
 
 ## Pendiente / a decisión del equipo
 
@@ -141,6 +155,11 @@ fueron la referencia visual — la app real vive en `src/`.
   `/agentes`, sin tocar código).
 - No hay modo offline/PWA — requiere conexión a internet (decisión tomada al
   planificar el proyecto, para mantener el alcance manejable).
+- La restricción de recaudación a jefe/admin está en el código del servidor
+  (Server Components/Actions), no en políticas RLS de Postgres — ya
+  documentado como decisión de arquitectura: no hay ningún otro camino a la
+  base (ni API pública ni acceso directo vía `supabase-js`), así que esto
+  cubre el 100% de los accesos reales de la app.
 - Sin tests automatizados.
 
 Cloudinary ya está configurado y probado (subida de fotos y firmas
