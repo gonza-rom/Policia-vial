@@ -116,6 +116,12 @@ fueron la referencia visual — la app real vive en `src/`.
 - `/estadisticas` → recaudación por día/semana/mes, montos por gravedad,
   ranking de infracciones, vehículos involucrados y edad de los infractores,
   navegable por mes.
+- `/requerimientos` → pedidos de captura o secuestro sobre personas o
+  vehículos. No depende de una guardia abierta — alcanza con tener un puesto
+  elegido. 4 campos de texto libre (Descripción/Identificación, Datos de la
+  Orden, Motivo, Observaciones), filtro por tipo, exportar a PDF. Cualquier
+  agente carga y edita los suyos; solo jefe/admin edita los de otros y
+  elimina (con confirmación).
 
 ## Pendiente / a decisión del equipo
 

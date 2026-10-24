@@ -1,13 +1,11 @@
 "use client";
 
-export function BotonEliminarActa({ numero }: { numero: string }) {
+export function BotonEliminarConConfirmacion({ mensaje }: { mensaje: string }) {
   return (
     <button
       type="submit"
       onClick={(e) => {
-        if (!confirm(`¿Eliminar el acta N° ${numero}? Esta acción no se puede deshacer.`)) {
-          e.preventDefault();
-        }
+        if (!confirm(mensaje)) e.preventDefault();
       }}
       className="flex items-center gap-1 text-error text-label-sm font-label-sm uppercase"
     >

@@ -71,6 +71,15 @@ export function puedeEditarActa(
   return acta.agenteId === agente.id || esJefe(agente);
 }
 
+/** Un requerimiento lo puede editar su agente dueño o un jefe/admin — no
+ * tiene estado de firma, así que no hay ventana de tiempo como en el acta. */
+export function puedeEditarRequerimiento(
+  agente: Pick<AgenteActual, "id" | "rol">,
+  requerimiento: { agenteId: string },
+) {
+  return requerimiento.agenteId === agente.id || esJefe(agente);
+}
+
 export async function getGuardiaActiva(agenteId: string) {
   return prisma.guardia.findFirst({
     where: { agenteId, estado: "ACTIVA" },

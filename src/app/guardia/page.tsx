@@ -46,6 +46,12 @@ export default async function GuardiaPage() {
               Cambiar de puesto
             </Link>
           </div>
+          <TarjetaAccion
+            href="/requerimientos"
+            icono="gpp_maybe"
+            titulo="Requerimientos"
+            descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
+          />
           {esJefe(agente) && (
             <TarjetaAccion
               href="/agentes"
@@ -205,7 +211,12 @@ export default async function GuardiaPage() {
               titulo="Estadísticas y Rendición"
               descripcion="Recaudación mensual, ranking de infracciones y comparativas."
               badge="Mensual"
-              className="sm:col-span-2"
+            />
+            <TarjetaAccion
+              href="/requerimientos"
+              icono="gpp_maybe"
+              titulo="Requerimientos"
+              descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
             />
             {esJefe(agente) && (
               <TarjetaAccion

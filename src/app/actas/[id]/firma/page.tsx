@@ -11,8 +11,8 @@ import {
   ESTADO_ACTA_LABEL,
 } from "@/lib/formato";
 import { FirmaForm } from "./FirmaForm";
-import { ImprimirActa } from "./ImprimirActa";
-import { BotonEliminarActa } from "./BotonEliminarActa";
+import { BotonImprimir } from "@/components/ui/BotonImprimir";
+import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
 import { eliminarActa } from "./actions";
 
 export default async function FirmaActaPage({
@@ -58,8 +58,7 @@ export default async function FirmaActaPage({
     <>
       <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
       <main
-        id="acta-imprimible"
-        className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4"
+        className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4"
       >
         <div className="flex items-center justify-between print:hidden">
           <Link
@@ -84,7 +83,9 @@ export default async function FirmaActaPage({
             {esJefe(agente) && (
               <form action={eliminarActa}>
                 <input type="hidden" name="actaId" value={acta.id} />
-                <BotonEliminarActa numero={numeroActa(acta.numero)} />
+                <BotonEliminarConConfirmacion
+                  mensaje={`¿Eliminar el acta N° ${numeroActa(acta.numero)}? Esta acción no se puede deshacer.`}
+                />
               </form>
             )}
           </div>
@@ -100,7 +101,7 @@ export default async function FirmaActaPage({
           >
             {ESTADO_ACTA_LABEL[acta.estado]}
           </span>
-          <ImprimirActa />
+          <BotonImprimir />
         </div>
 
         <div className="bg-primary-container text-on-primary rounded-lg p-pad-lg flex items-center justify-between">

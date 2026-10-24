@@ -67,6 +67,11 @@ enum TipoCampoContravencional {
   FECHA
 }
 
+enum TipoRequerimiento {
+  PERSONA
+  VEHICULO
+}
+
 model Agente {
   id             String    @id @default(cuid())
   legajo         String    @unique
@@ -82,8 +87,9 @@ model Agente {
   jefe    Agente?  @relation("JefeAgentes", fields: [jefeId], references: [id])
   agentes Agente[] @relation("JefeAgentes")
 
-  guardias Guardia[]
-  actas    Acta[]
+  guardias       Guardia[]
+  actas          Acta[]
+  requerimientos Requerimiento[]
 
   @@index([jefeId])
 }
@@ -97,8 +103,9 @@ model Puesto {
   activo    Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  guardias Guardia[]
-  actas    Acta[]
+  guardias       Guardia[]
+  actas          Acta[]
+  requerimientos Requerimiento[]
 }
 
 model Guardia {
@@ -228,4 +235,32 @@ model ActaInfraccion {
   detalleOperativo String?
 
   @@unique([actaId, infraccionId])
+}
+
+/// Pedido de captura/secuestro sobre una persona o un vehículo. No depende
+/// de una guardia abierta — es un "cartel" consultable en cualquier momento,
+/// asociado solo al puesto, la fecha y quién lo cargó.
+model Requerimiento {
+  id     String            @id @default(cuid())
+  numero Int               @unique @default(autoincrement())
+  tipo   TipoRequerimiento
+
+  puestoId String
+  puesto   Puesto   @relation(fields: [puestoId], references: [id])
+  agenteId String
+  agente   Agente   @relation(fields: [agenteId], references: [id])
+  fecha    DateTime @default(now())
+
+  // 4 campos de texto libre — cada caso es distinto, no hay casilleros fijos.
+  descripcion   String  @db.Text
+  datosOrden    String? @db.Text
+  motivo        String? @db.Text
+  observaciones String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tipo])
+  @@index([fecha])
+  @@index([puestoId])
 }
