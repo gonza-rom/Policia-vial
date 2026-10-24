@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
+import { getPuestoSeleccionado } from "@/lib/puesto";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
@@ -9,10 +11,14 @@ import { cerrarSesion, iniciarGuardia } from "./actions";
 
 export default async function GuardiaPage() {
   const agente = await getAgenteActual();
-  const guardia = await getGuardiaActiva(agente.id);
+  const [guardia, puestoContexto] = await Promise.all([
+    getGuardiaActiva(agente.id),
+    getPuestoSeleccionado(),
+  ]);
 
   if (!guardia) {
-    const puestos = await prisma.puesto.findMany({ where: { activo: true } });
+    if (!puestoContexto) redirect("/puesto");
+
     return (
       <>
         <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
@@ -25,26 +31,20 @@ export default async function GuardiaPage() {
               No tenés una guardia activa
             </h1>
             <p className="text-body-md text-on-surface-variant">
-              Iniciá tu turno seleccionando el puesto caminero para comenzar a
-              labrar actas.
+              Vas a iniciar turno en <strong>{puestoContexto.nombre}</strong>.
             </p>
             <form action={iniciarGuardia} className="space-y-3">
-              <select
-                name="puestoId"
-                required
-                className="w-full bg-surface-container-low border border-outline rounded text-body-md px-3 py-2.5 min-h-touch-min"
-              >
-                <option value="">Seleccioná un puesto…</option>
-                {puestos.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
-                ))}
-              </select>
+              <input type="hidden" name="puestoId" value={puestoContexto.id} />
               <Boton type="submit" icono="play_arrow" fullWidth>
-                Iniciar Guardia
+                Iniciar Guardia en {puestoContexto.nombre}
               </Boton>
             </form>
+            <Link
+              href="/puesto"
+              className="inline-block text-label-sm font-label-sm text-secondary uppercase"
+            >
+              Cambiar de puesto
+            </Link>
           </div>
           {esJefe(agente) && (
             <TarjetaAccion
@@ -112,12 +112,18 @@ export default async function GuardiaPage() {
                 {agente.grado ? `${agente.grado} ` : ""}
                 {agente.nombreApellido} · Leg. {agente.legajo}
               </p>
-              <p className="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1">
+              <p className="text-body-sm font-body-sm text-on-surface-variant flex items-center gap-1 flex-wrap">
                 <span className="material-symbols-outlined text-sm">
                   location_on
                 </span>
                 {guardia.puesto.nombre}
                 {guardia.puesto.kmRuta ? ` · ${guardia.puesto.kmRuta}` : ""}
+                <Link
+                  href="/puesto"
+                  className="text-secondary font-label-sm text-label-sm uppercase ml-1"
+                >
+                  (cambiar)
+                </Link>
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-surface-container-low p-2.5 rounded-lg border border-outline-variant">

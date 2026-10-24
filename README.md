@@ -36,21 +36,31 @@ fueron la referencia visual — la app real vive en `src/`.
      funcione**. Sin esto, el acta se guarda igual pero sin la imagen adjunta.
    - `SEED_DEFAULT_PASSWORD`: contraseña con la que se crean los agentes de
      prueba en el seed.
+   - `NEXT_PUBLIC_DEVHUB_NOMBRE` / `NEXT_PUBLIC_DEVHUB_URL`: texto y enlace del
+     footer "Desarrollado por…". Opcionales, tienen valor por defecto.
 
 3. **Base de datos**
 
    ```bash
-   npx prisma generate     # genera el cliente en src/generated/prisma
-   npx prisma db push      # sincroniza el schema con la base de Supabase
-   npx prisma db seed      # crea el puesto, agentes y catálogo de infracciones
+   npx prisma generate      # genera el cliente en src/generated/prisma
+   npx prisma migrate deploy  # aplica las migraciones versionadas de prisma/migrations
+   npx prisma db seed       # crea los puestos, agentes y catálogo de infracciones
    ```
 
    > Nota Supabase + Prisma 7: el pooler transaccional de Supabase (puerto
    > 6543, `DATABASE_URL`) no soporta los prepared statements que usa el
-   > schema engine. `prisma.config.ts` ya apunta el CLI (`db push`, `generate`,
+   > schema engine. `prisma.config.ts` ya apunta el CLI (`migrate`, `generate`,
    > `db seed`) a `DIRECT_URL` (puerto 5432) para evitarlo. La app en runtime
    > (`src/lib/prisma.ts`) sigue usando `DATABASE_URL` (pooled), que es lo
    > correcto para consultas normales.
+
+   **Migraciones:** el schema se versiona con Prisma Migrate (`prisma/migrations/`,
+   un `.sql` por cambio, aplicados en orden). Para agregar un cambio de schema:
+   editar `prisma/schema.prisma` y correr `npx prisma migrate dev --name <algo>`
+   (crea y aplica la migración en un solo paso, en desarrollo). En producción se
+   aplican con `prisma migrate deploy`, que nunca pregunta nada ni resetea datos.
+   Prisma Migrate no genera un "down" automático: si una migración hay que
+   revertirla, se escribe a mano el SQL inverso como una migración nueva.
 
 4. **Correr en desarrollo**
 
@@ -72,8 +82,13 @@ fueron la referencia visual — la app real vive en `src/`.
 
 - `/login` → login por legajo (Supabase Auth por debajo, con email interno
   `legajo@huillapima.local`).
-- `/guardia` → menú principal: estado de la guardia activa (o iniciar una),
-  accesos a Nueva Acta / Actas / Historial / Estadísticas.
+- `/puesto` → elegir el puesto caminero como "contexto de trabajo" de la
+  sesión (grilla con los 9 puestos activos). Se guarda en una cookie, no en la
+  base — cada dispositivo puede estar en un puesto distinto. Se pide una sola
+  vez después del login (si no hay guardia activa) y se puede cambiar en
+  cualquier momento desde "(cambiar)" en `/guardia`.
+- `/guardia` → menú principal: estado de la guardia activa (o iniciar una en
+  el puesto elegido), accesos a Nueva Acta / Actas / Historial / Estadísticas.
 - `/actas/nueva` → formulario completo del acta (conductor, vehículo,
   checklist de infracciones tipificadas, liquidación con 40% de descuento por
   pago voluntario).
@@ -95,11 +110,11 @@ fueron la referencia visual — la app real vive en `src/`.
 - Revisar y ajustar los montos base de multas del catálogo de infracciones
   (los cargados son valores de referencia, no la tarifa oficial de la
   ordenanza).
-- Cargar los agentes y puestos camineros reales (hoy solo hay 3 legajos de
-  prueba, ver tabla más arriba).
-- Pantalla de administración para altas de puestos — hoy se hace a mano
-  editando `prisma/seed.ts` y volviendo a correr `npx prisma db seed` (los
-  agentes ya se dan de alta desde `/agentes`).
+- Cargar los agentes reales (hoy solo hay 3 legajos de prueba, ver tabla más
+  arriba). Los 9 puestos ya están cargados: Base Vial y Tango 50 a 57
+  (nombres de ejemplo — para cambiarlos hoy se edita `prisma/seed.ts` y se
+  vuelve a correr `npx prisma db seed`; los agentes ya se dan de alta desde
+  `/agentes`, sin tocar código).
 - No hay modo offline/PWA — requiere conexión a internet (decisión tomada al
   planificar el proyecto, para mantener el alcance manejable).
 - Sin tests automatizados.

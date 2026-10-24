@@ -30,17 +30,47 @@ async function asegurarUsuarioAuth(email: string, password: string) {
 }
 
 async function main() {
-  console.log("Sembrando Puesto Caminero…");
-  const puesto = await prisma.puesto.upsert({
+  console.log("Sembrando puestos…");
+  // El puesto original de desarrollo queda inactivo (no forma parte de los
+  // 9 puestos reales) pero no se borra: hay actas/guardias de prueba que
+  // referencian su id.
+  await prisma.puesto.upsert({
     where: { id: "puesto-nueva-coneta" },
-    update: {},
+    update: { activo: false },
     create: {
       id: "puesto-nueva-coneta",
       nombre: "Puesto Caminero Nueva Coneta",
       kmRuta: "Ruta Prov. 14 / RN 38 Km 572",
       ubicacion: "Huillapima, Capayán, Catamarca",
+      activo: false,
     },
   });
+
+  const puestosSeed = [
+    "Base Vial",
+    "Tango 50",
+    "Tango 51",
+    "Tango 52",
+    "Tango 53",
+    "Tango 54",
+    "Tango 55",
+    "Tango 56",
+    "Tango 57",
+  ];
+  const puestos = [];
+  for (const [i, nombre] of puestosSeed.entries()) {
+    const p = await prisma.puesto.upsert({
+      where: { id: `puesto-${nombre.toLowerCase().replace(/\s+/g, "-")}` },
+      update: { nombre, orden: i },
+      create: {
+        id: `puesto-${nombre.toLowerCase().replace(/\s+/g, "-")}`,
+        nombre,
+        orden: i,
+      },
+    });
+    puestos.push(p);
+  }
+  const puesto = puestos[0];
 
   console.log("Sembrando agentes…");
   const agentesSeed = [
