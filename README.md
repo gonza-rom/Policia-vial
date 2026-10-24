@@ -89,11 +89,23 @@ fueron la referencia visual — la app real vive en `src/`.
   cualquier momento desde "(cambiar)" en `/guardia`.
 - `/guardia` → menú principal: estado de la guardia activa (o iniciar una en
   el puesto elegido), accesos a Nueva Acta / Actas / Historial / Estadísticas.
-- `/actas/nueva` → formulario completo del acta (conductor, vehículo,
-  checklist de infracciones tipificadas, liquidación con 40% de descuento por
-  pago voluntario).
-- `/actas/[id]/firma` → resumen legal del acta + firma digital (canvas) del
-  infractor y del actuante, opción "se niega a firmar", cierre del acta.
+- `/actas/nueva` → primero se elige el **tipo de acta**:
+  - **Municipal** (Ordenanza 385/12): el formulario de siempre — conductor,
+    vehículo, checklist de infracciones tipificadas, liquidación con 40% de
+    descuento por pago voluntario.
+  - **Contravencional** (Ley Provincial N° 5171/05, Código de Faltas de
+    Catamarca): formulario policial aparte, con sus propios campos agrupados
+    por sección (vehículo, conductor, "comprobándose", alcoholímetro, medidas
+    adoptadas). Los campos salen de la tabla `CampoContravencional` — se
+    pueden agregar/renombrar/reordenar sin tocar código (hoy vía
+    `prisma/seed.ts`, hasta que llegue el formulario oficial definitivo).
+- `/actas/[id]/firma` → resumen legal del acta + firma digital (canvas): el
+  acta municipal firma Infractor/Actuante, la contravencional firma
+  Conductor/Instructor/Secretario Autorizante (3 firmas, como en el papel).
+  Desde acá también: **Editar** (solo mientras está pendiente de firma, el
+  agente dueño o un jefe/admin), **Eliminar** (solo jefe/admin, con
+  confirmación) y **Exportar PDF** (imprime la página con una hoja de estilos
+  dedicada — usa "Guardar como PDF" del diálogo de impresión del navegador).
 - `/actas` → listado y búsqueda de actas del turno activo.
 - `/guardia/historial` → parte diario del turno y cierre de guardia.
 - `/agentes` → solo JEFE/ADMIN: listado del personal a cargo (en guardia,
@@ -110,6 +122,12 @@ fueron la referencia visual — la app real vive en `src/`.
 - Revisar y ajustar los montos base de multas del catálogo de infracciones
   (los cargados son valores de referencia, no la tarifa oficial de la
   ordenanza).
+- El formulario contravencional usa campos de ejemplo tomados de un acta de
+  comprobación provincial — cuando llegue el formato oficial definitivo,
+  ajustar `CampoContravencional` (sin tocar código).
+- La búsqueda de `/actas` busca por los campos del acta municipal
+  (conductor/DNI/dominio); no busca todavía dentro de los datos de la
+  contravencional (quedan en JSON).
 - Cargar los agentes reales (hoy solo hay 3 legajos de prueba, ver tabla más
   arriba). Los 9 puestos ya están cargados: Base Vial y Tango 50 a 57
   (nombres de ejemplo — para cambiarlos hoy se edita `prisma/seed.ts` y se

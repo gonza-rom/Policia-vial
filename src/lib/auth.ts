@@ -61,6 +61,16 @@ export async function getAgenteACargo(jefe: AgenteActual, agenteId: string) {
   return agente;
 }
 
+/** Un acta solo se puede corregir mientras no tenga firma, y solo por su
+ * agente dueño o por un jefe/admin — nunca se puede eliminar desde acá. */
+export function puedeEditarActa(
+  agente: Pick<AgenteActual, "id" | "rol">,
+  acta: { agenteId: string; estado: string },
+) {
+  if (acta.estado !== "PENDIENTE_FIRMA") return false;
+  return acta.agenteId === agente.id || esJefe(agente);
+}
+
 export async function getGuardiaActiva(agenteId: string) {
   return prisma.guardia.findFirst({
     where: { agenteId, estado: "ACTIVA" },

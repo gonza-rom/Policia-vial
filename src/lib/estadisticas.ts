@@ -81,9 +81,12 @@ export function agruparPorInfraccion(actas: ActaConInfracciones[]) {
 export function agruparPorVehiculo(actas: ActaConInfracciones[]) {
   const mapa = new Map<string, { cantidad: number; monto: number }>();
   for (const acta of actas) {
+    // Solo el acta municipal tiene tipo de vehículo; esta función ya recibe
+    // las actas filtradas por tipo="MUNICIPAL" desde /estadisticas.
+    if (!acta.vehiculoTipo) continue;
     const existente = mapa.get(acta.vehiculoTipo) ?? { cantidad: 0, monto: 0 };
     existente.cantidad += 1;
-    existente.monto += Number(acta.montoConDescuento);
+    existente.monto += Number(acta.montoConDescuento ?? 0);
     mapa.set(acta.vehiculoTipo, existente);
   }
   return mapa;

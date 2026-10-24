@@ -9,6 +9,7 @@ import {
   formatoHora,
   formatoMoneda,
   numeroActa,
+  nombreConductorActa,
   ESTADO_ACTA_LABEL,
 } from "@/lib/formato";
 import { cerrarGuardia } from "../actions";
@@ -115,7 +116,8 @@ export default async function HistorialGuardiaPage() {
                     </span>
                   </div>
                   <p className="text-body-md font-semibold text-on-surface">
-                    {acta.conductorNombre} · {acta.vehiculoDominio}
+                    {nombreConductorActa(acta)}
+                    {acta.tipo === "MUNICIPAL" ? ` · ${acta.vehiculoDominio}` : " · Contravencional"}
                   </p>
                   <div className="flex items-center justify-between mt-1">
                     <span
@@ -127,9 +129,11 @@ export default async function HistorialGuardiaPage() {
                     >
                       {ESTADO_ACTA_LABEL[acta.estado]}
                     </span>
-                    <span className="font-display font-bold text-primary">
-                      {formatoMoneda(Number(acta.montoConDescuento))}
-                    </span>
+                    {acta.tipo === "MUNICIPAL" && (
+                      <span className="font-display font-bold text-primary">
+                        {formatoMoneda(Number(acta.montoConDescuento ?? 0))}
+                      </span>
+                    )}
                   </div>
                 </Link>
               </li>

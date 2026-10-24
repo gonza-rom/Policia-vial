@@ -157,6 +157,47 @@ async function main() {
     }
   }
 
+  console.log("Sembrando esquema del acta contravencional…");
+  const campos = [
+    { clave: "vehiculo", etiqueta: "Vehículo", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 1, requerido: true },
+    { clave: "marca", etiqueta: "Marca", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 2 },
+    { clave: "modelo", etiqueta: "Modelo", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 3 },
+    { clave: "tipoVehiculo", etiqueta: "Tipo", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 4 },
+    { clave: "dominio", etiqueta: "Dominio", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 5, requerido: true },
+    { clave: "color", etiqueta: "Color", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 6 },
+    { clave: "titular", etiqueta: "Titular", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 7 },
+    { clave: "domicilioVehiculo", etiqueta: "Domicilio", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 8 },
+
+    { clave: "conductorNombre", etiqueta: "Conducido por el Ciudadano", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 9, requerido: true },
+    { clave: "instruccion", etiqueta: "Con o Sin Instrucción", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 10 },
+    { clave: "profesion", etiqueta: "Profesión", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 11 },
+    { clave: "domicilioConductor", etiqueta: "Domiciliado en", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 12 },
+    { clave: "dni", etiqueta: "D.N.I. N°", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 13, requerido: true },
+    { clave: "licenciaNro", etiqueta: "Licencia de Conducir N°", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 14 },
+    { clave: "licenciaExpedidaPor", etiqueta: "Expedida por", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 15 },
+
+    { clave: "comprobandose", etiqueta: "Comprobándose", seccion: "Comprobándose", tipo: "TEXTO_LARGO", orden: 16, requerido: true },
+    { clave: "articulosProvinciales", etiqueta: "Infracción al/los Artículos (Ley Provincial N° 5171)", seccion: "Comprobándose", tipo: "TEXTO", orden: 17 },
+    { clave: "articulosNacionales", etiqueta: "En Concordancia con Artículos (Ley Nacional N° 24.449)", seccion: "Comprobándose", tipo: "TEXTO", orden: 18 },
+
+    { clave: "alcoholimetroMarca", etiqueta: "Marca", seccion: "Datos del Alcoholímetro", tipo: "TEXTO", orden: 19 },
+    { clave: "alcoholimetroTipoNumero", etiqueta: "Tipo y Número", seccion: "Datos del Alcoholímetro", tipo: "TEXTO", orden: 20 },
+    { clave: "primeraLectura", etiqueta: "Primera Lectura", seccion: "Datos del Alcoholímetro", tipo: "TEXTO", orden: 21 },
+    { clave: "segundaLectura", etiqueta: "Segunda Lectura", seccion: "Datos del Alcoholímetro", tipo: "TEXTO", orden: 22 },
+
+    { clave: "medidasAdoptadas", etiqueta: "Medidas Adoptadas con el Conductor (Art. 48° Código de Faltas)", seccion: "Medidas y Circunstancias", tipo: "TEXTO_LARGO", orden: 23 },
+    { clave: "otrasCircunstancias", etiqueta: "Otras Circunstancias", seccion: "Medidas y Circunstancias", tipo: "TEXTO_LARGO", orden: 24 },
+    { clave: "nota", etiqueta: "Nota", seccion: "Medidas y Circunstancias", tipo: "TEXTO_LARGO", orden: 25 },
+  ] as const;
+
+  for (const campo of campos) {
+    await prisma.campoContravencional.upsert({
+      where: { clave: campo.clave },
+      update: campo,
+      create: campo,
+    });
+  }
+
   console.log("Abriendo guardia activa de ejemplo…");
   const jefe = agentes[0];
   const guardiaActiva = await prisma.guardia.findFirst({

@@ -7,6 +7,7 @@ import {
   formatoHora,
   formatoMoneda,
   numeroActa,
+  nombreConductorActa,
   ESTADO_ACTA_LABEL,
 } from "@/lib/formato";
 
@@ -101,16 +102,24 @@ export default async function ActasPage({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-body-md font-semibold text-on-surface">
-                          {acta.conductorNombre}
+                          {nombreConductorActa(acta)}
                         </p>
                         <p className="text-body-sm text-on-surface-variant">
-                          {acta.vehiculoDominio} · {formatoHora(acta.fecha)} Hs ·{" "}
-                          {acta.infracciones.length} infracc.
+                          {acta.tipo === "CONTRAVENCIONAL" ? (
+                            <>Contravencional · {formatoHora(acta.fecha)} Hs</>
+                          ) : (
+                            <>
+                              {acta.vehiculoDominio} · {formatoHora(acta.fecha)} Hs ·{" "}
+                              {acta.infracciones.length} infracc.
+                            </>
+                          )}
                         </p>
                       </div>
-                      <span className="font-display text-body-lg font-bold text-primary">
-                        {formatoMoneda(Number(acta.montoConDescuento))}
-                      </span>
+                      {acta.tipo === "MUNICIPAL" && (
+                        <span className="font-display text-body-lg font-bold text-primary">
+                          {formatoMoneda(Number(acta.montoConDescuento ?? 0))}
+                        </span>
+                      )}
                     </div>
                   </Link>
                 </li>

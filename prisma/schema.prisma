@@ -55,6 +55,18 @@ enum EstadoActa {
   ANULADA
 }
 
+enum TipoActa {
+  MUNICIPAL
+  CONTRAVENCIONAL
+}
+
+enum TipoCampoContravencional {
+  TEXTO
+  TEXTO_LARGO
+  NUMERO
+  FECHA
+}
+
 model Agente {
   id             String    @id @default(cuid())
   legajo         String    @unique
@@ -121,8 +133,9 @@ model InfraccionCatalogo {
 }
 
 model Acta {
-  id     String @id @default(cuid())
-  numero Int    @unique @default(autoincrement())
+  id     String   @id @default(cuid())
+  numero Int      @unique @default(autoincrement())
+  tipo   TipoActa @default(MUNICIPAL)
 
   guardiaId String
   guardia   Guardia @relation(fields: [guardiaId], references: [id])
@@ -134,9 +147,10 @@ model Acta {
   fecha        DateTime @default(now())
   lugarControl String?
 
+  // --- Campos del acta MUNICIPAL (Ordenanza 385/12) ---
   // Datos del conductor
-  conductorNombre        String
-  conductorDni           String
+  conductorNombre        String?
+  conductorDni           String?
   conductorEdad          Int?
   conductorDomicilio     String?
   conductorLicenciaNro   String?
@@ -144,23 +158,29 @@ model Acta {
   conductorExpedidoPor   String?
 
   // Datos del vehículo
-  vehiculoDominio     String
+  vehiculoDominio     String?
   vehiculoMarcaModelo String?
-  vehiculoTipo        TipoRodado
+  vehiculoTipo        TipoRodado?
   vehiculoRemitidoA   String?
 
   otrosDatosAmpliatorios String? @db.Text
 
   // Liquidación
-  montoBase           Decimal @db.Decimal(12, 2)
-  porcentajeDescuento Decimal @default(40) @db.Decimal(5, 2)
-  montoConDescuento   Decimal @db.Decimal(12, 2)
+  montoBase           Decimal? @db.Decimal(12, 2)
+  porcentajeDescuento Decimal  @default(40) @db.Decimal(5, 2)
+  montoConDescuento   Decimal? @db.Decimal(12, 2)
 
-  // Evidencia y firmas
+  // --- Campos del acta CONTRAVENCIONAL (Ley Provincial 5171/05) ---
+  // Clave/valor según el esquema configurable en CampoContravencional.
+  datosContravencional Json?
+
+  // Evidencia y firmas (compartido por ambos tipos; el tercer firmante
+  // —"Secretario Autorizante"— solo aplica al acta contravencional)
   fotoVehiculoUrl         String?
   fotoDocumentoUrl        String?
   firmaInfractorUrl       String?
   firmaActuanteUrl        String?
+  firmaSecretarioUrl      String?
   infractorSeNiegaAFirmar Boolean @default(false)
 
   // Retención preventiva
@@ -179,9 +199,24 @@ model Acta {
 
   @@index([fecha])
   @@index([estado])
+  @@index([tipo])
   @@index([guardiaId])
   @@index([vehiculoDominio])
   @@index([conductorDni])
+}
+
+/// Esquema editable de campos del acta contravencional (Ley Provincial
+/// 5171/05): mientras no llegue el formulario oficial definitivo, se puede
+/// ajustar acá (orden, etiquetas, secciones) sin tocar código.
+model CampoContravencional {
+  id        String                   @id @default(cuid())
+  clave     String                   @unique
+  etiqueta  String
+  seccion   String
+  tipo      TipoCampoContravencional @default(TEXTO)
+  orden     Int                      @default(0)
+  requerido Boolean                  @default(false)
+  activo    Boolean                  @default(true)
 }
 
 model ActaInfraccion {

@@ -65,3 +65,20 @@ export const ESTADO_ACTA_LABEL: Record<string, string> = {
   REMITIDA_RENTAS: "Remitida a Rentas",
   ANULADA: "Anulada",
 };
+
+export const TIPO_ACTA_LABEL: Record<string, string> = {
+  MUNICIPAL: "Municipal",
+  CONTRAVENCIONAL: "Contravencional",
+};
+
+/** El acta contravencional guarda al conductor en `datosContravencional`
+ * (JSON), no en la columna `conductorNombre` — este helper lo resuelve sin
+ * importar el tipo de acta. */
+export function nombreConductorActa(acta: {
+  conductorNombre: string | null;
+  datosContravencional: unknown;
+}) {
+  if (acta.conductorNombre) return acta.conductorNombre;
+  const datos = (acta.datosContravencional ?? {}) as Record<string, string>;
+  return datos.conductorNombre ?? "—";
+}

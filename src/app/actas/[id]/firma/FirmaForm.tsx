@@ -8,15 +8,20 @@ import { Boton } from "@/components/ui/Boton";
 
 export function FirmaForm({
   actaId,
+  tipo,
   actuanteNombre,
 }: {
   actaId: string;
+  tipo: "MUNICIPAL" | "CONTRAVENCIONAL";
   actuanteNombre: string;
 }) {
+  const esContravencional = tipo === "CONTRAVENCIONAL";
   const canvasInfractor = useRef<FirmaCanvasHandle>(null);
   const canvasActuante = useRef<FirmaCanvasHandle>(null);
+  const canvasSecretario = useRef<FirmaCanvasHandle>(null);
   const inputFirmaInfractor = useRef<HTMLInputElement>(null);
   const inputFirmaActuante = useRef<HTMLInputElement>(null);
+  const inputFirmaSecretario = useRef<HTMLInputElement>(null);
   const [seNiega, setSeNiega] = useState(false);
   const [errorFirma, setErrorFirma] = useState<string | null>(null);
 
@@ -24,7 +29,9 @@ export function FirmaForm({
     const firmaActuante = canvasActuante.current?.obtenerDataUrl() ?? null;
     if (!firmaActuante) {
       e.preventDefault();
-      setErrorFirma("Falta la firma del actuante para cerrar el acta.");
+      setErrorFirma(
+        `Falta la firma del ${esContravencional ? "instructor" : "actuante"} para cerrar el acta.`,
+      );
       return;
     }
     if (!seNiega) {
@@ -32,12 +39,23 @@ export function FirmaForm({
       if (!firmaInfractor) {
         e.preventDefault();
         setErrorFirma(
-          "Falta la firma del infractor. Si se niega a firmar, marcá la casilla correspondiente.",
+          `Falta la firma del ${esContravencional ? "conductor" : "infractor"}. Si se niega a firmar, marcá la casilla correspondiente.`,
         );
         return;
       }
       if (inputFirmaInfractor.current) {
         inputFirmaInfractor.current.value = firmaInfractor;
+      }
+    }
+    if (esContravencional) {
+      const firmaSecretario = canvasSecretario.current?.obtenerDataUrl() ?? null;
+      if (!firmaSecretario) {
+        e.preventDefault();
+        setErrorFirma("Falta la firma del secretario autorizante.");
+        return;
+      }
+      if (inputFirmaSecretario.current) {
+        inputFirmaSecretario.current.value = firmaSecretario;
       }
     }
     if (inputFirmaActuante.current) {
@@ -51,6 +69,9 @@ export function FirmaForm({
       <input type="hidden" name="actaId" value={actaId} />
       <input type="hidden" name="firmaInfractor" ref={inputFirmaInfractor} />
       <input type="hidden" name="firmaActuante" ref={inputFirmaActuante} />
+      {esContravencional && (
+        <input type="hidden" name="firmaSecretario" ref={inputFirmaSecretario} />
+      )}
 
       <p className="text-body-sm font-body-sm text-on-surface-variant">
         Queda Ud. debidamente notificado. Vencido el plazo sin dar cumplimiento
@@ -61,7 +82,8 @@ export function FirmaForm({
       <div className="border border-outline rounded p-3 bg-surface-container-low">
         <div className="flex justify-between items-center mb-1">
           <span className="text-label-sm font-label-sm text-primary uppercase font-bold">
-            Firma del Infractor {seNiega && "(Negativa registrada)"}
+            Firma del {esContravencional ? "Conductor" : "Infractor"}{" "}
+            {seNiega && "(Negativa registrada)"}
           </span>
           <button
             type="button"
@@ -80,14 +102,14 @@ export function FirmaForm({
             onChange={(e) => setSeNiega(e.target.checked)}
             className="w-5 h-5 accent-error"
           />
-          El infractor se niega a firmar
+          El {esContravencional ? "conductor" : "infractor"} se niega a firmar
         </label>
       </div>
 
       <div className="border border-outline rounded p-3 bg-surface-container-low">
         <div className="flex justify-between items-center mb-1">
           <span className="text-label-sm font-label-sm text-primary uppercase font-bold">
-            Firma del Actuante
+            Firma del {esContravencional ? "Instructor" : "Actuante"}
           </span>
           <button
             type="button"
@@ -102,6 +124,24 @@ export function FirmaForm({
           {actuanteNombre}
         </p>
       </div>
+
+      {esContravencional && (
+        <div className="border border-outline rounded p-3 bg-surface-container-low">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-label-sm font-label-sm text-primary uppercase font-bold">
+              Firma del Secretario Autorizante
+            </span>
+            <button
+              type="button"
+              onClick={() => canvasSecretario.current?.limpiar()}
+              className="text-label-sm text-error uppercase font-bold"
+            >
+              Limpiar
+            </button>
+          </div>
+          <FirmaCanvas ref={canvasSecretario} />
+        </div>
+      )}
 
       {errorFirma && (
         <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">

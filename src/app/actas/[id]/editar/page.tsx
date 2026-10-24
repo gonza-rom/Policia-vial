@@ -1,0 +1,89 @@
+import { notFound, redirect } from "next/navigation";
+import { getAgenteActual, puedeEditarActa } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { AppHeader } from "@/components/ui/AppHeader";
+import { NuevaActaForm } from "../../nueva/NuevaActaForm";
+import { ContravencionalActaForm } from "../../nueva/ContravencionalActaForm";
+
+export default async function EditarActaPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const agente = await getAgenteActual();
+
+  const acta = await prisma.acta.findUnique({
+    where: { id },
+    include: { infracciones: true },
+  });
+  if (!acta) notFound();
+
+  if (!puedeEditarActa(agente, acta)) {
+    redirect(`/actas/${id}/firma`);
+  }
+
+  if (acta.tipo === "CONTRAVENCIONAL") {
+    const campos = await prisma.campoContravencional.findMany({
+      where: { activo: true },
+      orderBy: { orden: "asc" },
+    });
+    return (
+      <>
+        <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
+        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+          <ContravencionalActaForm
+            campos={campos}
+            actaExistente={{
+              id: acta.id,
+              lugarControl: acta.lugarControl,
+              datos: (acta.datosContravencional ?? {}) as Record<string, string>,
+            }}
+          />
+        </main>
+      </>
+    );
+  }
+
+  const catalogo = await prisma.infraccionCatalogo.findMany({
+    where: { activo: true },
+    orderBy: { orden: "asc" },
+  });
+
+  return (
+    <>
+      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+        <NuevaActaForm
+          catalogo={catalogo.map((i) => ({ ...i, montoBase: Number(i.montoBase) }))}
+          lugarControlSugerido={acta.lugarControl ?? ""}
+          actaExistente={{
+            id: acta.id,
+            lugarControl: acta.lugarControl,
+            conductorNombre: acta.conductorNombre,
+            conductorDomicilio: acta.conductorDomicilio,
+            conductorDni: acta.conductorDni,
+            conductorEdad: acta.conductorEdad,
+            conductorExpedidoPor: acta.conductorExpedidoPor,
+            conductorLicenciaNro: acta.conductorLicenciaNro,
+            conductorLicenciaClase: acta.conductorLicenciaClase,
+            vehiculoDominio: acta.vehiculoDominio,
+            vehiculoMarcaModelo: acta.vehiculoMarcaModelo,
+            vehiculoTipo: acta.vehiculoTipo,
+            vehiculoRemitidoA: acta.vehiculoRemitidoA,
+            otrosDatosAmpliatorios: acta.otrosDatosAmpliatorios,
+            retencionPreventiva: acta.retencionPreventiva,
+            tipoRetencion: acta.tipoRetencion,
+            montoBase: Number(acta.montoBase ?? 0),
+            infraccionIds: acta.infracciones.map((i) => i.infraccionId),
+            detalleOtraInfraccion:
+              acta.infracciones.find((i) => i.detalleOperativo)?.detalleOperativo ?? null,
+            alcoholemiaGraduacion: acta.alcoholemiaGraduacion
+              ? Number(acta.alcoholemiaGraduacion)
+              : null,
+          }}
+        />
+      </main>
+    </>
+  );
+}

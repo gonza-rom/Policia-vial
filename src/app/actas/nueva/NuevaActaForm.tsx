@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { crearActa } from "./actions";
+import { crearActa, actualizarActa } from "./actions";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { Campo, CampoSelect, CampoTextarea } from "@/components/ui/Campo";
 import { ChipInfraccion } from "@/components/ui/ChipInfraccion";
+import { CampoArchivo } from "@/components/ui/CampoArchivo";
 import { Boton } from "@/components/ui/Boton";
 
 type InfraccionCatalogoDTO = {
@@ -34,18 +35,51 @@ const TIPOS_RODADO = [
 
 const ALCOHOLEMIA_DESC = "Estado de Ebriedad / Efecto Estupefacientes";
 
+export type ActaExistenteDTO = {
+  id: string;
+  lugarControl: string | null;
+  conductorNombre: string | null;
+  conductorDomicilio: string | null;
+  conductorDni: string | null;
+  conductorEdad: number | null;
+  conductorExpedidoPor: string | null;
+  conductorLicenciaNro: string | null;
+  conductorLicenciaClase: string | null;
+  vehiculoDominio: string | null;
+  vehiculoMarcaModelo: string | null;
+  vehiculoTipo: "AUTO" | "MOTO" | "PICKUP" | "CARGA" | null;
+  vehiculoRemitidoA: string | null;
+  otrosDatosAmpliatorios: string | null;
+  retencionPreventiva: boolean;
+  tipoRetencion: string;
+  montoBase: number;
+  infraccionIds: string[];
+  detalleOtraInfraccion: string | null;
+  alcoholemiaGraduacion: number | null;
+};
+
 export function NuevaActaForm({
   catalogo,
   lugarControlSugerido,
+  actaExistente,
 }: {
   catalogo: InfraccionCatalogoDTO[];
   lugarControlSugerido: string;
+  actaExistente?: ActaExistenteDTO;
 }) {
-  const [seleccionadas, setSeleccionadas] = useState<Set<string>>(new Set());
-  const [tipoRodado, setTipoRodado] = useState<(typeof TIPOS_RODADO)[number]["value"]>("AUTO");
-  const [montoBase, setMontoBase] = useState<number>(0);
-  const [montoEditadoManualmente, setMontoEditadoManualmente] = useState(false);
-  const [retencion, setRetencion] = useState(false);
+  const [seleccionadas, setSeleccionadas] = useState<Set<string>>(
+    new Set(actaExistente?.infraccionIds ?? []),
+  );
+  const [tipoRodado, setTipoRodado] = useState<(typeof TIPOS_RODADO)[number]["value"]>(
+    actaExistente?.vehiculoTipo ?? "AUTO",
+  );
+  const [montoBase, setMontoBase] = useState<number>(actaExistente?.montoBase ?? 0);
+  const [montoEditadoManualmente, setMontoEditadoManualmente] = useState(
+    Boolean(actaExistente),
+  );
+  const [retencion, setRetencion] = useState(
+    actaExistente?.retencionPreventiva ?? false,
+  );
 
   const otraInfraccion = catalogo.find((i) => i.categoria === "OTRA");
 
@@ -72,7 +106,13 @@ export function NuevaActaForm({
   );
 
   return (
-    <form action={crearActa} className="space-y-4">
+    <form
+      action={actaExistente ? actualizarActa : crearActa}
+      className="space-y-4"
+    >
+      {actaExistente && (
+        <input type="hidden" name="actaId" value={actaExistente.id} />
+      )}
       <div className="bg-surface-container-lowest border-l-4 border-secondary p-3 rounded shadow-sm border border-outline-variant">
         <div className="flex items-center justify-between">
           <span className="text-label-sm font-label-sm text-secondary uppercase font-bold">
@@ -87,7 +127,7 @@ export function NuevaActaForm({
             label="Lugar de Constatación"
             id="lugarControl"
             name="lugarControl"
-            defaultValue={lugarControlSugerido}
+            defaultValue={actaExistente?.lugarControl ?? lugarControlSugerido}
           />
         </div>
       </div>
@@ -100,12 +140,14 @@ export function NuevaActaForm({
           placeholder="Ej: CARRIZO, MARCELO ANTONIO"
           required
           className="uppercase"
+          defaultValue={actaExistente?.conductorNombre ?? undefined}
         />
         <Campo
           label="Domicilio Legal"
           id="conductorDomicilio"
           name="conductorDomicilio"
           placeholder="Calle, Barrio, Localidad"
+          defaultValue={actaExistente?.conductorDomicilio ?? undefined}
         />
         <div className="grid grid-cols-2 gap-3">
           <Campo
@@ -115,6 +157,7 @@ export function NuevaActaForm({
             placeholder="Ej: 34.892.115"
             required
             monoespaciado
+            defaultValue={actaExistente?.conductorDni ?? undefined}
           />
           <Campo
             label="Edad"
@@ -125,6 +168,7 @@ export function NuevaActaForm({
             max={110}
             placeholder="Ej: 32"
             monoespaciado
+            defaultValue={actaExistente?.conductorEdad ?? undefined}
           />
         </div>
         <Campo
@@ -133,6 +177,7 @@ export function NuevaActaForm({
           name="conductorExpedidoPor"
           placeholder="Ej: RENAPER / Catamarca"
           className="uppercase"
+          defaultValue={actaExistente?.conductorExpedidoPor ?? undefined}
         />
         <div className="grid grid-cols-2 gap-3">
           <Campo
@@ -141,6 +186,7 @@ export function NuevaActaForm({
             name="conductorLicenciaNro"
             placeholder="N° Carnet"
             monoespaciado
+            defaultValue={actaExistente?.conductorLicenciaNro ?? undefined}
           />
           <Campo
             label="Clase"
@@ -149,6 +195,7 @@ export function NuevaActaForm({
             placeholder="B1, B2, C…"
             monoespaciado
             className="uppercase"
+            defaultValue={actaExistente?.conductorLicenciaClase ?? undefined}
           />
         </div>
       </TarjetaSeccion>
@@ -166,6 +213,7 @@ export function NuevaActaForm({
           required
           monoespaciado
           className="uppercase tracking-widest text-lg text-primary"
+          defaultValue={actaExistente?.vehiculoDominio ?? undefined}
         />
         <Campo
           label="Vehículo Marca - Modelo"
@@ -173,6 +221,7 @@ export function NuevaActaForm({
           name="vehiculoMarcaModelo"
           placeholder="Ej: TOYOTA HILUX"
           className="uppercase"
+          defaultValue={actaExistente?.vehiculoMarcaModelo ?? undefined}
         />
         <div>
           <span className="block text-label-sm font-label-sm text-on-surface-variant uppercase mb-1">
@@ -204,11 +253,17 @@ export function NuevaActaForm({
           id="vehiculoRemitidoA"
           name="vehiculoRemitidoA"
           placeholder="Ej: Corralón Municipal Huillapima"
+          defaultValue={actaExistente?.vehiculoRemitidoA ?? undefined}
         />
         <div className="grid grid-cols-2 gap-3">
           <CampoArchivo label="Foto del Vehículo" id="fotoVehiculo" name="fotoVehiculo" />
           <CampoArchivo label="Foto Documentación" id="fotoDocumento" name="fotoDocumento" />
         </div>
+        {actaExistente && (
+          <p className="text-body-sm text-on-surface-variant">
+            Si no adjuntás una foto nueva, se conserva la que ya estaba cargada.
+          </p>
+        )}
       </TarjetaSeccion>
 
       <TarjetaSeccion
@@ -262,6 +317,7 @@ export function NuevaActaForm({
                             min={0}
                             placeholder="Ej: 0.85"
                             monoespaciado
+                            defaultValue={actaExistente?.alcoholemiaGraduacion ?? undefined}
                           />
                         </div>
                       )}
@@ -295,6 +351,7 @@ export function NuevaActaForm({
                 id="detalleOtraInfraccion"
                 name="detalleOtraInfraccion"
                 placeholder="Tipificación adicional según Código de Faltas…"
+                defaultValue={actaExistente?.detalleOtraInfraccion ?? undefined}
               />
             )}
           </div>
@@ -308,6 +365,7 @@ export function NuevaActaForm({
           name="otrosDatosAmpliatorios"
           rows={3}
           placeholder="Detalle estado del tiempo, visibilidad, comportamiento del conductor…"
+          defaultValue={actaExistente?.otrosDatosAmpliatorios ?? undefined}
         />
         <div className="flex items-center gap-2">
           <input
@@ -323,7 +381,12 @@ export function NuevaActaForm({
           </label>
         </div>
         {retencion && (
-          <CampoSelect label="Tipo de Retención" id="tipoRetencion" name="tipoRetencion" defaultValue="LICENCIA">
+          <CampoSelect
+            label="Tipo de Retención"
+            id="tipoRetencion"
+            name="tipoRetencion"
+            defaultValue={actaExistente?.tipoRetencion ?? "LICENCIA"}
+          >
             <option value="LICENCIA">Licencia de Conducir</option>
             <option value="VEHICULO">Vehículo</option>
             <option value="LICENCIA_Y_VEHICULO">Licencia y Vehículo</option>
@@ -386,58 +449,33 @@ export function NuevaActaForm({
         </div>
       </TarjetaSeccion>
 
-      <BotonEnviar />
+      <BotonEnviar esEdicion={Boolean(actaExistente)} />
     </form>
   );
 }
 
-function CampoArchivo({
-  label,
-  id,
-  name,
-}: {
-  label: string;
-  id: string;
-  name: string;
-}) {
-  return (
-    <div>
-      <label
-        htmlFor={id}
-        className="block text-label-sm font-label-sm text-on-surface-variant uppercase mb-1"
-      >
-        {label}
-      </label>
-      <label
-        htmlFor={id}
-        className="flex items-center justify-center gap-1.5 min-h-touch-min border border-dashed border-outline rounded bg-surface-container-low text-label-sm font-label-sm text-on-surface-variant cursor-pointer hover:bg-surface-container px-2 text-center"
-      >
-        <span className="material-symbols-outlined text-[18px]">
-          photo_camera
-        </span>
-        Adjuntar
-      </label>
-      <input id={id} name={name} type="file" accept="image/*" capture="environment" className="hidden" />
-    </div>
-  );
-}
-
-function BotonEnviar() {
+function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
   const { pending } = useFormStatus();
   return (
     <div className="pt-2 pb-6">
       <Boton
         type="submit"
-        icono="draw"
+        icono={esEdicion ? "save" : "draw"}
         fullWidth
         disabled={pending}
         className="disabled:opacity-60"
       >
-        {pending ? "Guardando…" : "Continuar a Firma y Cierre"}
+        {pending
+          ? "Guardando…"
+          : esEdicion
+            ? "Guardar Cambios"
+            : "Continuar a Firma y Cierre"}
       </Boton>
-      <p className="text-center text-label-sm font-label-sm text-outline mt-2 uppercase">
-        Firma infractor y actuante con valor probatorio legal
-      </p>
+      {!esEdicion && (
+        <p className="text-center text-label-sm font-label-sm text-outline mt-2 uppercase">
+          Firma infractor y actuante con valor probatorio legal
+        </p>
+      )}
     </div>
   );
 }

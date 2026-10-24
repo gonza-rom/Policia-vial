@@ -66,12 +66,16 @@ export default async function EstadisticasPage({
   const esMesActual =
     finMes > new Date() && inicioMes <= new Date() && inicioMes.getMonth() === new Date().getMonth() && inicioMes.getFullYear() === new Date().getFullYear();
 
+  // Las actas contravencionales no tienen monto ni infracciones tipificadas
+  // de esta tabla — este dashboard (recaudación, gravedad, vehículos) es
+  // específico del acta municipal.
   const whereBase = {
+    tipo: "MUNICIPAL" as const,
     fecha: { gte: inicioMes, lt: finMes },
     estado: { not: "ANULADA" as const },
   };
 
-  const [actas, agregadoMesAnterior] = await Promise.all([
+  const [actas, agregadoMesAnterior, actasContravencionales] = await Promise.all([
     prisma.acta.findMany({
       where: whereBase,
       include: { infracciones: { include: { infraccion: true } } },
@@ -79,10 +83,18 @@ export default async function EstadisticasPage({
     }),
     prisma.acta.aggregate({
       where: {
+        tipo: "MUNICIPAL",
         fecha: { gte: inicioMesAnterior, lt: inicioMes },
         estado: { not: "ANULADA" },
       },
       _sum: { montoConDescuento: true },
+    }),
+    prisma.acta.count({
+      where: {
+        tipo: "CONTRAVENCIONAL",
+        fecha: { gte: inicioMes, lt: finMes },
+        estado: { not: "ANULADA" },
+      },
     }),
   ]);
 
@@ -167,10 +179,27 @@ export default async function EstadisticasPage({
           />
           <StatTile
             icono="description"
-            label="Total Actas Emitidas"
+            label="Actas Municipales"
             valor={String(actas.length)}
           />
         </div>
+
+        {actasContravencionales > 0 && (
+          <Link
+            href="/actas"
+            className="flex items-center justify-between bg-surface-container-lowest rounded-lg border border-outline-variant p-3 shadow-sm hover:bg-surface-container"
+          >
+            <span className="flex items-center gap-2 text-body-md text-on-surface">
+              <span className="material-symbols-outlined text-secondary">
+                local_police
+              </span>
+              Actas Contravencionales del mes
+            </span>
+            <span className="font-display text-lg font-bold text-primary">
+              {actasContravencionales}
+            </span>
+          </Link>
+        )}
 
         <EvolucionChart porSemana={porSemana} porDia={porDia} />
 

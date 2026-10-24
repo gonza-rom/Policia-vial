@@ -147,3 +147,27 @@ textarea:focus {
   border-color: var(--color-secondary) !important;
   box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
 }
+
+/* Exportar acta a PDF: solo el contenido de #acta-imprimible, sin chrome
+   de la app (header, nav, footer, botones de acción). */
+@media print {
+  header,
+  nav,
+  footer {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  #acta-imprimible {
+    max-width: none;
+    padding: 0;
+  }
+
+  #acta-imprimible section {
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+}
