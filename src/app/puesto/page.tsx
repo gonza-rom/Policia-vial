@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAgenteActual } from "@/lib/auth";
+import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -7,13 +7,18 @@ import { elegirPuesto } from "./actions";
 
 export default async function PuestoPage() {
   const agente = await getAgenteActual();
-  const [puestos, actual] = await Promise.all([
+  const [puestos, contexto, guardiaActiva] = await Promise.all([
     prisma.puesto.findMany({
       where: { activo: true },
       orderBy: { orden: "asc" },
     }),
     getPuestoSeleccionado(),
+    getGuardiaActiva(agente.id),
   ]);
+  // Con guardia abierta, lo que manda es el puesto de ESA guardia (lo que
+  // se ve en /guardia), no el contexto de sesión — así el resaltado coincide
+  // con lo que el agente ve ahí.
+  const actual = guardiaActiva ? guardiaActiva.puesto : contexto;
 
   return (
     <>
@@ -35,8 +40,9 @@ export default async function PuestoPage() {
             Elegí tu puesto
           </h1>
           <p className="text-body-sm text-on-surface-variant">
-            Define dónde vas a trabajar en esta sesión. Podés cambiarlo cuando
-            quieras desde el menú principal.
+            {guardiaActiva
+              ? "Ya tenés un turno abierto. Si elegís otro puesto, se reasigna tu guardia actual a ese puesto."
+              : "Define dónde vas a trabajar en esta sesión. Podés cambiarlo cuando quieras desde el menú principal."}
           </p>
         </div>
 
