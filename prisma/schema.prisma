@@ -315,3 +315,17 @@ model Relevamiento {
   @@index([fecha])
   @@index([puestoId])
 }
+
+/// Registro de "última edición gana" cuando una sincronización offline pisa
+/// una edición más nueva que ya estaba en el servidor. La versión que
+/// prevalece queda en Acta; la descartada se guarda acá para no perderla.
+model ConflictoSincronizacion {
+  id         String   @id @default(cuid())
+  actaId     String
+  agenteId   String
+  descartado Json
+  motivo     String
+  creadoEn   DateTime @default(now())
+
+  @@index([actaId])
+}

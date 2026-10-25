@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { iniciarSesion, type EstadoLogin } from "./actions";
 import { Boton } from "@/components/ui/Boton";
+import { limpiarCachePaginasOffline } from "@/lib/offline/sincronizar";
 
 const estadoInicial: EstadoLogin = {};
 
@@ -12,6 +13,13 @@ export function LoginForm() {
     estadoInicial,
   );
   const [verContrasena, setVerContrasena] = useState(false);
+
+  // El login es la pantalla que ve cualquier agente antes de usar un celular
+  // compartido — aprovechamos para borrar las páginas offline cacheadas por
+  // quien haya usado el equipo antes (ver comentario en sincronizar.ts).
+  useEffect(() => {
+    limpiarCachePaginasOffline();
+  }, []);
 
   return (
     <form action={formAction} className="space-y-4">

@@ -176,7 +176,11 @@ export default async function GuardiaPage() {
             Acciones Operativas de Tránsito
           </h2>
 
-          <Link
+          {/* <a> normal, no <Link>: fuerza una recarga completa para que el
+          Service Worker cachee el HTML servido (con el catálogo de
+          infracciones ya incluido) y la página quede disponible sin
+          conexión. Una transición cliente de Next no pasa por el SW. */}
+          <a
             href="/actas/nueva"
             className="group block bg-primary-container text-on-primary rounded-xl p-pad-xl border-2 border-primary shadow-md hover:bg-primary transition-all active:scale-[0.99]"
           >
@@ -196,7 +200,7 @@ export default async function GuardiaPage() {
                 arrow_forward
               </span>
             </span>
-          </Link>
+          </a>
 
           <div className="grid gap-pad-md sm:grid-cols-2">
             <TarjetaAccion

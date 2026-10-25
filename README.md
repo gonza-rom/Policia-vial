@@ -15,6 +15,8 @@ recaudación.
 - **Recharts** para el gráfico de evolución de recaudación (resto de gráficos:
   barras HTML/CSS propias, siguiendo el sistema de diseño de
   `sistema_de_control_y_actas_viales_huillapima/DESIGN.md`)
+- **Service Worker + IndexedDB** para el modo offline de Nueva Acta (ver
+  sección dedicada más abajo)
 
 Las 6 pantallas originales en `*/code.html` (mockups estáticos con Tailwind CDN)
 fueron la referencia visual — la app real vive en `src/`.
@@ -34,6 +36,13 @@ fueron la referencia visual — la app real vive en `src/`.
    - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
      `CLOUDINARY_API_SECRET`: **necesarios para que la subida de fotos y firmas
      funcione**. Sin esto, el acta se guarda igual pero sin la imagen adjunta.
+   - `NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET`: preset de subida **sin firmar**
+     (unsigned) en Cloudinary — necesario para que las fotos adjuntadas a una
+     acta guardada sin conexión se puedan subir directo desde el celular al
+     volver la señal, sin pasar por el servidor. Se crea en el panel de
+     Cloudinary → Settings → Upload → Upload presets → "Add upload preset",
+     con "Signing Mode" en **Unsigned**. Sin esto, el acta offline se
+     sincroniza igual pero sin las fotos.
    - `SEED_DEFAULT_PASSWORD`: contraseña con la que se crean los agentes de
      prueba en el seed.
    - `NEXT_PUBLIC_DEVHUB_NOMBRE` / `NEXT_PUBLIC_DEVHUB_URL`: texto y enlace del
@@ -137,6 +146,64 @@ fueron la referencia visual — la app real vive en `src/`.
   procedencia/medio/sexo, filtrable por puesto. Mismo esquema de permisos
   que Requerimientos.
 
+## Modo offline (Nueva Acta)
+
+Si se corta la señal durante una guardia, el agente puede seguir labrando
+**actas municipales nuevas** desde `/actas/nueva?tipo=municipal` — quedan
+guardadas en el celular y se sincronizan solas al volver la conexión.
+
+**Alcance** (a propósito, para mantener el riesgo acotado):
+- Solo **Nueva Acta municipal**. Requerimientos, Relevamientos, el acta
+  contravencional y la edición de actas existentes siguen necesitando señal.
+- La firma digital también necesita señal — un acta guardada sin conexión se
+  puede firmar recién cuando ya se sincronizó con el servidor.
+- Las fotos adjuntas se suben directo a Cloudinary desde el celular (preset
+  sin firmar, ver variable de entorno arriba); si no hay preset configurado,
+  el acta se sincroniza igual pero sin las fotos.
+
+**Cómo funciona:**
+- Un Service Worker (`public/sw.js`) cachea el HTML ya renderizado de
+  `/guardia`, `/actas/nueva` y `/actas/nueva?tipo=municipal` — con el
+  catálogo de infracciones y los datos de la guardia activa ya incluidos —
+  cada vez que la app arranca con señal (`precargarRutasCriticas` en
+  `src/lib/offline/precache.ts`), además de cachearlas cuando se visitan
+  normalmente. Por eso esas 3 rutas usan `<a>` en vez de `<Link>` en los
+  puntos de entrada (tarjeta de "Cargar Nueva Acta", selector de tipo de
+  acta, ítems del menú inferior): una transición cliente de Next no pasa
+  por el Service Worker, y sin esto la página nunca quedaría cacheada.
+- Si al enviar el formulario no hay señal, el acta se guarda en
+  **IndexedDB** del navegador (`src/lib/offline/`) en vez de mandarse al
+  servidor, con un UUID generado en el celular que va a ser el `Acta.id`
+  definitivo (evita duplicados al sincronizar).
+- Un indicador fijo arriba de la pantalla (`SincronizadorOffline`) muestra
+  cuántas actas quedan pendientes y permite reintentar a mano. Al volver la
+  señal, se sincroniza sola.
+- **Conflictos:** si dos ediciones del mismo acta llegan por caminos
+  distintos (poco probable en este alcance, ya que es solo creación, pero
+  cubierto igual), gana la última edición por fecha; la que se descarta
+  queda registrada en `ConflictoSincronizacion` para auditoría, no se pierde
+  silenciosamente.
+- **Dispositivo compartido:** al mostrarse `/login` se borra el cache de
+  páginas (no el de archivos estáticos), para que las páginas offline
+  cacheadas con los datos de un agente no queden disponibles para el
+  siguiente que use el mismo celular.
+
+**Cómo probarlo (Chrome DevTools):**
+1. Loguearse y entrar a "Cargar Nueva Acta" → "Acta Municipal" con señal, y
+   esperar 2-3 segundos en esa pantalla (para que el Service Worker termine
+   de cachear).
+2. DevTools → pestaña **Network** → tilde **Offline** (o **Application** →
+   **Service Workers** → **Offline**).
+3. Recargar la página (F5). Debe seguir viéndose el formulario completo
+   (catálogo de infracciones incluido), no un error de conexión.
+4. Completar el formulario y enviarlo. Debe aparecer la pantalla "Guardado
+   sin conexión" (no el formulario de nuevo ni un error).
+5. DevTools → **Application** → **IndexedDB** → `policia-vial-offline` →
+   `actas_pendientes`: debe aparecer el acta recién guardada.
+6. Volver a tocar "Offline" en Network para sacarlo (reconectar). La barra
+   de arriba debe pasar a "Sincronizando…" y después desaparecer.
+7. Confirmar en `/actas` que el acta aparece, y que no se duplicó.
+
 ## Pendiente / a decisión del equipo
 
 - Revisar y ajustar los montos base de multas del catálogo de infracciones
@@ -153,8 +220,10 @@ fueron la referencia visual — la app real vive en `src/`.
   (nombres de ejemplo — para cambiarlos hoy se edita `prisma/seed.ts` y se
   vuelve a correr `npx prisma db seed`; los agentes ya se dan de alta desde
   `/agentes`, sin tocar código).
-- No hay modo offline/PWA — requiere conexión a internet (decisión tomada al
-  planificar el proyecto, para mantener el alcance manejable).
+- El modo offline (ver sección "Modo offline" arriba) solo cubre Nueva Acta
+  municipal. Si más adelante hace falta offline para requerimientos,
+  relevamientos, el acta contravencional o la firma, es una extensión del
+  mismo mecanismo (IndexedDB + Service Worker), no un enfoque nuevo.
 - La restricción de recaudación a jefe/admin está en el código del servidor
   (Server Components/Actions), no en políticas RLS de Postgres — ya
   documentado como decisión de arquitectura: no hay ningún otro camino a la

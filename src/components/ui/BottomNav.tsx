@@ -18,6 +18,12 @@ const ITEM_AGENTES = { href: "/agentes", icono: "groups", label: "Agentes" } as 
 // activas con la ruta exacta.
 const RUTAS_EXACTAS: string[] = ["/guardia", "/actas"];
 
+// "Nueva Acta" y "Inicio" necesitan una recarga completa (no una transición
+// cliente de Next) para que el Service Worker las cachee y queden
+// disponibles sin conexión — ver sw.js y NuevaActaForm.tsx. "Inicio" además
+// es a donde se vuelve después de guardar un acta sin conexión.
+const RUTAS_RECARGA_COMPLETA: string[] = ["/actas/nueva", "/guardia"];
+
 /** `verAgentes`: muestra el acceso a /agentes (solo JEFE o ADMIN). */
 export function BottomNav({ verAgentes = false }: { verAgentes?: boolean }) {
   const pathname = usePathname();
@@ -29,17 +35,12 @@ export function BottomNav({ verAgentes = false }: { verAgentes?: boolean }) {
         const activo = RUTAS_EXACTAS.includes(item.href)
           ? pathname === item.href
           : pathname.startsWith(item.href);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={clsx(
-              "flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 min-h-touch-min transition-colors",
-              activo
-                ? "text-primary bg-surface-container"
-                : "text-on-surface-variant",
-            )}
-          >
+        const claseItem = clsx(
+          "flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 min-h-touch-min transition-colors",
+          activo ? "text-primary bg-surface-container" : "text-on-surface-variant",
+        );
+        const contenido = (
+          <>
             <span className="material-symbols-outlined text-[22px]" aria-hidden>
               {item.icono}
             </span>
@@ -51,6 +52,19 @@ export function BottomNav({ verAgentes = false }: { verAgentes?: boolean }) {
             >
               {item.label}
             </span>
+          </>
+        );
+
+        if (RUTAS_RECARGA_COMPLETA.includes(item.href)) {
+          return (
+            <a key={item.href} href={item.href} className={claseItem}>
+              {contenido}
+            </a>
+          );
+        }
+        return (
+          <Link key={item.href} href={item.href} className={claseItem}>
+            {contenido}
           </Link>
         );
       })}

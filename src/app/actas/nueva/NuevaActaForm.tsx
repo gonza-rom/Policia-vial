@@ -8,6 +8,9 @@ import { Campo, CampoSelect, CampoTextarea } from "@/components/ui/Campo";
 import { ChipInfraccion } from "@/components/ui/ChipInfraccion";
 import { CampoArchivo } from "@/components/ui/CampoArchivo";
 import { Boton } from "@/components/ui/Boton";
+import { soportaIndexedDB } from "@/lib/offline/db";
+import { encolarActa } from "@/lib/offline/colaActas";
+import { avisarCambioDeCola } from "@/lib/offline/sincronizar";
 
 type InfraccionCatalogoDTO = {
   id: string;
@@ -62,11 +65,19 @@ export function NuevaActaForm({
   catalogo,
   lugarControlSugerido,
   actaExistente,
+  guardiaId,
+  puestoId,
 }: {
   catalogo: InfraccionCatalogoDTO[];
   lugarControlSugerido: string;
   actaExistente?: ActaExistenteDTO;
+  /** Solo hacen falta para poder guardar sin conexión — si no hay señal,
+   * no hay forma de que el servidor nos diga cuál es la guardia activa. */
+  guardiaId?: string;
+  puestoId?: string;
 }) {
+  const [guardadoOffline, setGuardadoOffline] = useState(false);
+  const [guardandoOffline, setGuardandoOffline] = useState(false);
   const [seleccionadas, setSeleccionadas] = useState<Set<string>>(
     new Set(actaExistente?.infraccionIds ?? []),
   );
@@ -105,9 +116,104 @@ export function NuevaActaForm({
     [montoBase],
   );
 
+  /** Si no hay señal, no tiene sentido mandar el form al servidor — se
+   * guarda en el celular (IndexedDB) y se sincroniza solo cuando vuelva la
+   * conexión. Solo aplica a actas nuevas: editar offline una que ya existe
+   * en el servidor queda fuera de este alcance. */
+  async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (actaExistente) return; // edición: siempre va al servidor
+    if (navigator.onLine) return; // hay señal: que siga el submit normal
+    if (!soportaIndexedDB() || !guardiaId || !puestoId) return; // sin forma de guardar local, se intenta igual (fallará con un error claro)
+
+    e.preventDefault();
+    setGuardandoOffline(true);
+
+    const formEl = e.currentTarget;
+    const formData = new FormData(formEl);
+    const campos: Record<string, string> = {};
+    for (const campo of [
+      "lugarControl",
+      "conductorNombre",
+      "conductorDni",
+      "conductorEdad",
+      "conductorDomicilio",
+      "conductorLicenciaNro",
+      "conductorLicenciaClase",
+      "conductorExpedidoPor",
+      "vehiculoDominio",
+      "vehiculoMarcaModelo",
+      "vehiculoTipo",
+      "vehiculoRemitidoA",
+      "otrosDatosAmpliatorios",
+      "montoBase",
+      "tipoRetencion",
+      "alcoholemiaGraduacion",
+      "detalleOtraInfraccion",
+    ]) {
+      campos[campo] = String(formData.get(campo) ?? "");
+    }
+
+    const id = crypto.randomUUID();
+    const fotos: { actaId: string; campo: "fotoVehiculo" | "fotoDocumento"; blob: Blob; nombre: string; tipo: string }[] = [];
+    for (const campo of ["fotoVehiculo", "fotoDocumento"] as const) {
+      const archivo = formData.get(campo);
+      if (archivo instanceof File && archivo.size > 0) {
+        fotos.push({ actaId: id, campo, blob: archivo, nombre: archivo.name, tipo: archivo.type });
+      }
+    }
+
+    await encolarActa(
+      {
+        id,
+        campos,
+        infraccionIds: Array.from(seleccionadas),
+        otraInfraccionId: otraInfraccion?.id ?? null,
+        retencionPreventiva: retencion,
+        guardiaId,
+        puestoId,
+        creadoEnCliente: new Date().toISOString(),
+      },
+      fotos,
+    );
+    avisarCambioDeCola();
+    setGuardandoOffline(false);
+    setGuardadoOffline(true);
+  }
+
+  if (guardadoOffline) {
+    return (
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-xl text-center space-y-4">
+        <span className="material-symbols-outlined text-5xl text-secondary">
+          cloud_off
+        </span>
+        <h2 className="text-headline-md font-headline-md text-primary">
+          Guardado sin conexión
+        </h2>
+        <p className="text-body-md text-on-surface-variant">
+          El acta quedó guardada en este celular. Se va a sincronizar sola —
+          y vas a poder firmarla — en cuanto vuelva la señal.
+        </p>
+        {/* Navegación dura (no router.push): si no hay señal, una
+        transición cliente intenta pedir el RSC de /guardia y falla; una
+        recarga completa en cambio puede servirse desde el cache del SW. */}
+        <Boton
+          onClick={() => {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga dura intencional, ver comentario arriba
+            window.location.href = "/guardia";
+          }}
+          fullWidth
+          icono="home"
+        >
+          Volver al Menú
+        </Boton>
+      </div>
+    );
+  }
+
   return (
     <form
       action={actaExistente ? actualizarActa : crearActa}
+      onSubmit={manejarSubmit}
       className="space-y-4"
     >
       {actaExistente && (
@@ -449,12 +555,18 @@ export function NuevaActaForm({
         </div>
       </TarjetaSeccion>
 
-      <BotonEnviar esEdicion={Boolean(actaExistente)} />
+      <BotonEnviar esEdicion={Boolean(actaExistente)} guardandoOffline={guardandoOffline} />
     </form>
   );
 }
 
-function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
+function BotonEnviar({
+  esEdicion,
+  guardandoOffline,
+}: {
+  esEdicion: boolean;
+  guardandoOffline: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <div className="pt-2 pb-6">
@@ -462,10 +574,10 @@ function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
         type="submit"
         icono={esEdicion ? "save" : "draw"}
         fullWidth
-        disabled={pending}
+        disabled={pending || guardandoOffline}
         className="disabled:opacity-60"
       >
-        {pending
+        {pending || guardandoOffline
           ? "Guardando…"
           : esEdicion
             ? "Guardar Cambios"

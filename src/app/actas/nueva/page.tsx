@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -29,7 +28,10 @@ export default async function NuevaActaPage({
             ¿Qué tipo de acta vas a labrar?
           </h1>
           <div className="grid gap-pad-md">
-            <Link
+            {/* <a> normal, no <Link>: para que el Service Worker cachee el
+            HTML de cada tipo de acta (con su catálogo ya incluido) y quede
+            disponible sin conexión — una transición cliente no pasa por el SW. */}
+            <a
               href="/actas/nueva?tipo=municipal"
               className="block bg-surface-container-lowest rounded-xl border-2 border-outline-variant p-pad-lg shadow-sm hover:border-primary transition-colors"
             >
@@ -41,8 +43,8 @@ export default async function NuevaActaPage({
                 Ordenanza N° 385/12 — infracciones de tránsito con liquidación
                 de multa y 40% de descuento por pago voluntario.
               </p>
-            </Link>
-            <Link
+            </a>
+            <a
               href="/actas/nueva?tipo=contravencional"
               className="block bg-surface-container-lowest rounded-xl border-2 border-outline-variant p-pad-lg shadow-sm hover:border-primary transition-colors"
             >
@@ -54,7 +56,7 @@ export default async function NuevaActaPage({
                 Código de Faltas de la Provincia (Ley N° 5171/05) — acta
                 policial de comprobación.
               </p>
-            </Link>
+            </a>
           </div>
         </main>
       </>
@@ -91,6 +93,8 @@ export default async function NuevaActaPage({
             montoBase: Number(i.montoBase),
           }))}
           lugarControlSugerido={guardia.puesto.kmRuta ?? guardia.puesto.nombre}
+          guardiaId={guardia.id}
+          puestoId={guardia.puestoId}
         />
       </main>
     </>

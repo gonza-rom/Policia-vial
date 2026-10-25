@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Public_Sans, Space_Grotesk } from "next/font/google";
 import { RegistrarServiceWorker } from "@/components/ui/RegistrarServiceWorker";
+import { SincronizadorOffline } from "@/components/ui/SincronizadorOffline";
 import { Footer } from "@/components/ui/Footer";
 import "./globals.css";
 
@@ -68,6 +69,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         suppressHydrationWarning
       >
         <RegistrarServiceWorker />
+        <SincronizadorOffline />
         {children}
         <Footer />
       </body>
