@@ -4,13 +4,16 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
+import { StatTile } from "@/components/ui/StatTile";
+import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import {
   formatoFechaHora,
   formatoHora,
   formatoMoneda,
   numeroActa,
   nombreConductorActa,
-  ESTADO_ACTA_LABEL,
 } from "@/lib/formato";
 import { cerrarGuardia } from "../actions";
 
@@ -81,14 +84,13 @@ export default async function HistorialGuardiaPage() {
         </p>
 
         <div className="grid grid-cols-2 gap-3">
-          <Metrica label="Actas Labradas" valor={String(actas.length)} tono="primario" />
-          <Metrica
+          <StatTile label="Actas Labradas" valor={String(actas.length)} />
+          <StatTile
             label="Monto Total"
             valor={formatoMoneda(Number(agregados._sum.montoConDescuento ?? 0))}
-            tono="primario"
           />
-          <Metrica label="Retenciones Preventivas" valor={String(retenciones)} tono="error" />
-          <Metrica label="Alcoholemias Positivas" valor={String(alcoholemias)} tono="error" />
+          <StatTile label="Retenciones Preventivas" valor={String(retenciones)} tono="error" />
+          <StatTile label="Alcoholemias Positivas" valor={String(alcoholemias)} tono="error" />
         </div>
 
         <section className="space-y-2">
@@ -96,9 +98,7 @@ export default async function HistorialGuardiaPage() {
             Actas Labradas en el Turno
           </h2>
           {actas.length === 0 && (
-            <p className="text-body-sm text-on-surface-variant">
-              Todavía no se labraron actas en esta guardia.
-            </p>
+            <EstadoVacio>Todavía no se labraron actas en esta guardia.</EstadoVacio>
           )}
           <ul className="space-y-2">
             {actas.map((acta) => (
@@ -120,15 +120,7 @@ export default async function HistorialGuardiaPage() {
                     {acta.tipo === "MUNICIPAL" ? ` · ${acta.vehiculoDominio}` : " · Contravencional"}
                   </p>
                   <div className="flex items-center justify-between mt-1">
-                    <span
-                      className={`text-label-sm font-label-sm px-2 py-0.5 rounded font-bold ${
-                        acta.estado === "PENDIENTE_FIRMA"
-                          ? "bg-error-container text-on-error-container"
-                          : "bg-secondary-container/40 text-on-secondary-container"
-                      }`}
-                    >
-                      {ESTADO_ACTA_LABEL[acta.estado]}
-                    </span>
+                    <BadgeEstadoActa estado={acta.estado} />
                     {acta.tipo === "MUNICIPAL" && (
                       <span className="font-display font-bold text-primary">
                         {formatoMoneda(Number(acta.montoConDescuento ?? 0))}
@@ -141,13 +133,7 @@ export default async function HistorialGuardiaPage() {
           </ul>
         </section>
 
-        <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-          <h2 className="text-label-lg font-label-lg text-primary uppercase flex items-center gap-2">
-            <span className="material-symbols-outlined text-secondary">
-              assignment_turned_in
-            </span>
-            Cierre de Guardia
-          </h2>
+        <TarjetaSeccion icono="assignment_turned_in" titulo="Cierre de Guardia">
           {pendientesFirma > 0 && (
             <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
               Hay {pendientesFirma} acta(s) pendiente(s) de firma. Podés cerrar
@@ -174,45 +160,12 @@ export default async function HistorialGuardiaPage() {
               Cerrar Guardia
             </Boton>
           </form>
-        </section>
+        </TarjetaSeccion>
 
         <ListaGuardiasCerradas guardias={guardiasRecientes} />
       </main>
       <BottomNav verAgentes={esJefe(agente)} />
     </>
-  );
-}
-
-function Metrica({
-  label,
-  valor,
-  tono,
-}: {
-  label: string;
-  valor: string;
-  tono: "primario" | "error";
-}) {
-  return (
-    <div
-      className={`border-l-4 px-3 py-2 bg-surface-container-lowest rounded shadow-sm ${
-        tono === "error" ? "border-error" : "border-primary"
-      }`}
-    >
-      <span
-        className={`text-label-sm font-label-sm block uppercase ${
-          tono === "error" ? "text-error" : "text-on-surface-variant"
-        }`}
-      >
-        {label}
-      </span>
-      <span
-        className={`text-headline-sm font-display font-bold ${
-          tono === "error" ? "text-error" : "text-primary"
-        }`}
-      >
-        {valor}
-      </span>
-    </div>
   );
 }
 

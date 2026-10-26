@@ -62,17 +62,17 @@ export function EvolucionChart({
           <BarChart data={datos} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <CartesianGrid
               vertical={false}
-              stroke="#c4c6ce"
+              stroke="var(--color-outline-variant)"
               strokeOpacity={0.5}
             />
             <XAxis
               dataKey="etiqueta"
-              tick={{ fontSize: 11, fill: "#44474e" }}
-              axisLine={{ stroke: "#c4c6ce" }}
+              tick={{ fontSize: 11, fill: "var(--color-on-surface-variant)" }}
+              axisLine={{ stroke: "var(--color-outline-variant)" }}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: "#44474e" }}
+              tick={{ fontSize: 11, fill: "var(--color-on-surface-variant)" }}
               axisLine={false}
               tickLine={false}
               width={54}
@@ -86,7 +86,7 @@ export function EvolucionChart({
               contentStyle={{
                 fontSize: 12,
                 borderRadius: 6,
-                borderColor: "#c4c6ce",
+                borderColor: "var(--color-outline-variant)",
               }}
             />
             <Bar dataKey="monto" fill={COLOR_RECAUDACION} radius={[4, 4, 0, 0]} maxBarSize={28} />

@@ -8,12 +8,13 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { StatTile } from "@/components/ui/StatTile";
+import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import {
   formatoFechaHora,
   formatoHora,
   formatoMoneda,
   numeroActa,
-  ESTADO_ACTA_LABEL,
 } from "@/lib/formato";
 import { cambiarEstadoAgente, cerrarGuardiaDeAgente } from "../actions";
 import { ContrasenaForm, EditarAgenteForm } from "./FormulariosAgente";
@@ -149,11 +150,7 @@ export default async function AgentePage({
         </TarjetaSeccion>
 
         <TarjetaSeccion icono="task_alt" titulo="Últimas Actas">
-          {actas.length === 0 && (
-            <p className="text-body-sm text-on-surface-variant">
-              Todavía no labró actas.
-            </p>
-          )}
+          {actas.length === 0 && <EstadoVacio>Todavía no labró actas.</EstadoVacio>}
           <ul className="space-y-2">
             {actas.map((acta) => (
               <li key={acta.id}>
@@ -173,15 +170,7 @@ export default async function AgentePage({
                     {acta.conductorNombre} · {acta.vehiculoDominio}
                   </p>
                   <div className="flex items-center justify-between mt-1">
-                    <span
-                      className={`text-label-sm font-label-sm px-2 py-0.5 rounded font-bold ${
-                        acta.estado === "PENDIENTE_FIRMA"
-                          ? "bg-error-container text-on-error-container"
-                          : "bg-secondary-container/40 text-on-secondary-container"
-                      }`}
-                    >
-                      {ESTADO_ACTA_LABEL[acta.estado]}
-                    </span>
+                    <BadgeEstadoActa estado={acta.estado} />
                     <span className="font-display font-bold text-primary">
                       {formatoMoneda(Number(acta.montoConDescuento))}
                     </span>

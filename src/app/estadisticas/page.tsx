@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { BarraHorizontal } from "@/components/ui/BarraHorizontal";
 import { StatTile } from "@/components/ui/StatTile";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import {
   formatoMoneda,
   TIPO_RODADO_LABEL,
@@ -21,7 +22,7 @@ import {
   agruparPorVehiculo,
 } from "@/lib/estadisticas";
 import { EvolucionChart } from "./EvolucionChart";
-import { COLOR_GRAVEDAD, COLOR_VEHICULO } from "@/lib/chartColors";
+import { COLOR_GRAVEDAD, COLOR_VEHICULO, PALETA_CATEGORICA } from "@/lib/chartColors";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -242,10 +243,10 @@ export default async function EstadisticasPage({
           <EvolucionChart porSemana={porSemana} porDia={porDia} />
         )}
 
-        <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-          <h2 className="text-label-lg font-label-lg text-primary uppercase">
-            {puedeVerRecaudacion ? "Montos por Gravedad" : "Actas por Gravedad"}
-          </h2>
+        <TarjetaSeccion
+          icono="bar_chart"
+          titulo={puedeVerRecaudacion ? "Montos por Gravedad" : "Actas por Gravedad"}
+        >
           {(["GRAVISIMA", "GRAVE", "LEVE"] as const).map((g) => (
             <BarraHorizontal
               key={g}
@@ -267,12 +268,9 @@ export default async function EstadisticasPage({
               }
             />
           ))}
-        </section>
+        </TarjetaSeccion>
 
-        <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-          <h2 className="text-label-lg font-label-lg text-primary uppercase">
-            Infracciones Más Frecuentes
-          </h2>
+        <TarjetaSeccion icono="format_list_numbered" titulo="Infracciones Más Frecuentes">
           {infracciones.length === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
           {infracciones.slice(0, 8).map((inf) => (
             <BarraHorizontal
@@ -285,15 +283,12 @@ export default async function EstadisticasPage({
                   : String(inf.cantidad)
               }
               porcentaje={(inf.cantidad / maxInfraccion) * 100}
-              color="#2a78d6"
+              color={PALETA_CATEGORICA[0]}
             />
           ))}
-        </section>
+        </TarjetaSeccion>
 
-        <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-          <h2 className="text-label-lg font-label-lg text-primary uppercase">
-            Vehículos Involucrados
-          </h2>
+        <TarjetaSeccion icono="directions_car" titulo="Vehículos Involucrados">
           {vehiculos.size === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
           {Array.from(vehiculos.entries()).map(([tipo, datos]) => (
             <BarraHorizontal
@@ -310,12 +305,9 @@ export default async function EstadisticasPage({
               icono={TIPO_RODADO_ICON[tipo]}
             />
           ))}
-        </section>
+        </TarjetaSeccion>
 
-        <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-          <h2 className="text-label-lg font-label-lg text-primary uppercase">
-            Edad de los Infractores
-          </h2>
+        <TarjetaSeccion icono="groups" titulo="Edad de los Infractores">
           {actas.length === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
           {edadBuckets.map((b) => (
             <BarraHorizontal
@@ -324,7 +316,7 @@ export default async function EstadisticasPage({
               valor={b.cantidad}
               valorMostrado={String(b.cantidad)}
               porcentaje={(b.cantidad / maxEdad) * 100}
-              color="#4a3aa7"
+              color={PALETA_CATEGORICA[2]}
             />
           ))}
           {edadSinDato > 0 && (
@@ -332,7 +324,7 @@ export default async function EstadisticasPage({
               {edadSinDato} acta(s) sin edad registrada.
             </p>
           )}
-        </section>
+        </TarjetaSeccion>
       </main>
       <BottomNav verAgentes={esJefe(agente)} />
     </>
