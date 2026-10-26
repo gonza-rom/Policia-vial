@@ -11,8 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import { formatoMoneda } from "@/lib/formato";
-
-const AZUL = "#2a78d6";
+import { COLOR_RECAUDACION } from "@/lib/chartColors";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
 
 export function EvolucionChart({
   porSemana,
@@ -41,14 +41,14 @@ export function EvolucionChart({
           <button
             type="button"
             onClick={() => setVista("semana")}
-            className={`px-3 py-1.5 ${vista === "semana" ? "bg-primary-container text-on-primary" : "text-on-surface-variant"}`}
+            className={`min-h-touch-min px-3 ${vista === "semana" ? "bg-primary-container text-on-primary" : "text-on-surface-variant"}`}
           >
             Semanal
           </button>
           <button
             type="button"
             onClick={() => setVista("dia")}
-            className={`px-3 py-1.5 ${vista === "dia" ? "bg-primary-container text-on-primary" : "text-on-surface-variant"}`}
+            className={`min-h-touch-min px-3 ${vista === "dia" ? "bg-primary-container text-on-primary" : "text-on-surface-variant"}`}
           >
             Diario
           </button>
@@ -56,9 +56,7 @@ export function EvolucionChart({
       </div>
 
       {datos.length === 0 ? (
-        <p className="text-body-sm text-on-surface-variant py-8 text-center">
-          Sin actas registradas en el período seleccionado.
-        </p>
+        <EstadoVacio>Sin actas registradas en el período seleccionado.</EstadoVacio>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={datos} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -91,7 +89,7 @@ export function EvolucionChart({
                 borderColor: "#c4c6ce",
               }}
             />
-            <Bar dataKey="monto" fill={AZUL} radius={[4, 4, 0, 0]} maxBarSize={28} />
+            <Bar dataKey="monto" fill={COLOR_RECAUDACION} radius={[4, 4, 0, 0]} maxBarSize={28} />
           </BarChart>
         </ResponsiveContainer>
       )}

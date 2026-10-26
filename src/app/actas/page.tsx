@@ -3,12 +3,13 @@ import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
+import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import {
   formatoHora,
   formatoMoneda,
   numeroActa,
   nombreConductorActa,
-  ESTADO_ACTA_LABEL,
 } from "@/lib/formato";
 
 export default async function ActasPage({
@@ -73,9 +74,7 @@ export default async function ActasPage({
             </form>
 
             {actas.length === 0 && (
-              <p className="text-body-md text-on-surface-variant text-center py-8">
-                No hay actas registradas en este turno todavía.
-              </p>
+              <EstadoVacio>No hay actas registradas en este turno todavía.</EstadoVacio>
             )}
 
             <ul className="space-y-3">
@@ -89,15 +88,7 @@ export default async function ActasPage({
                       <span className="font-display text-label-md text-on-surface-variant">
                         ACTA N° {numeroActa(acta.numero)}
                       </span>
-                      <span
-                        className={`text-label-sm font-label-sm px-2 py-0.5 rounded font-bold ${
-                          acta.estado === "PENDIENTE_FIRMA"
-                            ? "bg-error-container text-on-error-container"
-                            : "bg-secondary-container/40 text-on-secondary-container"
-                        }`}
-                      >
-                        {ESTADO_ACTA_LABEL[acta.estado]}
-                      </span>
+                      <BadgeEstadoActa estado={acta.estado} />
                     </div>
                     <div className="flex items-center justify-between">
                       <div>

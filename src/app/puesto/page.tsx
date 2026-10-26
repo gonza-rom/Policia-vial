@@ -3,6 +3,7 @@ import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { elegirPuesto } from "./actions";
 
 export default async function PuestoPage() {
@@ -75,9 +76,7 @@ export default async function PuestoPage() {
         </form>
 
         {puestos.length === 0 && (
-          <p className="text-body-md text-on-surface-variant text-center py-8">
-            No hay puestos cargados todavía.
-          </p>
+          <EstadoVacio>No hay puestos cargados todavía.</EstadoVacio>
         )}
       </main>
     </>

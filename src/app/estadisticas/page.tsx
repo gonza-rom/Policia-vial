@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { BarraHorizontal } from "@/components/ui/BarraHorizontal";
+import { StatTile } from "@/components/ui/StatTile";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import {
   formatoMoneda,
   TIPO_RODADO_LABEL,
@@ -19,19 +21,7 @@ import {
   agruparPorVehiculo,
 } from "@/lib/estadisticas";
 import { EvolucionChart } from "./EvolucionChart";
-
-const COLOR_GRAVEDAD = {
-  LEVE: "#0ca30c",
-  GRAVE: "#ec835a",
-  GRAVISIMA: "#d03b3b",
-} as const;
-
-const COLOR_VEHICULO = {
-  AUTO: "#2a78d6",
-  MOTO: "#eb6834",
-  PICKUP: "#1baf7a",
-  CARGA: "#eda100",
-} as const;
+import { COLOR_GRAVEDAD, COLOR_VEHICULO } from "@/lib/chartColors";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -181,6 +171,7 @@ export default async function EstadisticasPage({
           <select
             name="puesto"
             defaultValue={puestoParam ?? ""}
+            aria-label="Filtrar por puesto"
             className="bg-surface-container-low border border-outline rounded text-body-sm px-3 py-2 min-h-touch-min flex-1"
           >
             <option value="">Todos los puestos</option>
@@ -282,9 +273,7 @@ export default async function EstadisticasPage({
           <h2 className="text-label-lg font-label-lg text-primary uppercase">
             Infracciones Más Frecuentes
           </h2>
-          {infracciones.length === 0 && (
-            <p className="text-body-sm text-on-surface-variant">Sin datos en el período.</p>
-          )}
+          {infracciones.length === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
           {infracciones.slice(0, 8).map((inf) => (
             <BarraHorizontal
               key={inf.descripcion}
@@ -305,9 +294,7 @@ export default async function EstadisticasPage({
           <h2 className="text-label-lg font-label-lg text-primary uppercase">
             Vehículos Involucrados
           </h2>
-          {vehiculos.size === 0 && (
-            <p className="text-body-sm text-on-surface-variant">Sin datos en el período.</p>
-          )}
+          {vehiculos.size === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
           {Array.from(vehiculos.entries()).map(([tipo, datos]) => (
             <BarraHorizontal
               key={tipo}
@@ -329,9 +316,7 @@ export default async function EstadisticasPage({
           <h2 className="text-label-lg font-label-lg text-primary uppercase">
             Edad de los Infractores
           </h2>
-          {actas.length === 0 && (
-            <p className="text-body-sm text-on-surface-variant">Sin datos en el período.</p>
-          )}
+          {actas.length === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
           {edadBuckets.map((b) => (
             <BarraHorizontal
               key={b.label}
@@ -351,46 +336,5 @@ export default async function EstadisticasPage({
       </main>
       <BottomNav verAgentes={esJefe(agente)} />
     </>
-  );
-}
-
-function StatTile({
-  icono,
-  label,
-  valor,
-  delta,
-}: {
-  icono: string;
-  label: string;
-  valor: string;
-  delta?: number | null;
-}) {
-  return (
-    <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-3 shadow-sm">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-label-sm font-label-sm text-on-surface-variant uppercase">
-          {label}
-        </span>
-        <span className="material-symbols-outlined text-secondary text-[18px]">
-          {icono}
-        </span>
-      </div>
-      <p className="text-headline-sm font-display font-bold text-primary truncate">
-        {valor}
-      </p>
-      {delta != null && (
-        <p
-          className={`text-body-sm font-semibold flex items-center gap-0.5 ${
-            delta >= 0 ? "text-emerald-600" : "text-error"
-          }`}
-        >
-          <span className="material-symbols-outlined text-[14px]">
-            {delta >= 0 ? "trending_up" : "trending_down"}
-          </span>
-          {delta >= 0 ? "+" : ""}
-          {delta.toFixed(1)}% vs mes anterior
-        </p>
-      )}
-    </div>
   );
 }

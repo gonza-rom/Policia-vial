@@ -7,6 +7,7 @@ import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
+import { StatTile } from "@/components/ui/StatTile";
 import {
   formatoFechaHora,
   formatoHora,
@@ -84,12 +85,12 @@ export default async function AgentePage({
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <Metrica label="Actas del Mes" valor={String(resumenMes._count)} />
-          <Metrica
+          <StatTile label="Actas del Mes" valor={String(resumenMes._count)} />
+          <StatTile
             label="Monto del Mes"
             valor={formatoMoneda(Number(resumenMes._sum.montoConDescuento ?? 0))}
           />
-          <Metrica
+          <StatTile
             label="Sin Firmar"
             valor={String(pendientesFirma)}
             tono={pendientesFirma > 0 ? "error" : "primario"}
@@ -223,38 +224,5 @@ export default async function AgentePage({
       </main>
       <BottomNav verAgentes />
     </>
-  );
-}
-
-function Metrica({
-  label,
-  valor,
-  tono = "primario",
-}: {
-  label: string;
-  valor: string;
-  tono?: "primario" | "error";
-}) {
-  return (
-    <div
-      className={`border-l-4 px-3 py-2 bg-surface-container-lowest rounded shadow-sm min-w-0 ${
-        tono === "error" ? "border-error" : "border-primary"
-      }`}
-    >
-      <span
-        className={`text-label-sm font-label-sm block uppercase ${
-          tono === "error" ? "text-error" : "text-on-surface-variant"
-        }`}
-      >
-        {label}
-      </span>
-      <span
-        className={`text-headline-sm font-display font-bold break-words ${
-          tono === "error" ? "text-error" : "text-primary"
-        }`}
-      >
-        {valor}
-      </span>
-    </div>
   );
 }

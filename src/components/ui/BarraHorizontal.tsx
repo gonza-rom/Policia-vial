@@ -33,12 +33,12 @@ export function BarraHorizontal({
         </span>
       </div>
       <div
-        className="h-2.5 rounded-full bg-surface-container-high overflow-hidden"
+        className="h-2.5 rounded bg-surface-container-high overflow-hidden"
         role="img"
         aria-label={`${etiqueta}: ${valorMostrado}`}
       >
         <div
-          className="h-full rounded-full"
+          className="h-full rounded"
           style={{
             width: `${Math.min(100, Math.max(valor > 0 ? 3 : 0, porcentaje))}%`,
             backgroundColor: color,

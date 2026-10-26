@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { InstalarApp } from "@/components/ui/InstalarApp";
+import { EstadoConexion } from "@/components/ui/EstadoConexion";
 import { LoginForm } from "./LoginForm";
 
 export default async function LoginPage({
@@ -12,16 +13,7 @@ export default async function LoginPage({
   return (
     <main className="flex-1 flex flex-col items-center justify-center bg-background px-pad-lg py-pad-2xl">
       <div className="w-full max-w-md space-y-4">
-        <div className="flex items-center justify-between text-body-sm font-label-sm text-on-surface-variant">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden />
-            Sincronización Activa
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-[18px]">wifi</span>
-            SRV Catamarca-01
-          </span>
-        </div>
+        <EstadoConexion className="justify-center text-on-surface-variant" />
 
         <div className="bg-primary-container rounded-xl p-pad-xl flex flex-col items-center text-center gap-3 shadow-md">
           <Image

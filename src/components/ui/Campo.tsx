@@ -49,9 +49,10 @@ export function Campo({
 type AreaProps = {
   label: string;
   hint?: string;
+  error?: string;
 } & ComponentPropsWithoutRef<"textarea">;
 
-export function CampoTextarea({ label, hint, id, className, ...rest }: AreaProps) {
+export function CampoTextarea({ label, hint, error, id, className, ...rest }: AreaProps) {
   return (
     <div>
       <label
@@ -64,20 +65,25 @@ export function CampoTextarea({ label, hint, id, className, ...rest }: AreaProps
         id={id}
         className={clsx(
           "w-full bg-surface-container-low border border-outline rounded text-body-md font-body-md text-on-surface p-3 focus:bg-surface-container-lowest transition-colors placeholder:text-on-surface-variant/60",
+          error && "border-error",
           className,
         )}
         {...rest}
       />
-      {hint && <p className="text-body-sm text-on-surface-variant mt-1">{hint}</p>}
+      {hint && !error && (
+        <p className="text-body-sm text-on-surface-variant mt-1">{hint}</p>
+      )}
+      {error && <p className="text-body-sm text-error mt-1">{error}</p>}
     </div>
   );
 }
 
 type SelectProps = {
   label: string;
+  error?: string;
 } & ComponentPropsWithoutRef<"select">;
 
-export function CampoSelect({ label, id, className, children, ...rest }: SelectProps) {
+export function CampoSelect({ label, error, id, className, children, ...rest }: SelectProps) {
   return (
     <div>
       <label
@@ -86,9 +92,14 @@ export function CampoSelect({ label, id, className, children, ...rest }: SelectP
       >
         {label}
       </label>
-      <select id={id} className={clsx(inputBase, className)} {...rest}>
+      <select
+        id={id}
+        className={clsx(inputBase, error && "border-error", className)}
+        {...rest}
+      >
         {children}
       </select>
+      {error && <p className="text-body-sm text-error mt-1">{error}</p>}
     </div>
   );
 }

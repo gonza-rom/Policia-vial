@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
+import { StatTile } from "@/components/ui/StatTile";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { formatoHora } from "@/lib/formato";
 
 export default async function AgentesPage() {
@@ -62,10 +64,10 @@ export default async function AgentesPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Metrica label="Agentes Activos" valor={`${activos} / ${agentes.length}`} />
-          <Metrica label="En Guardia Ahora" valor={String(enGuardia)} />
-          <Metrica label="Actas del Mes" valor={String(actasMes)} />
-          <Metrica
+          <StatTile label="Agentes Activos" valor={`${activos} / ${agentes.length}`} />
+          <StatTile label="En Guardia Ahora" valor={String(enGuardia)} />
+          <StatTile label="Actas del Mes" valor={String(actasMes)} />
+          <StatTile
             label="Pendientes de Firma"
             valor={String(pendientesFirma)}
             tono={pendientesFirma > 0 ? "error" : "primario"}
@@ -73,10 +75,10 @@ export default async function AgentesPage() {
         </div>
 
         {agentes.length === 0 && (
-          <p className="text-body-md text-on-surface-variant text-center py-8">
+          <EstadoVacio>
             Todavía no diste de alta a ningún agente. Usá «Nuevo Agente» para
             crear su usuario de acceso.
-          </p>
+          </EstadoVacio>
         )}
 
         <ul className="space-y-3">
@@ -137,38 +139,5 @@ export default async function AgentesPage() {
       </main>
       <BottomNav verAgentes />
     </>
-  );
-}
-
-function Metrica({
-  label,
-  valor,
-  tono = "primario",
-}: {
-  label: string;
-  valor: string;
-  tono?: "primario" | "error";
-}) {
-  return (
-    <div
-      className={`border-l-4 px-3 py-2 bg-surface-container-lowest rounded shadow-sm ${
-        tono === "error" ? "border-error" : "border-primary"
-      }`}
-    >
-      <span
-        className={`text-label-sm font-label-sm block uppercase ${
-          tono === "error" ? "text-error" : "text-on-surface-variant"
-        }`}
-      >
-        {label}
-      </span>
-      <span
-        className={`text-headline-sm font-display font-bold ${
-          tono === "error" ? "text-error" : "text-primary"
-        }`}
-      >
-        {valor}
-      </span>
-    </div>
   );
 }

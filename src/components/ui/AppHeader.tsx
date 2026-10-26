@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { EstadoConexion } from "./EstadoConexion";
 
 function iniciales(nombreApellido: string) {
   const partes = nombreApellido.trim().split(/\s+/);
@@ -35,15 +36,7 @@ export function AppHeader({
         </div>
       </div>
       <div className="flex items-center gap-pad-md shrink-0">
-        <span
-          className="flex items-center gap-1 text-on-primary-container"
-          title="Sincronización activa"
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-400" aria-hidden />
-          <span className="hidden md:inline font-label-sm text-label-sm">
-            En Línea
-          </span>
-        </span>
+        <EstadoConexion className="text-on-primary-container" ocultarTextoEnMovil />
         <div className="flex items-center gap-2 pl-pad-sm border-l border-on-primary-container/30">
           <div className="text-right hidden sm:block">
             <p className="text-label-sm font-label-sm font-bold text-on-primary leading-tight">

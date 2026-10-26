@@ -88,7 +88,7 @@ export function FirmaForm({
           <button
             type="button"
             onClick={() => canvasInfractor.current?.limpiar()}
-            className="text-label-sm text-error uppercase font-bold"
+            className="min-h-touch-min px-1 text-label-sm text-error uppercase font-bold"
           >
             Limpiar
           </button>
@@ -114,7 +114,7 @@ export function FirmaForm({
           <button
             type="button"
             onClick={() => canvasActuante.current?.limpiar()}
-            className="text-label-sm text-error uppercase font-bold"
+            className="min-h-touch-min px-1 text-label-sm text-error uppercase font-bold"
           >
             Limpiar
           </button>
@@ -134,7 +134,7 @@ export function FirmaForm({
             <button
               type="button"
               onClick={() => canvasSecretario.current?.limpiar()}
-              className="text-label-sm text-error uppercase font-bold"
+              className="min-h-touch-min px-1 text-label-sm text-error uppercase font-bold"
             >
               Limpiar
             </button>

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
+import { StatTile } from "@/components/ui/StatTile";
 import { formatoMoneda } from "@/lib/formato";
 import { NOMBRE_RELEVAMIENTOS } from "@/lib/config";
 import { cerrarSesion, iniciarGuardia } from "./actions";
@@ -139,31 +140,15 @@ export default async function GuardiaPage() {
                 </Link>
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 bg-surface-container-low p-2.5 rounded-lg border border-outline-variant">
-              <div className="border-l-4 border-secondary px-3 py-1 bg-surface-container-lowest rounded">
-                <span className="text-label-sm font-label-sm text-on-surface-variant block uppercase">
-                  Actas
-                </span>
-                <span className="text-headline-md font-display font-bold text-primary">
-                  {actasHoy}
-                </span>
-              </div>
-              <div className="border-l-4 border-primary px-3 py-1 bg-surface-container-lowest rounded">
-                <span className="text-label-sm font-label-sm text-on-surface-variant block uppercase">
-                  Aforo Estim.
-                </span>
-                <span className="text-headline-md font-display font-bold text-primary whitespace-nowrap">
-                  {formatoMoneda(totalEstimado)}
-                </span>
-              </div>
-              <div className="border-l-4 border-error px-3 py-1 bg-surface-container-lowest rounded">
-                <span className="text-label-sm font-label-sm text-error block uppercase">
-                  Alcoholemias
-                </span>
-                <span className="text-headline-md font-display font-bold text-error">
-                  {alcoholemias}
-                </span>
-              </div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+              <StatTile label="Actas" valor={String(actasHoy)} tono="secundario" />
+              <StatTile
+                label="Aforo Estim."
+                valor={formatoMoneda(totalEstimado)}
+                tono="primario"
+                className="whitespace-nowrap"
+              />
+              <StatTile label="Alcoholemias" valor={String(alcoholemias)} tono="error" />
             </div>
           </div>
         </section>

@@ -5,6 +5,10 @@ import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
 import { BarraHorizontal } from "@/components/ui/BarraHorizontal";
+import { TarjetaSeccion } from "@/components/ui/Tarjeta";
+import { FiltroPill } from "@/components/ui/FiltroPill";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { PALETA_CATEGORICA } from "@/lib/chartColors";
 import { formatoFechaHora } from "@/lib/formato";
 import { NOMBRE_RELEVAMIENTOS } from "@/lib/config";
 import {
@@ -79,26 +83,12 @@ export default async function RelevamientosPage({
         </p>
 
         <div className="flex gap-2">
-          <Link
-            href="/relevamientos?modalidad=FINES_LARGOS"
-            className={`px-3 py-1.5 rounded text-label-sm font-label-sm border ${
-              !esDiaVirgen
-                ? "bg-primary-container text-on-primary border-primary"
-                : "border-outline-variant text-on-surface-variant"
-            }`}
-          >
+          <FiltroPill href="/relevamientos?modalidad=FINES_LARGOS" activo={!esDiaVirgen}>
             Fines Largos
-          </Link>
-          <Link
-            href="/relevamientos?modalidad=DIA_VIRGEN"
-            className={`px-3 py-1.5 rounded text-label-sm font-label-sm border ${
-              esDiaVirgen
-                ? "bg-primary-container text-on-primary border-primary"
-                : "border-outline-variant text-on-surface-variant"
-            }`}
-          >
+          </FiltroPill>
+          <FiltroPill href="/relevamientos?modalidad=DIA_VIRGEN" activo={esDiaVirgen}>
             Día de la Virgen
-          </Link>
+          </FiltroPill>
         </div>
 
         <form className="flex items-center gap-2">
@@ -106,6 +96,7 @@ export default async function RelevamientosPage({
           <select
             name="puesto"
             defaultValue={puestoParam ?? ""}
+            aria-label="Filtrar por puesto"
             className="bg-surface-container-low border border-outline rounded text-body-sm px-3 py-2 min-h-touch-min flex-1"
           >
             <option value="">Todos los puestos</option>
@@ -134,10 +125,7 @@ export default async function RelevamientosPage({
         </section>
 
         {esDiaVirgen && porMedio.length > 0 && (
-          <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-            <h2 className="text-label-lg font-label-lg text-primary uppercase">
-              Por Medio de Transporte
-            </h2>
+          <TarjetaSeccion icono="commute" titulo="Por Medio de Transporte">
             {porMedio.map((p) => (
               <BarraHorizontal
                 key={p.etiqueta}
@@ -145,17 +133,14 @@ export default async function RelevamientosPage({
                 valor={p.cantidad}
                 valorMostrado={String(p.cantidad)}
                 porcentaje={(p.cantidad / maxMedio) * 100}
-                color="#2a78d6"
+                color={PALETA_CATEGORICA[0]}
               />
             ))}
-          </section>
+          </TarjetaSeccion>
         )}
 
         {esDiaVirgen && porSexo.length > 0 && (
-          <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-            <h2 className="text-label-lg font-label-lg text-primary uppercase">
-              Por Sexo
-            </h2>
+          <TarjetaSeccion icono="wc" titulo="Por Sexo">
             {porSexo.map((p) => (
               <BarraHorizontal
                 key={p.etiqueta}
@@ -163,17 +148,14 @@ export default async function RelevamientosPage({
                 valor={p.cantidad}
                 valorMostrado={String(p.cantidad)}
                 porcentaje={(p.cantidad / maxSexo) * 100}
-                color="#4a3aa7"
+                color={PALETA_CATEGORICA[1]}
               />
             ))}
-          </section>
+          </TarjetaSeccion>
         )}
 
         {porProcedencia.length > 0 && (
-          <section className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm space-y-3">
-            <h2 className="text-label-lg font-label-lg text-primary uppercase">
-              Por Procedencia
-            </h2>
+          <TarjetaSeccion icono="map" titulo="Por Procedencia">
             {porProcedencia.slice(0, 10).map((p) => (
               <BarraHorizontal
                 key={p.etiqueta}
@@ -181,10 +163,10 @@ export default async function RelevamientosPage({
                 valor={p.cantidad}
                 valorMostrado={String(p.cantidad)}
                 porcentaje={(p.cantidad / maxProcedencia) * 100}
-                color="#1baf7a"
+                color={PALETA_CATEGORICA[2]}
               />
             ))}
-          </section>
+          </TarjetaSeccion>
         )}
 
         <section className="space-y-2">
@@ -192,9 +174,7 @@ export default async function RelevamientosPage({
             Últimos Registros
           </h2>
           {recientes.length === 0 && (
-            <p className="text-body-sm text-on-surface-variant">
-              Todavía no hay conteos cargados para esta modalidad.
-            </p>
+            <EstadoVacio>Todavía no hay conteos cargados para esta modalidad.</EstadoVacio>
           )}
           <ul className="space-y-2">
             {recientes.map((r) => {

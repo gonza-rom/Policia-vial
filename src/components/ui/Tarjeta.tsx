@@ -3,11 +3,17 @@ import clsx from "clsx";
 
 type TarjetaSeccionProps = {
   icono: string;
+  iconoTono?: "secundario" | "error";
   titulo: string;
   badge?: string;
   badgeTono?: "secundario" | "error" | "primario";
   children: ReactNode;
   className?: string;
+};
+
+const ICONO_TONOS: Record<NonNullable<TarjetaSeccionProps["iconoTono"]>, string> = {
+  secundario: "text-secondary",
+  error: "text-error",
 };
 
 const BADGE_TONOS: Record<NonNullable<TarjetaSeccionProps["badgeTono"]>, string> = {
@@ -18,6 +24,7 @@ const BADGE_TONOS: Record<NonNullable<TarjetaSeccionProps["badgeTono"]>, string>
 
 export function TarjetaSeccion({
   icono,
+  iconoTono = "secundario",
   titulo,
   badge,
   badgeTono = "secundario",
@@ -33,7 +40,7 @@ export function TarjetaSeccion({
     >
       <div className="flex items-center justify-between pb-2 mb-3 border-b border-outline-variant">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-secondary" aria-hidden>
+          <span className={clsx("material-symbols-outlined", ICONO_TONOS[iconoTono])} aria-hidden>
             {icono}
           </span>
           <h2 className="text-label-lg font-label-lg text-primary uppercase">

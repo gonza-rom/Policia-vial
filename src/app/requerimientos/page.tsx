@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
+import { FiltroPill } from "@/components/ui/FiltroPill";
+import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { formatoFechaHora, numeroActa } from "@/lib/formato";
 
 const TIPO_LABEL = { PERSONA: "Persona", VEHICULO: "Vehículo" } as const;
@@ -46,42 +48,19 @@ export default async function RequerimientosPage({
         </p>
 
         <div className="flex gap-2">
-          <Link
-            href="/requerimientos"
-            className={`px-3 py-1.5 rounded text-label-sm font-label-sm border ${
-              !filtroTipo
-                ? "bg-primary-container text-on-primary border-primary"
-                : "border-outline-variant text-on-surface-variant"
-            }`}
-          >
+          <FiltroPill href="/requerimientos" activo={!filtroTipo}>
             Todos
-          </Link>
-          <Link
-            href="/requerimientos?tipo=PERSONA"
-            className={`px-3 py-1.5 rounded text-label-sm font-label-sm border ${
-              filtroTipo === "PERSONA"
-                ? "bg-primary-container text-on-primary border-primary"
-                : "border-outline-variant text-on-surface-variant"
-            }`}
-          >
+          </FiltroPill>
+          <FiltroPill href="/requerimientos?tipo=PERSONA" activo={filtroTipo === "PERSONA"}>
             Personas
-          </Link>
-          <Link
-            href="/requerimientos?tipo=VEHICULO"
-            className={`px-3 py-1.5 rounded text-label-sm font-label-sm border ${
-              filtroTipo === "VEHICULO"
-                ? "bg-primary-container text-on-primary border-primary"
-                : "border-outline-variant text-on-surface-variant"
-            }`}
-          >
+          </FiltroPill>
+          <FiltroPill href="/requerimientos?tipo=VEHICULO" activo={filtroTipo === "VEHICULO"}>
             Vehículos
-          </Link>
+          </FiltroPill>
         </div>
 
         {requerimientos.length === 0 && (
-          <p className="text-body-md text-on-surface-variant text-center py-8">
-            No hay requerimientos cargados todavía.
-          </p>
+          <EstadoVacio>No hay requerimientos cargados todavía.</EstadoVacio>
         )}
 
         <ul className="space-y-3">
