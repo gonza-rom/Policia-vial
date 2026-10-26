@@ -34,6 +34,9 @@ const TIPOS_RODADO = [
   { value: "MOTO", label: "Moto", icono: "two_wheeler" },
   { value: "PICKUP", label: "Pick-Up", icono: "airport_shuttle" },
   { value: "CARGA", label: "Carga", icono: "local_shipping" },
+  { value: "PASAJEROS", label: "Pasajeros", icono: "directions_bus" },
+  { value: "EMERGENCIAS", label: "Emergencias", icono: "emergency" },
+  { value: "OTRO", label: "Otros", icono: "help" },
 ] as const;
 
 const ALCOHOLEMIA_DESC = "Estado de Ebriedad / Efecto Estupefacientes";
@@ -50,7 +53,16 @@ export type ActaExistenteDTO = {
   conductorLicenciaClase: string | null;
   vehiculoDominio: string | null;
   vehiculoMarcaModelo: string | null;
-  vehiculoTipo: "AUTO" | "MOTO" | "PICKUP" | "CARGA" | null;
+  vehiculoTipo:
+    | "AUTO"
+    | "MOTO"
+    | "PICKUP"
+    | "CARGA"
+    | "PASAJEROS"
+    | "EMERGENCIAS"
+    | "OTRO"
+    | null;
+  vehiculoTipoOtro: string | null;
   vehiculoRemitidoA: string | null;
   otrosDatosAmpliatorios: string | null;
   retencionPreventiva: boolean;
@@ -83,6 +95,9 @@ export function NuevaActaForm({
   );
   const [tipoRodado, setTipoRodado] = useState<(typeof TIPOS_RODADO)[number]["value"]>(
     actaExistente?.vehiculoTipo ?? "AUTO",
+  );
+  const [otroTipoRodado, setOtroTipoRodado] = useState(
+    actaExistente?.vehiculoTipoOtro ?? "",
   );
   const [montoBase, setMontoBase] = useState<number>(actaExistente?.montoBase ?? 0);
   const [montoEditadoManualmente, setMontoEditadoManualmente] = useState(
@@ -143,6 +158,7 @@ export function NuevaActaForm({
       "vehiculoDominio",
       "vehiculoMarcaModelo",
       "vehiculoTipo",
+      "vehiculoTipoOtro",
       "vehiculoRemitidoA",
       "otrosDatosAmpliatorios",
       "montoBase",
@@ -353,6 +369,19 @@ export function NuevaActaForm({
               </button>
             ))}
           </div>
+          {tipoRodado === "OTRO" && (
+            <div className="mt-2">
+              <Campo
+                label="Especificar Tipo de Vehículo"
+                id="vehiculoTipoOtro"
+                name="vehiculoTipoOtro"
+                placeholder="Ej: Maquinaria Vial, Tractor…"
+                required
+                value={otroTipoRodado}
+                onChange={(e) => setOtroTipoRodado(e.target.value)}
+              />
+            </div>
+          )}
         </div>
         <Campo
           label="Remitido Al"

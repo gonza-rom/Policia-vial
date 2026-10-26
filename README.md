@@ -106,10 +106,14 @@ fueron la referencia visual — la app real vive en `src/`.
     descuento por pago voluntario.
   - **Contravencional** (Ley Provincial N° 5171/05, Código de Faltas de
     Catamarca): formulario policial aparte, con sus propios campos agrupados
-    por sección (vehículo, conductor, "comprobándose", alcoholímetro, medidas
-    adoptadas). Los campos salen de la tabla `CampoContravencional` — se
-    pueden agregar/renombrar/reordenar sin tocar código (hoy vía
-    `prisma/seed.ts`, hasta que llegue el formulario oficial definitivo).
+    por sección (fecha y hora, vehículo, conductor, "comprobándose",
+    alcoholímetro, medidas adoptadas). Los campos salen de la tabla
+    `CampoContravencional` — se pueden agregar/renombrar/reordenar sin tocar
+    código (hoy vía `prisma/seed.ts`, hasta que llegue el formulario oficial
+    definitivo), y soportan texto, texto largo, número, fecha, hora y lista
+    desplegable (`tipo: SELECT`, con las opciones en `opciones: string[]`).
+    El acta municipal tiene 7 tipos de vehículo (Auto, Moto, Pick-Up, Carga,
+    Pasajeros, Emergencias, Otros — con texto libre si se elige "Otros").
 - `/actas/[id]/firma` → resumen legal del acta + firma digital (canvas): el
   acta municipal firma Infractor/Actuante, la contravencional firma
   Conductor/Instructor/Secretario Autorizante (3 firmas, como en el papel).
@@ -141,10 +145,14 @@ fueron la referencia visual — la app real vive en `src/`.
 - `/relevamientos` ("Relevamientos", nombre configurable) → conteos rápidos
   de personas en operativos puntuales, separados de las actas. Dos
   modalidades: **Fines Largos** (cantidad de personas + provincia de
-  origen) y **Día de la Virgen** (medio de transporte, sexo y procedencia).
-  Tampoco depende de guardia abierta. Panel con totales y desgloses por
-  procedencia/medio/sexo, filtrable por puesto. Mismo esquema de permisos
-  que Requerimientos.
+  origen) y **Día de la Virgen** (medio de transporte + cantidad de
+  Masculino/Femenino/Otros + procedencia — un solo envío carga hasta 3
+  registros atrás, uno por categoría con cantidad > 0, para no cambiar cómo
+  se arman después las estadísticas). Tampoco depende de guardia abierta.
+  Cada registro tiene su propia pantalla de detalle con **Exportar PDF**.
+  Panel con totales y desgloses por procedencia/medio/sexo, filtrable por
+  puesto. Mismo esquema de permisos que Requerimientos — editar un registro
+  ya cargado sigue siendo el formulario de siempre (un registro, un sexo).
 
 ## Modo offline (Nueva Acta)
 
@@ -204,6 +212,35 @@ guardadas en el celular y se sincronizan solas al volver la conexión.
    de arriba debe pasar a "Sincronizando…" y después desaparecer.
 7. Confirmar en `/actas` que el acta aparece, y que no se duplicó.
 
+## Exportar a PDF (actas, requerimientos, relevamientos)
+
+No hay ninguna librería de generación de PDF en el proyecto — "Exportar PDF"
+sigue siendo imprimir la página (`window.print()`, botón `BotonImprimir`) con
+una hoja de estilos dedicada (`.imprimible` en `globals.css`, que oculta el
+header/nav/footer de la app al imprimir). Las tres pantallas que se pueden
+exportar (acta, requerimiento, relevamiento) comparten un único encabezado de
+impresión (`src/components/ui/EncabezadoImprimible.tsx`) con el logo y un
+bloque de **Lugar / Fecha / Hora** — siempre el del registro que se exporta,
+nunca el momento en que se aprieta "Exportar PDF". Si se agrega exportación a
+un módulo nuevo, reutilizar ese componente en vez de armar el encabezado de
+nuevo.
+
+> El `<Image>` del logo dentro de `EncabezadoImprimible` usa `priority`
+> a propósito: el bloque arranca oculto (`hidden print:flex`) y sin esa
+> prop Next.js nunca llega a pedir la imagen, porque el observer de carga
+> diferida no dispara para un elemento que nunca tuvo caja de layout.
+
+## Zona horaria
+
+Catamarca es siempre UTC-3 (Argentina no tiene horario de verano desde
+2009). Las funciones de fecha/hora en `src/lib/formato.ts`
+(`formatoFecha`, `formatoHora`, `formatoFechaHora`) fijan explícitamente
+`timeZone: "America/Argentina/Buenos_Aires"` — sin esto, en producción
+(donde el servidor corre en UTC) las horas se mostrarían corridas 3 horas.
+La fecha/hora que carga el agente en el acta contravencional se guarda y
+se muestra como texto plano (sin pasar por `Date`), a propósito, para no
+arrastrar ningún problema de huso horario en esos dos campos puntuales.
+
 ## Pendiente / a decisión del equipo
 
 - Revisar y ajustar los montos base de multas del catálogo de infracciones
@@ -230,7 +267,25 @@ guardadas en el celular y se sincronizan solas al volver la conexión.
   base (ni API pública ni acceso directo vía `supabase-js`), así que esto
   cubre el 100% de los accesos reales de la app.
 - Sin tests automatizados.
+- El logo (`public/escudo-policia-catamarca.png`) es el que se entregó en
+  esta ronda, ya centralizado en `AppHeader` (se propaga solo a todas las
+  pantallas) y usado también en `EncabezadoImprimible`. El archivo
+  original tenía fondo negro sólido (JPEG, sin transparencia) — se
+  reprocesó a PNG con el fondo recortado por flood-fill antes de usarlo,
+  para que no se vea como un cuadro negro en los PDF de fondo blanco.
 
 Cloudinary ya está configurado y probado (subida de fotos y firmas
 funcionando) — solo falta que cada quien complete sus propias credenciales en
 `.env` si levanta el proyecto de cero.
+
+> **Nota sobre la base de datos compartida:** el 25/10 se encontraron 3
+> migraciones aplicadas directo contra esta misma base de Supabase, fuera
+> del historial de `prisma/migrations/` de este repo (tablas `Auditoria` y
+> `AgentePuesto`, una columna en `Acta`, políticas RLS sin ninguna policy
+> definida — lo que habría bloqueado el acceso a cualquier rol que no
+> tuviera bypass). Eran de la rama de otro desarrollador, ya descartada;
+> por pedido explícito se revirtieron (incluidos 2 agentes de prueba que
+> había creado) y la base quedó sincronizada de nuevo con este historial
+> de migraciones. Si alguien más vuelve a tocar esta base por fuera de
+> `prisma/migrations/`, correr `npx prisma migrate status` antes de migrar
+> para detectar drift a tiempo.

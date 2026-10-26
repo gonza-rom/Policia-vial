@@ -159,6 +159,9 @@ async function main() {
 
   console.log("Sembrando esquema del acta contravencional…");
   const campos = [
+    { clave: "fecha", etiqueta: "Fecha del Acta", seccion: "Fecha y Hora", tipo: "FECHA", orden: -2, requerido: true },
+    { clave: "hora", etiqueta: "Hora del Acta", seccion: "Fecha y Hora", tipo: "HORA", orden: -1, requerido: true },
+
     { clave: "vehiculo", etiqueta: "Vehículo", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 1, requerido: true },
     { clave: "marca", etiqueta: "Marca", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 2 },
     { clave: "modelo", etiqueta: "Modelo", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 3 },
@@ -169,7 +172,7 @@ async function main() {
     { clave: "domicilioVehiculo", etiqueta: "Domicilio", seccion: "Datos del Vehículo", tipo: "TEXTO", orden: 8 },
 
     { clave: "conductorNombre", etiqueta: "Conducido por el Ciudadano", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 9, requerido: true },
-    { clave: "instruccion", etiqueta: "Con o Sin Instrucción", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 10 },
+    { clave: "instruccion", etiqueta: "Con o Sin Instrucción", seccion: "Datos del Conductor", tipo: "SELECT", opciones: ["Con Instrucción", "Sin Instrucción"] as string[], orden: 10 },
     { clave: "profesion", etiqueta: "Profesión", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 11 },
     { clave: "domicilioConductor", etiqueta: "Domiciliado en", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 12 },
     { clave: "dni", etiqueta: "D.N.I. N°", seccion: "Datos del Conductor", tipo: "TEXTO", orden: 13, requerido: true },

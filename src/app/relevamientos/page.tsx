@@ -202,8 +202,17 @@ export default async function RelevamientosPage({
                   <p className="text-body-sm text-on-surface-variant">
                     {r.puesto.nombre} · {r.agente.nombreApellido}
                   </p>
-                  {puedeEditar && (
-                    <div className="flex items-center gap-3 mt-2">
+                  <div className="flex items-center gap-3 mt-2">
+                    <Link
+                      href={`/relevamientos/${r.id}`}
+                      className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">
+                        print
+                      </span>
+                      Ver / Exportar PDF
+                    </Link>
+                    {puedeEditar && (
                       <Link
                         href={`/relevamientos/${r.id}/editar`}
                         className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
@@ -213,16 +222,16 @@ export default async function RelevamientosPage({
                         </span>
                         Editar
                       </Link>
-                      {esJefe(agente) && (
-                        <form action={eliminarRelevamiento}>
-                          <input type="hidden" name="id" value={r.id} />
-                          <BotonEliminarConConfirmacion
-                            mensaje="¿Eliminar este registro? Esta acción no se puede deshacer."
-                          />
-                        </form>
-                      )}
-                    </div>
-                  )}
+                    )}
+                    {puedeEditar && esJefe(agente) && (
+                      <form action={eliminarRelevamiento}>
+                        <input type="hidden" name="id" value={r.id} />
+                        <BotonEliminarConConfirmacion
+                          mensaje="¿Eliminar este registro? Esta acción no se puede deshacer."
+                        />
+                      </form>
+                    )}
+                  </div>
                 </li>
               );
             })}

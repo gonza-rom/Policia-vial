@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { fechaInputHoy, horaInputAhora } from "@/lib/formato";
 import { NuevaActaForm } from "./NuevaActaForm";
 import { ContravencionalActaForm } from "./ContravencionalActaForm";
 
@@ -72,7 +73,11 @@ export default async function NuevaActaPage({
       <>
         <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
         <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
-          <ContravencionalActaForm campos={campos} />
+          <ContravencionalActaForm
+            campos={campos}
+            fechaPorDefecto={fechaInputHoy()}
+            horaPorDefecto={horaInputAhora()}
+          />
         </main>
       </>
     );

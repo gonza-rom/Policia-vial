@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
-import { formatoMoneda, numeroActa, TIPO_RODADO_LABEL } from "@/lib/formato";
+import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
+import { formatoFecha, formatoHora, formatoMoneda, numeroActa, TIPO_RODADO_LABEL } from "@/lib/formato";
 import { FirmaForm } from "./FirmaForm";
 import { BotonImprimir } from "@/components/ui/BotonImprimir";
 import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
@@ -51,12 +52,28 @@ export default async function FirmaActaPage({
     seccion.campos.push(campo);
   }
 
+  // Para la contravencional, el agente carga fecha/hora a mano (campo
+  // dinámico); para la municipal no existe ese campo, así que se usa el
+  // momento en que se creó el acta — en ambos casos es "cuándo pasó esto",
+  // nunca la fecha de cuando se exporta el PDF.
+  const fechaImprimible = datosContravencional.fecha
+    ? datosContravencional.fecha.split("-").reverse().join("/")
+    : formatoFecha(acta.fecha);
+  const horaImprimible = datosContravencional.hora || formatoHora(acta.fecha);
+
   return (
     <>
       <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
       <main
         className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4"
       >
+        <EncabezadoImprimible
+          titulo={acta.tipo === "CONTRAVENCIONAL" ? "Acta Contravencional" : "Acta Municipal"}
+          lugar={acta.lugarControl || acta.puesto.nombre}
+          fecha={fechaImprimible}
+          hora={horaImprimible}
+        />
+
         <div className="flex items-center justify-between print:hidden">
           <Link
             href="/actas"
@@ -131,13 +148,22 @@ export default async function FirmaActaPage({
             <TarjetaSeccion icono="directions_car" titulo="Vehículo / Marca y Modelo">
               <div className="flex items-center justify-between">
                 <span className="text-body-md">
-                  {acta.vehiculoMarcaModelo ??
-                    (acta.vehiculoTipo ? TIPO_RODADO_LABEL[acta.vehiculoTipo] : "—")}
+                  {acta.vehiculoMarcaModelo ?? "—"}
                 </span>
                 <span className="font-display text-lg tracking-widest bg-surface-container px-2 py-1 rounded">
                   {acta.vehiculoDominio}
                 </span>
               </div>
+              {acta.vehiculoTipo && (
+                <p className="text-body-sm text-on-surface-variant">
+                  Tipo:{" "}
+                  <span className="font-semibold text-on-surface">
+                    {acta.vehiculoTipo === "OTRO" && acta.vehiculoTipoOtro
+                      ? acta.vehiculoTipoOtro
+                      : TIPO_RODADO_LABEL[acta.vehiculoTipo]}
+                  </span>
+                </p>
+              )}
             </TarjetaSeccion>
 
             <TarjetaSeccion
@@ -182,16 +208,23 @@ export default async function FirmaActaPage({
           secciones.map((seccion) => (
             <TarjetaSeccion key={seccion.nombre} icono="description" titulo={seccion.nombre}>
               <dl className="text-body-sm space-y-1">
-                {seccion.campos.map((campo) => (
-                  <div key={campo.clave} className="flex justify-between gap-3">
-                    <dt className="text-on-surface-variant shrink-0">
-                      {campo.etiqueta}
-                    </dt>
-                    <dd className="text-right">
-                      {datosContravencional[campo.clave]}
-                    </dd>
-                  </div>
-                ))}
+                {seccion.campos.map((campo) => {
+                  const valor = datosContravencional[campo.clave];
+                  const valorMostrado =
+                    campo.tipo === "FECHA"
+                      ? valor.split("-").reverse().join("/")
+                      : campo.tipo === "HORA"
+                        ? `${valor} Hs`
+                        : valor;
+                  return (
+                    <div key={campo.clave} className="flex justify-between gap-3">
+                      <dt className="text-on-surface-variant shrink-0">
+                        {campo.etiqueta}
+                      </dt>
+                      <dd className="text-right">{valorMostrado}</dd>
+                    </div>
+                  );
+                })}
               </dl>
             </TarjetaSeccion>
           ))

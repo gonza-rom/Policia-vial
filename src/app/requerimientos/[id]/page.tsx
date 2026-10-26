@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BotonImprimir } from "@/components/ui/BotonImprimir";
 import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
-import { formatoFechaHora, numeroActa } from "@/lib/formato";
+import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
+import { formatoFecha, formatoFechaHora, formatoHora, numeroActa } from "@/lib/formato";
 import { eliminarRequerimiento } from "../actions";
 
 const TIPO_LABEL = { PERSONA: "Persona", VEHICULO: "Vehículo" } as const;
@@ -30,6 +31,13 @@ export default async function DetalleRequerimientoPage({
     <>
       <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
       <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4">
+        <EncabezadoImprimible
+          titulo={`Requerimiento — ${TIPO_LABEL[requerimiento.tipo]}`}
+          lugar={requerimiento.puesto.nombre}
+          fecha={formatoFecha(requerimiento.fecha)}
+          hora={formatoHora(requerimiento.fecha)}
+        />
+
         <div className="flex items-center justify-between print:hidden">
           <Link
             href="/requerimientos"

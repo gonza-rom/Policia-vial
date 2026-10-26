@@ -70,6 +70,7 @@ export default async function EditarActaPage({
             vehiculoDominio: acta.vehiculoDominio,
             vehiculoMarcaModelo: acta.vehiculoMarcaModelo,
             vehiculoTipo: acta.vehiculoTipo,
+            vehiculoTipoOtro: acta.vehiculoTipoOtro,
             vehiculoRemitidoA: acta.vehiculoRemitidoA,
             otrosDatosAmpliatorios: acta.otrosDatosAmpliatorios,
             retencionPreventiva: acta.retencionPreventiva,

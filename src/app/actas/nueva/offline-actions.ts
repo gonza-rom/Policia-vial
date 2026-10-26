@@ -73,7 +73,15 @@ export async function sincronizarActaOffline(
 
     vehiculoDominio: texto("vehiculoDominio").toUpperCase(),
     vehiculoMarcaModelo: texto("vehiculoMarcaModelo") || null,
-    vehiculoTipo: texto("vehiculoTipo") as "AUTO" | "MOTO" | "PICKUP" | "CARGA",
+    vehiculoTipo: texto("vehiculoTipo") as
+      | "AUTO"
+      | "MOTO"
+      | "PICKUP"
+      | "CARGA"
+      | "PASAJEROS"
+      | "EMERGENCIAS"
+      | "OTRO",
+    vehiculoTipoOtro: texto("vehiculoTipoOtro") || null,
     vehiculoRemitidoA: texto("vehiculoRemitidoA") || null,
 
     otrosDatosAmpliatorios: texto("otrosDatosAmpliatorios") || null,

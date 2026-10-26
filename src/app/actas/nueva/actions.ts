@@ -89,7 +89,15 @@ export async function crearActa(formData: FormData) {
 
       vehiculoDominio: texto("vehiculoDominio").toUpperCase(),
       vehiculoMarcaModelo: texto("vehiculoMarcaModelo") || null,
-      vehiculoTipo: texto("vehiculoTipo") as "AUTO" | "MOTO" | "PICKUP" | "CARGA",
+      vehiculoTipo: texto("vehiculoTipo") as
+        | "AUTO"
+        | "MOTO"
+        | "PICKUP"
+        | "CARGA"
+        | "PASAJEROS"
+        | "EMERGENCIAS"
+        | "OTRO",
+      vehiculoTipoOtro: texto("vehiculoTipoOtro") || null,
       vehiculoRemitidoA: texto("vehiculoRemitidoA") || null,
 
       otrosDatosAmpliatorios: texto("otrosDatosAmpliatorios") || null,
@@ -175,7 +183,15 @@ export async function actualizarActa(formData: FormData) {
 
         vehiculoDominio: texto("vehiculoDominio").toUpperCase(),
         vehiculoMarcaModelo: texto("vehiculoMarcaModelo") || null,
-        vehiculoTipo: texto("vehiculoTipo") as "AUTO" | "MOTO" | "PICKUP" | "CARGA",
+        vehiculoTipo: texto("vehiculoTipo") as
+          | "AUTO"
+          | "MOTO"
+          | "PICKUP"
+          | "CARGA"
+          | "PASAJEROS"
+          | "EMERGENCIAS"
+          | "OTRO",
+        vehiculoTipoOtro: texto("vehiculoTipoOtro") || null,
         vehiculoRemitidoA: texto("vehiculoRemitidoA") || null,
 
         otrosDatosAmpliatorios: texto("otrosDatosAmpliatorios") || null,

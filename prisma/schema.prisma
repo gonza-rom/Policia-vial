@@ -39,6 +39,9 @@ enum TipoRodado {
   MOTO
   PICKUP
   CARGA
+  PASAJEROS
+  EMERGENCIAS
+  OTRO
 }
 
 enum TipoRetencion {
@@ -65,6 +68,8 @@ enum TipoCampoContravencional {
   TEXTO_LARGO
   NUMERO
   FECHA
+  HORA
+  SELECT
 }
 
 enum TipoRequerimiento {
@@ -190,6 +195,8 @@ model Acta {
   vehiculoDominio     String?
   vehiculoMarcaModelo String?
   vehiculoTipo        TipoRodado?
+  // Solo tiene valor cuando vehiculoTipo = OTRO.
+  vehiculoTipoOtro    String?
   vehiculoRemitidoA   String?
 
   otrosDatosAmpliatorios String? @db.Text
@@ -243,6 +250,8 @@ model CampoContravencional {
   etiqueta  String
   seccion   String
   tipo      TipoCampoContravencional @default(TEXTO)
+  // Solo se usa cuando tipo = SELECT: las opciones de la lista desplegable.
+  opciones  String[]                 @default([])
   orden     Int                      @default(0)
   requerido Boolean                  @default(false)
   activo    Boolean                  @default(true)

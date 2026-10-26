@@ -22,11 +22,17 @@ export const COLOR_GRAVEDAD: Record<"LEVE" | "GRAVE" | "GRAVISIMA", string> = {
   GRAVISIMA: ERROR,
 };
 
-export const COLOR_VEHICULO: Record<"AUTO" | "MOTO" | "PICKUP" | "CARGA", string> = {
+export const COLOR_VEHICULO: Record<
+  "AUTO" | "MOTO" | "PICKUP" | "CARGA" | "PASAJEROS" | "EMERGENCIAS" | "OTRO",
+  string
+> = {
   AUTO: PRIMARIO,
   MOTO: SECUNDARIO,
   PICKUP: ADVERTENCIA,
   CARGA: NEUTRO,
+  PASAJEROS: SECUNDARIO,
+  EMERGENCIAS: ERROR,
+  OTRO: NEUTRO,
 };
 
 /** Color de la barra de evolución de recaudación. */

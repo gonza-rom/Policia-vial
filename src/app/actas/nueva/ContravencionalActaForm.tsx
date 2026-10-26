@@ -6,7 +6,7 @@ import {
   actualizarActaContravencional,
 } from "./actions";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
-import { Campo, CampoTextarea } from "@/components/ui/Campo";
+import { Campo, CampoTextarea, CampoSelect } from "@/components/ui/Campo";
 import { CampoArchivo } from "@/components/ui/CampoArchivo";
 import { Boton } from "@/components/ui/Boton";
 
@@ -15,8 +15,15 @@ type CampoDTO = {
   clave: string;
   etiqueta: string;
   seccion: string;
-  tipo: "TEXTO" | "TEXTO_LARGO" | "NUMERO" | "FECHA";
+  tipo: "TEXTO" | "TEXTO_LARGO" | "NUMERO" | "FECHA" | "HORA" | "SELECT";
+  opciones: string[];
   requerido: boolean;
+};
+
+const TIPO_INPUT: Partial<Record<CampoDTO["tipo"], string>> = {
+  NUMERO: "number",
+  FECHA: "date",
+  HORA: "time",
 };
 
 function agruparPorSeccion(campos: CampoDTO[]) {
@@ -35,6 +42,8 @@ function agruparPorSeccion(campos: CampoDTO[]) {
 export function ContravencionalActaForm({
   campos,
   actaExistente,
+  fechaPorDefecto,
+  horaPorDefecto,
 }: {
   campos: CampoDTO[];
   actaExistente?: {
@@ -42,6 +51,10 @@ export function ContravencionalActaForm({
     lugarControl: string | null;
     datos: Record<string, string>;
   };
+  /** Solo se usan al cargar un acta nueva (no al editar), para no obligar
+   * al agente a tipear la fecha/hora de algo que está pasando ahora mismo. */
+  fechaPorDefecto?: string;
+  horaPorDefecto?: string;
 }) {
   const secciones = agruparPorSeccion(campos);
 
@@ -78,29 +91,61 @@ export function ContravencionalActaForm({
           icono="description"
           titulo={`${i + 1}. ${seccion.nombre}`}
         >
-          {seccion.campos.map((campo) =>
-            campo.tipo === "TEXTO_LARGO" ? (
-              <CampoTextarea
-                key={campo.clave}
-                label={campo.etiqueta}
-                id={campo.clave}
-                name={campo.clave}
-                rows={3}
-                required={campo.requerido}
-                defaultValue={actaExistente?.datos[campo.clave] ?? undefined}
-              />
-            ) : (
+          {seccion.campos.map((campo) => {
+            const valorExistente = actaExistente?.datos[campo.clave];
+            if (campo.tipo === "TEXTO_LARGO") {
+              return (
+                <CampoTextarea
+                  key={campo.clave}
+                  label={campo.etiqueta}
+                  id={campo.clave}
+                  name={campo.clave}
+                  rows={3}
+                  required={campo.requerido}
+                  defaultValue={valorExistente ?? undefined}
+                />
+              );
+            }
+            if (campo.tipo === "SELECT") {
+              return (
+                <CampoSelect
+                  key={campo.clave}
+                  label={campo.etiqueta}
+                  id={campo.clave}
+                  name={campo.clave}
+                  required={campo.requerido}
+                  defaultValue={valorExistente ?? ""}
+                >
+                  <option value="" disabled>
+                    — Elegir —
+                  </option>
+                  {campo.opciones.map((opcion) => (
+                    <option key={opcion} value={opcion}>
+                      {opcion}
+                    </option>
+                  ))}
+                </CampoSelect>
+              );
+            }
+            const defaultValue =
+              valorExistente ??
+              (campo.clave === "fecha"
+                ? fechaPorDefecto
+                : campo.clave === "hora"
+                  ? horaPorDefecto
+                  : undefined);
+            return (
               <Campo
                 key={campo.clave}
                 label={campo.etiqueta}
                 id={campo.clave}
                 name={campo.clave}
-                type={campo.tipo === "NUMERO" ? "number" : campo.tipo === "FECHA" ? "date" : "text"}
+                type={TIPO_INPUT[campo.tipo] ?? "text"}
                 required={campo.requerido}
-                defaultValue={actaExistente?.datos[campo.clave] ?? undefined}
+                defaultValue={defaultValue}
               />
-            ),
-          )}
+            );
+          })}
         </TarjetaSeccion>
       ))}
 

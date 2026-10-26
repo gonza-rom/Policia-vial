@@ -7,6 +7,11 @@ export function formatoMoneda(valor: number | string) {
   }).format(num);
 }
 
+// Catamarca es siempre UTC-3 (Argentina no tiene horario de verano desde
+// 2009) — fijar la zona acá evita que estas fechas se muestren en UTC (el
+// huso del servidor en producción) en vez de la hora real de Catamarca.
+const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
+
 export function formatoFechaHora(fecha: Date | string) {
   const d = typeof fecha === "string" ? new Date(fecha) : fecha;
   return new Intl.DateTimeFormat("es-AR", {
@@ -15,6 +20,7 @@ export function formatoFechaHora(fecha: Date | string) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: ZONA_HORARIA,
   }).format(d);
 }
 
@@ -24,6 +30,7 @@ export function formatoFecha(fecha: Date | string) {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    timeZone: ZONA_HORARIA,
   }).format(d);
 }
 
@@ -32,7 +39,30 @@ export function formatoHora(fecha: Date | string) {
   return new Intl.DateTimeFormat("es-AR", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: ZONA_HORARIA,
   }).format(d);
+}
+
+/** "YYYY-MM-DD" de hoy en hora de Catamarca — para usar como defaultValue
+ * de un <input type="date">. Se calcula en el servidor con la zona fija
+ * para no arrastrar el problema de huso horario que tenía formatoFecha. */
+export function fechaInputHoy() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ZONA_HORARIA,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+/** "HH:MM" de ahora en hora de Catamarca — para un <input type="time">. */
+export function horaInputAhora() {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: ZONA_HORARIA,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
 }
 
 export function numeroActa(numero: number) {
@@ -43,7 +73,10 @@ export const TIPO_RODADO_LABEL: Record<string, string> = {
   AUTO: "Auto",
   MOTO: "Moto",
   PICKUP: "Pick-Up",
-  CARGA: "Carga",
+  CARGA: "Transporte de Carga",
+  PASAJEROS: "Transporte de Pasajeros",
+  EMERGENCIAS: "Emergencias",
+  OTRO: "Otros",
 };
 
 export const TIPO_RODADO_ICON: Record<string, string> = {
@@ -51,6 +84,9 @@ export const TIPO_RODADO_ICON: Record<string, string> = {
   MOTO: "two_wheeler",
   PICKUP: "airport_shuttle",
   CARGA: "local_shipping",
+  PASAJEROS: "directions_bus",
+  EMERGENCIAS: "emergency",
+  OTRO: "help",
 };
 
 export const GRAVEDAD_LABEL: Record<string, string> = {
