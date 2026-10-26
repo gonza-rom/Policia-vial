@@ -8,7 +8,10 @@ import { StatTile } from "@/components/ui/StatTile";
 import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
+import { BotonImprimir } from "@/components/ui/BotonImprimir";
+import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
 import {
+  formatoFecha,
   formatoFechaHora,
   formatoHora,
   formatoMoneda,
@@ -71,17 +74,29 @@ export default async function HistorialGuardiaPage() {
   return (
     <>
       <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
-        <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined text-secondary">
-            history
-          </span>
-          Historial y Cierre de Guardia
-        </h1>
-        <p className="text-body-sm text-on-surface-variant">
-          Turno iniciado {formatoFechaHora(guardia.turnoInicio)} Hs ·{" "}
-          {guardia.puesto.nombre}
-        </p>
+      <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
+        <EncabezadoImprimible
+          titulo="Parte de Guardia"
+          lugar={guardia.puesto.nombre}
+          fecha={formatoFecha(guardia.turnoInicio)}
+          hora={formatoHora(guardia.turnoInicio)}
+        />
+
+        <div className="flex items-center justify-between print:hidden">
+          <div>
+            <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary">
+                history
+              </span>
+              Historial y Cierre de Guardia
+            </h1>
+            <p className="text-body-sm text-on-surface-variant">
+              Turno iniciado {formatoFechaHora(guardia.turnoInicio)} Hs ·{" "}
+              {guardia.puesto.nombre}
+            </p>
+          </div>
+          <BotonImprimir texto="PDF" />
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <StatTile label="Actas Labradas" valor={String(actas.length)} />
@@ -133,7 +148,7 @@ export default async function HistorialGuardiaPage() {
           </ul>
         </section>
 
-        <TarjetaSeccion icono="assignment_turned_in" titulo="Cierre de Guardia">
+        <TarjetaSeccion icono="assignment_turned_in" titulo="Cierre de Guardia" className="print:hidden">
           {pendientesFirma > 0 && (
             <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
               Hay {pendientesFirma} acta(s) pendiente(s) de firma. Podés cerrar

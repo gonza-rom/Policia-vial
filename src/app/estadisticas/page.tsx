@@ -7,6 +7,8 @@ import { BarraHorizontal } from "@/components/ui/BarraHorizontal";
 import { StatTile } from "@/components/ui/StatTile";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
+import { BotonImprimir } from "@/components/ui/BotonImprimir";
+import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
 import {
   formatoMoneda,
   TIPO_RODADO_LABEL,
@@ -65,6 +67,9 @@ export default async function EstadisticasPage({
     where: { activo: true },
     orderBy: { orden: "asc" },
   });
+  const nombrePuestoFiltro =
+    (puestoParam && puestos.find((p) => p.id === puestoParam)?.nombre) ||
+    "Todos los Puestos";
 
   const whereBase = {
     tipo: "MUNICIPAL" as const,
@@ -134,20 +139,29 @@ export default async function EstadisticasPage({
   return (
     <>
       <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-5">
-        <div>
-          <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
-            <span className="material-symbols-outlined text-secondary">
-              bar_chart
-            </span>
-            Estadísticas y Recaudación
-          </h1>
-          <p className="text-body-sm text-on-surface-variant">
-            Policía de Catamarca · Dirección de Seguridad Vial · Huillapima
-          </p>
+      <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-5">
+        <EncabezadoImprimible
+          titulo="Estadísticas y Recaudación"
+          lugar={nombrePuestoFiltro}
+          fecha={`${MESES[mes]} ${anio}`}
+        />
+
+        <div className="flex items-center justify-between print:hidden">
+          <div>
+            <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary">
+                bar_chart
+              </span>
+              Estadísticas y Recaudación
+            </h1>
+            <p className="text-body-sm text-on-surface-variant">
+              Policía de Catamarca · Dirección de Seguridad Vial · Huillapima
+            </p>
+          </div>
+          <BotonImprimir texto="PDF" />
         </div>
 
-        <div className="flex items-center justify-between bg-surface-container-lowest border border-outline-variant rounded-lg p-2">
+        <div className="flex items-center justify-between bg-surface-container-lowest border border-outline-variant rounded-lg p-2 print:hidden">
           <Link
             href={`/estadisticas?mes=${mesAnteriorParam}${puestoParam ? `&puesto=${puestoParam}` : ""}`}
             className="p-2 rounded hover:bg-surface-container"
@@ -167,7 +181,7 @@ export default async function EstadisticasPage({
           </Link>
         </div>
 
-        <form className="flex items-center gap-2">
+        <form className="flex items-center gap-2 print:hidden">
           <input type="hidden" name="mes" value={`${anio}-${String(mes + 1).padStart(2, "0")}`} />
           <select
             name="puesto"
@@ -240,7 +254,9 @@ export default async function EstadisticasPage({
         )}
 
         {puedeVerRecaudacion && (
-          <EvolucionChart porSemana={porSemana} porDia={porDia} />
+          <div className="print:hidden">
+            <EvolucionChart porSemana={porSemana} porDia={porDia} />
+          </div>
         )}
 
         <TarjetaSeccion

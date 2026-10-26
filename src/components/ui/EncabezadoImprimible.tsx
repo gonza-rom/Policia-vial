@@ -13,7 +13,9 @@ export function EncabezadoImprimible({
   titulo: string;
   lugar: string;
   fecha: string;
-  hora: string;
+  /** Omitila en reportes de un período (no de un hecho puntual) — p. ej.
+   * el resumen mensual de estadísticas no tiene una sola "hora". */
+  hora?: string;
 }) {
   return (
     <div className="hidden print:flex items-center justify-between gap-4 border-b-2 border-primary pb-3 mb-4">
@@ -49,10 +51,12 @@ export function EncabezadoImprimible({
           <dt className="text-on-surface-variant uppercase">Fecha:</dt>
           <dd className="font-semibold text-on-surface">{fecha}</dd>
         </div>
-        <div className="flex justify-end gap-1.5">
-          <dt className="text-on-surface-variant uppercase">Hora:</dt>
-          <dd className="font-semibold text-on-surface">{hora} Hs</dd>
-        </div>
+        {hora && (
+          <div className="flex justify-end gap-1.5">
+            <dt className="text-on-surface-variant uppercase">Hora:</dt>
+            <dd className="font-semibold text-on-surface">{hora} Hs</dd>
+          </div>
+        )}
       </dl>
     </div>
   );

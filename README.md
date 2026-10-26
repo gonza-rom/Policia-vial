@@ -212,18 +212,29 @@ guardadas en el celular y se sincronizan solas al volver la conexión.
    de arriba debe pasar a "Sincronizando…" y después desaparecer.
 7. Confirmar en `/actas` que el acta aparece, y que no se duplicó.
 
-## Exportar a PDF (actas, requerimientos, relevamientos)
+## Exportar a PDF (actas, requerimientos, relevamientos, estadísticas, parte de guardia)
 
 No hay ninguna librería de generación de PDF en el proyecto — "Exportar PDF"
 sigue siendo imprimir la página (`window.print()`, botón `BotonImprimir`) con
 una hoja de estilos dedicada (`.imprimible` en `globals.css`, que oculta el
-header/nav/footer de la app al imprimir). Las tres pantallas que se pueden
-exportar (acta, requerimiento, relevamiento) comparten un único encabezado de
-impresión (`src/components/ui/EncabezadoImprimible.tsx`) con el logo y un
-bloque de **Lugar / Fecha / Hora** — siempre el del registro que se exporta,
-nunca el momento en que se aprieta "Exportar PDF". Si se agrega exportación a
-un módulo nuevo, reutilizar ese componente en vez de armar el encabezado de
-nuevo.
+header/nav/footer de la app al imprimir). Las cinco pantallas que se pueden
+exportar comparten un único encabezado de impresión
+(`src/components/ui/EncabezadoImprimible.tsx`) con el logo y un bloque de
+**Lugar / Fecha / Hora**. Si se agrega exportación a un módulo nuevo,
+reutilizar ese componente en vez de armar el encabezado de nuevo.
+
+- **Acta, requerimiento, parte de guardia**: lugar/fecha/hora son los del
+  registro puntual que se exporta (nunca el momento en que se aprieta
+  "Exportar PDF").
+- **Estadísticas** (resumen mensual): no es un hecho puntual, es un
+  período — ahí "Lugar" muestra el filtro de puesto activo ("Todos los
+  Puestos" si no hay filtro) y "Fecha" el mes/año navegado; no tiene
+  sentido una sola "Hora", así que ese campo es opcional en el componente
+  (`hora?: string` — se omite la línea si no se pasa) y en este caso se
+  omite. El PDF de estadísticas es un resumen con los números y tablas
+  clave (recaudación, gravedad, infracciones, vehículos, edades) — el
+  gráfico de evolución (Recharts/SVG) se oculta a propósito al imprimir,
+  no se intenta replicar.
 
 > El `<Image>` del logo dentro de `EncabezadoImprimible` usa `priority`
 > a propósito: el bloque arranca oculto (`hidden print:flex`) y sin esa
