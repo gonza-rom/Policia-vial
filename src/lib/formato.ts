@@ -71,6 +71,12 @@ export const TIPO_ACTA_LABEL: Record<string, string> = {
   CONTRAVENCIONAL: "Contravencional",
 };
 
+export const ROL_LABEL: Record<string, string> = {
+  AGENTE: "Agente",
+  JEFE: "Jefe de Base",
+  ADMIN: "Dirección",
+};
+
 /** El acta contravencional guarda al conductor en `datosContravencional`
  * (JSON), no en la columna `conductorNombre` — este helper lo resuelve sin
  * importar el tipo de acta. */

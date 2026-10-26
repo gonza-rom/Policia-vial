@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { EstadoConexion } from "./EstadoConexion";
 
 function iniciales(nombreApellido: string) {
@@ -37,7 +38,13 @@ export function AppHeader({
       </div>
       <div className="flex items-center gap-pad-md shrink-0">
         <EstadoConexion className="text-on-primary-container" ocultarTextoEnMovil />
-        <div className="flex items-center gap-2 pl-pad-sm border-l border-on-primary-container/30">
+        {/* Toca el avatar para ver la cuenta y cerrar sesión — accesible
+        desde cualquier pantalla, no solo desde /guardia. */}
+        <Link
+          href="/cuenta"
+          aria-label="Mi cuenta y cerrar sesión"
+          className="flex items-center gap-2 pl-pad-sm border-l border-on-primary-container/30 min-h-touch-min active:opacity-70"
+        >
           <div className="text-right hidden sm:block">
             <p className="text-label-sm font-label-sm font-bold text-on-primary leading-tight">
               {nombreApellido}
@@ -49,7 +56,7 @@ export function AppHeader({
           <div className="w-8 h-8 rounded-full bg-secondary text-on-secondary font-display text-label-md flex items-center justify-center font-bold ring-2 ring-secondary-container/40 shrink-0">
             {iniciales(nombreApellido)}
           </div>
-        </div>
+        </Link>
       </div>
     </header>
   );

@@ -69,8 +69,14 @@ export default async function GuardiaPage() {
             />
           )}
           <form action={cerrarSesion}>
-            <Boton type="submit" variante="fantasma" fullWidth icono="logout">
-              Cerrar sesión
+            <Boton
+              type="submit"
+              variante="outline"
+              fullWidth
+              icono="logout"
+              className="text-error border-error"
+            >
+              Cerrar Sesión
             </Boton>
           </form>
         </main>
@@ -234,8 +240,14 @@ export default async function GuardiaPage() {
         </section>
 
         <form action={cerrarSesion}>
-          <Boton type="submit" variante="fantasma" fullWidth icono="logout">
-            Cerrar sesión
+          <Boton
+            type="submit"
+            variante="outline"
+            fullWidth
+            icono="logout"
+            className="text-error border-error"
+          >
+            Cerrar Sesión
           </Boton>
         </form>
       </main>
