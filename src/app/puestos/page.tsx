@@ -12,8 +12,15 @@ export default async function PuestosPage() {
 
   return (
     <>
-      <AppHeader nombreApellido={jefe.nombreApellido} legajo={jefe.legajo} />
+      <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
+        <Link
+          href="/guardia"
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
         <div className="flex items-center justify-between">
           <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-secondary">location_on</span>

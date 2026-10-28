@@ -6,11 +6,11 @@ import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { NuevoAgenteForm } from "./NuevoAgenteForm";
 
 export default async function NuevoAgentePage() {
-  const jefe = await getJefeActual();
+  await getJefeActual();
 
   return (
     <>
-      <AppHeader nombreApellido={jefe.nombreApellido} legajo={jefe.legajo} />
+      <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
         <Link
           href="/agentes"

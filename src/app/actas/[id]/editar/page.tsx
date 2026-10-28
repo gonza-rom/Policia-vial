@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getAgenteActual, puedeEditarActa } from "@/lib/auth";
+import { esJefe, getAgenteActual, puedeEditarActa } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { NuevaActaForm } from "../../nueva/NuevaActaForm";
 import { ContravencionalActaForm } from "../../nueva/ContravencionalActaForm";
 
@@ -30,8 +32,15 @@ export default async function EditarActaPage({
     });
     return (
       <>
-        <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+        <AppHeader />
+        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
+          <Link
+            href={`/actas/${id}/firma`}
+            className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            Volver
+          </Link>
           <ContravencionalActaForm
             campos={campos}
             actaExistente={{
@@ -41,6 +50,7 @@ export default async function EditarActaPage({
             }}
           />
         </main>
+        <BottomNav verAgentes={esJefe(agente)} />
       </>
     );
   }
@@ -52,8 +62,15 @@ export default async function EditarActaPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
+        <Link
+          href={`/actas/${id}/firma`}
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
         <NuevaActaForm
           catalogo={catalogo.map((i) => ({ ...i, montoBase: Number(i.montoBase) }))}
           lugarControlSugerido={acta.lugarControl ?? ""}
@@ -85,6 +102,7 @@ export default async function EditarActaPage({
           }}
         />
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

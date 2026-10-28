@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getJefeActual } from "@/lib/auth";
+import { esJefe, getJefeActual } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { PuestoEditarForm } from "./PuestoEditarForm";
 
 export default async function EditarPuestoPage({
@@ -17,8 +19,15 @@ export default async function EditarPuestoPage({
 
   return (
     <>
-      <AppHeader nombreApellido={jefe.nombreApellido} legajo={jefe.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
+        <Link
+          href="/puestos"
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
         <PuestoEditarForm
           puesto={{
             id: puesto.id,
@@ -33,6 +42,7 @@ export default async function EditarPuestoPage({
           }}
         />
       </main>
+      <BottomNav verAgentes={esJefe(jefe)} />
     </>
   );
 }

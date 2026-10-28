@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
+import { esJefe, getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { ProcedimientoForm } from "../../ProcedimientoForm";
 
 export default async function EditarProcedimientoPage({
@@ -21,10 +23,18 @@ export default async function EditarProcedimientoPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
+        <Link
+          href={`/procedimientos/${id}`}
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
         <ProcedimientoForm procedimientoExistente={procedimiento} />
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

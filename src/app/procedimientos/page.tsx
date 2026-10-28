@@ -6,6 +6,7 @@ import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
 import { FiltroPill } from "@/components/ui/FiltroPill";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
+import { BadgeOtraJurisdiccion } from "@/components/ui/BadgeOtraJurisdiccion";
 import { formatoFechaHora, numeroActa, TIPO_PROCEDIMIENTO_LABEL, TIPO_PROCEDIMIENTO_ICON } from "@/lib/formato";
 import type { TipoProcedimientoValor } from "./ProcedimientoForm";
 
@@ -40,8 +41,15 @@ export default async function ProcedimientosPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
+      <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
+        <Link
+          href="/guardia"
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
         <div className="flex items-center justify-between">
           <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-secondary">gavel</span>
@@ -78,16 +86,21 @@ export default async function ProcedimientosPage({
                 href={`/procedimientos/${p.id}`}
                 className="block bg-surface-container-lowest rounded-lg border border-outline-variant p-3 shadow-sm hover:bg-surface-container transition-colors"
               >
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between gap-2 mb-1">
                   <span className="font-display text-label-md text-on-surface-variant">
                     PROC. N° {numeroActa(p.numero)}
                   </span>
-                  <span className="flex items-center gap-1 text-label-sm font-label-sm bg-error-container text-on-error-container px-2 py-0.5 rounded font-bold">
-                    <span className="material-symbols-outlined text-[16px]">
-                      {TIPO_PROCEDIMIENTO_ICON[p.tipo]}
+                  <div className="flex items-center gap-1.5">
+                    {p.modalidadTrabajo === "OTRA_JURISDICCION" && (
+                      <BadgeOtraJurisdiccion />
+                    )}
+                    <span className="flex items-center gap-1 text-label-sm font-label-sm bg-error-container text-on-error-container px-2 py-0.5 rounded font-bold">
+                      <span className="material-symbols-outlined text-[16px]">
+                        {TIPO_PROCEDIMIENTO_ICON[p.tipo]}
+                      </span>
+                      {TIPO_PROCEDIMIENTO_LABEL[p.tipo]}
                     </span>
-                    {TIPO_PROCEDIMIENTO_LABEL[p.tipo]}
-                  </span>
+                  </div>
                 </div>
                 <p className="text-body-md font-semibold text-on-surface line-clamp-2">
                   {p.descripcion}

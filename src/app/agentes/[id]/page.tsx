@@ -9,6 +9,7 @@ import { Boton } from "@/components/ui/Boton";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { StatTile } from "@/components/ui/StatTile";
 import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
+import { BadgeOtraJurisdiccion } from "@/components/ui/BadgeOtraJurisdiccion";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import {
   formatoFechaHora,
@@ -31,36 +32,60 @@ export default async function AgentePage({
 
   const inicioMes = startOfMonth(new Date());
 
-  const [guardiaActiva, guardias, actas, resumenMes, pendientesFirma] =
-    await Promise.all([
-      prisma.guardia.findFirst({
-        where: { agenteId: agente.id, estado: "ACTIVA" },
-        include: { puesto: true, _count: { select: { actas: true } } },
-      }),
-      prisma.guardia.findMany({
-        where: { agenteId: agente.id, estado: "CERRADA" },
-        orderBy: { turnoFin: "desc" },
-        take: 5,
-        include: { puesto: true, _count: { select: { actas: true } } },
-      }),
-      prisma.acta.findMany({
-        where: { agenteId: agente.id },
-        orderBy: { fecha: "desc" },
-        take: 10,
-      }),
-      prisma.acta.aggregate({
-        where: { agenteId: agente.id, fecha: { gte: inicioMes } },
-        _count: true,
-        _sum: { montoConDescuento: true },
-      }),
-      prisma.acta.count({
-        where: { agenteId: agente.id, estado: "PENDIENTE_FIRMA" },
-      }),
-    ]);
+  const [
+    guardiaActiva,
+    guardias,
+    actas,
+    resumenMes,
+    pendientesFirma,
+    otraJurisdiccionActas,
+    otraJurisdiccionProcedimientos,
+  ] = await Promise.all([
+    prisma.guardia.findFirst({
+      where: { agenteId: agente.id, estado: "ACTIVA" },
+      include: { puesto: true, _count: { select: { actas: true } } },
+    }),
+    prisma.guardia.findMany({
+      where: { agenteId: agente.id, estado: "CERRADA" },
+      orderBy: { turnoFin: "desc" },
+      take: 5,
+      include: { puesto: true, _count: { select: { actas: true } } },
+    }),
+    prisma.acta.findMany({
+      where: { agenteId: agente.id },
+      orderBy: { fecha: "desc" },
+      take: 10,
+      include: { puestoTrabajo: true },
+    }),
+    prisma.acta.aggregate({
+      where: { agenteId: agente.id, fecha: { gte: inicioMes } },
+      _count: true,
+      _sum: { montoConDescuento: true },
+    }),
+    prisma.acta.count({
+      where: { agenteId: agente.id, estado: "PENDIENTE_FIRMA" },
+    }),
+    prisma.acta.count({
+      where: {
+        agenteId: agente.id,
+        modalidadTrabajo: "OTRA_JURISDICCION",
+        fecha: { gte: inicioMes },
+      },
+    }),
+    prisma.procedimiento.count({
+      where: {
+        agenteId: agente.id,
+        modalidadTrabajo: "OTRA_JURISDICCION",
+        fecha: { gte: inicioMes },
+      },
+    }),
+  ]);
+
+  const otraJurisdiccionMes = otraJurisdiccionActas + otraJurisdiccionProcedimientos;
 
   return (
     <>
-      <AppHeader nombreApellido={jefe.nombreApellido} legajo={jefe.legajo} />
+      <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
         <Link
           href="/agentes"
@@ -97,6 +122,15 @@ export default async function AgentePage({
             tono={pendientesFirma > 0 ? "error" : "primario"}
           />
         </div>
+
+        {otraJurisdiccionMes > 0 && (
+          <StatTile
+            label="Otra Jurisdicción Este Mes — Para Revisar"
+            valor={String(otraJurisdiccionMes)}
+            icono="travel_explore"
+            tono="secundario"
+          />
+        )}
 
         <TarjetaSeccion
           icono="shield"
@@ -169,6 +203,11 @@ export default async function AgentePage({
                   <p className="text-body-md font-semibold text-on-surface">
                     {acta.conductorNombre} · {acta.vehiculoDominio}
                   </p>
+                  {acta.modalidadTrabajo === "OTRA_JURISDICCION" && (
+                    <div className="mt-1">
+                      <BadgeOtraJurisdiccion />
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mt-1">
                     <BadgeEstadoActa estado={acta.estado} />
                     <span className="font-display font-bold text-primary">

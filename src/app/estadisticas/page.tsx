@@ -165,13 +165,21 @@ export default async function EstadisticasPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
+      <AppHeader />
       <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-5">
         <EncabezadoImprimible
           titulo="Estadísticas y Recaudación"
           lugar={nombrePuestoFiltro}
           fecha={`${MESES[mes]} ${anio}`}
         />
+
+        <Link
+          href="/guardia"
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase print:hidden"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
 
         <div className="flex items-center justify-between print:hidden">
           <div>

@@ -57,9 +57,9 @@ async function main() {
     { nombre: "Tango 52", ubicacion: "Sumalao", lat: -28.592606267478608, lng: -65.75821113299423, jurisdicciones: [] as const },
     { nombre: "Tango 53", ubicacion: "La Puerta", lat: -28.19388, lng: -65.770447, jurisdicciones: ["LA_PUERTA"] as const },
     { nombre: "Tango 54", ubicacion: "La Atravesada, Balcozna", lat: -27.838041329131357, lng: -65.78247381905491, jurisdicciones: [] as const },
-    { nombre: "Tango 55", ubicacion: "Las Salinas, referencias 157 y 60", lat: -29.511015778037514, lng: -64.92065009294869, jurisdicciones: [] as const },
+    { nombre: "Tango 55", ubicacion: "Las Salinas Ruta 157 y 60", lat: -29.511015778037514, lng: -64.92065009294869, jurisdicciones: [] as const },
     { nombre: "Tango 56", ubicacion: "El Clavillo, Aconquija", lat: -27.346150633985534, lng: -65.97125014673429, jurisdicciones: [] as const },
-    { nombre: "Tango 57", ubicacion: "La Viña, Ruta 38, antes de Huacra", lat: -28.005090960815874, lng: -65.58027437622454, jurisdicciones: [] as const },
+    { nombre: "Tango 57", ubicacion: "La Viña, Ruta 38", lat: -28.005090960815874, lng: -65.58027437622454, jurisdicciones: [] as const },
   ];
   const puestos = [];
   for (const [i, p] of puestosSeed.entries()) {

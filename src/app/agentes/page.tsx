@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
 import { StatTile } from "@/components/ui/StatTile";
+import { BadgeOtraJurisdiccion } from "@/components/ui/BadgeOtraJurisdiccion";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { formatoHora } from "@/lib/formato";
 
@@ -31,11 +32,46 @@ export default async function AgentesPage() {
   });
 
   const idsAgentes = agentes.map((a) => a.id);
-  const pendientesFirma = idsAgentes.length
-    ? await prisma.acta.count({
-        where: { agenteId: { in: idsAgentes }, estado: "PENDIENTE_FIRMA" },
-      })
-    : 0;
+  const [pendientesFirma, actasOtraJuris, procedimientosOtraJuris] = idsAgentes.length
+    ? await Promise.all([
+        prisma.acta.count({
+          where: { agenteId: { in: idsAgentes }, estado: "PENDIENTE_FIRMA" },
+        }),
+        prisma.acta.groupBy({
+          by: ["agenteId"],
+          where: {
+            agenteId: { in: idsAgentes },
+            modalidadTrabajo: "OTRA_JURISDICCION",
+            fecha: { gte: inicioMes },
+          },
+          _count: true,
+        }),
+        prisma.procedimiento.groupBy({
+          by: ["agenteId"],
+          where: {
+            agenteId: { in: idsAgentes },
+            modalidadTrabajo: "OTRA_JURISDICCION",
+            fecha: { gte: inicioMes },
+          },
+          _count: true,
+        }),
+      ])
+    : [0, [], []];
+
+  const otraJurisdiccionPorAgente = new Map<string, number>();
+  for (const g of actasOtraJuris) {
+    otraJurisdiccionPorAgente.set(g.agenteId, g._count);
+  }
+  for (const g of procedimientosOtraJuris) {
+    otraJurisdiccionPorAgente.set(
+      g.agenteId,
+      (otraJurisdiccionPorAgente.get(g.agenteId) ?? 0) + g._count,
+    );
+  }
+  const otraJurisdiccionMes = [...otraJurisdiccionPorAgente.values()].reduce(
+    (acc, n) => acc + n,
+    0,
+  );
 
   const activos = agentes.filter((a) => a.activo).length;
   const enGuardia = agentes.filter((a) => a.guardias.length > 0).length;
@@ -43,7 +79,7 @@ export default async function AgentesPage() {
 
   return (
     <>
-      <AppHeader nombreApellido={jefe.nombreApellido} legajo={jefe.legajo} />
+      <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
         <Link
           href="/guardia"
@@ -73,6 +109,15 @@ export default async function AgentesPage() {
             tono={pendientesFirma > 0 ? "error" : "primario"}
           />
         </div>
+
+        {otraJurisdiccionMes > 0 && (
+          <StatTile
+            label="Otra Jurisdicción Este Mes — Para Revisar"
+            valor={String(otraJurisdiccionMes)}
+            icono="travel_explore"
+            tono="secundario"
+          />
+        )}
 
         {agentes.length === 0 && (
           <EstadoVacio>
@@ -127,9 +172,14 @@ export default async function AgentesPage() {
                               : "Administrador"}
                       </p>
                     </div>
-                    <span className="text-label-sm font-label-sm bg-surface-container px-2 py-0.5 rounded shrink-0">
-                      {a._count.actas} actas este mes
-                    </span>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-label-sm font-label-sm bg-surface-container px-2 py-0.5 rounded">
+                        {a._count.actas} actas este mes
+                      </span>
+                      {(otraJurisdiccionPorAgente.get(a.id) ?? 0) > 0 && (
+                        <BadgeOtraJurisdiccion />
+                      )}
+                    </div>
                   </div>
                 </Link>
               </li>

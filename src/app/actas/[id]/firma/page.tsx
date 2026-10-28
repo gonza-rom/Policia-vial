@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { esJefe, getAgenteActual, puedeEditarActa } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
 import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
@@ -16,6 +17,7 @@ import {
   JURISDICCION_LABEL,
 } from "@/lib/formato";
 import { ImagenConFallback } from "@/components/ui/ImagenConFallback";
+import { AvisoOtraJurisdiccion } from "@/components/ui/AvisoOtraJurisdiccion";
 import { FirmaForm } from "./FirmaForm";
 import { BotonImprimir } from "@/components/ui/BotonImprimir";
 import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
@@ -72,9 +74,9 @@ export default async function FirmaActaPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
+      <AppHeader />
       <main
-        className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4"
+        className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4"
       >
         <EncabezadoImprimible
           titulo={acta.tipo === "CONTRAVENCIONAL" ? "Acta Contravencional" : "Acta Municipal"}
@@ -120,25 +122,12 @@ export default async function FirmaActaPage({
         </div>
 
         {acta.modalidadTrabajo === "OTRA_JURISDICCION" && (
-          <div className="bg-secondary-container/40 border-2 border-secondary rounded-lg p-3 flex items-start gap-2">
-            <span className="material-symbols-outlined text-secondary mt-0.5">
-              travel_explore
-            </span>
-            <div>
-              <p className="text-label-sm font-label-sm font-bold text-secondary uppercase">
-                Labrada en Otra Jurisdicción
-              </p>
-              <p className="text-body-sm text-on-surface">
-                Agente de <strong>{acta.puesto.nombre}</strong> trabajando en{" "}
-                <strong>{acta.puestoTrabajo?.nombre ?? "otro puesto"}</strong>.
-              </p>
-              {acta.motivoOtraJurisdiccion && (
-                <p className="text-body-sm text-on-surface-variant mt-1">
-                  Motivo: {acta.motivoOtraJurisdiccion}
-                </p>
-              )}
-            </div>
-          </div>
+          <AvisoOtraJurisdiccion
+            titulo="Labrada"
+            puestoOrigen={acta.puesto.nombre}
+            puestoTrabajo={acta.puestoTrabajo?.nombre}
+            motivo={acta.motivoOtraJurisdiccion}
+          />
         )}
 
         <div className="bg-primary-container text-on-primary rounded-lg p-pad-lg flex items-center justify-between">
@@ -335,6 +324,7 @@ export default async function FirmaActaPage({
           </TarjetaSeccion>
         )}
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

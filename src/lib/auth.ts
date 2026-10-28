@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +14,11 @@ export function legajoToEmail(legajo: string) {
   return `${normalizado}@huillapima.local`;
 }
 
-export async function getAgenteActual() {
+/** `cache()` (memoización por request de React): AppHeader necesita el
+ * agente actual para el menú del avatar, pero cada página ya lo pide para
+ * lo suyo — sin esto, cada carga de página haría el viaje a Supabase Auth +
+ * la consulta de Prisma dos veces. */
+export const getAgenteActual = cache(async function getAgenteActual() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -35,7 +40,7 @@ export async function getAgenteActual() {
   }
 
   return agente;
-}
+});
 
 export type AgenteActual = Awaited<ReturnType<typeof getAgenteActual>>;
 
@@ -101,10 +106,12 @@ export function puedeCrearActaMunicipalEnJurisdiccion(
   return puestoOrigen.jurisdiccionesMunicipales.includes(jurisdiccion);
 }
 
-export async function getGuardiaActiva(agenteId: string) {
+export const getGuardiaActiva = cache(async function getGuardiaActiva(
+  agenteId: string,
+) {
   return prisma.guardia.findFirst({
     where: { agenteId, estado: "ACTIVA" },
     include: { puesto: true },
     orderBy: { turnoInicio: "desc" },
   });
-}
+});

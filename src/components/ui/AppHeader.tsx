@@ -1,20 +1,19 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
+import { ROL_LABEL } from "@/lib/formato";
+import { cerrarGuardia, cerrarSesion } from "@/app/guardia/actions";
 import { EstadoConexion } from "./EstadoConexion";
+import { MenuCuenta } from "./MenuCuenta";
 
-function iniciales(nombreApellido: string) {
-  const partes = nombreApellido.trim().split(/\s+/);
-  const letras = partes.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "");
-  return letras.join("") || "PV";
-}
+/** Header fijo de toda la app. Antes recibía nombreApellido/legajo por
+ * props desde cada página — ahora resuelve el agente (y si tiene guardia
+ * activa, para el menú del avatar) por su cuenta. `getAgenteActual` y
+ * `getGuardiaActiva` están memoizadas por request (`cache()` en auth.ts),
+ * así que esto no duplica la consulta que la página ya hace para lo suyo. */
+export async function AppHeader() {
+  const agente = await getAgenteActual();
+  const guardia = await getGuardiaActiva(agente.id);
 
-export function AppHeader({
-  nombreApellido,
-  legajo,
-}: {
-  nombreApellido: string;
-  legajo: string;
-}) {
   return (
     <header className="sticky top-0 z-40 bg-primary-container text-on-primary border-b border-primary shadow-sm w-full px-pad-lg h-touch-min flex justify-between items-center">
       <div className="flex items-center gap-pad-md min-w-0">
@@ -38,25 +37,14 @@ export function AppHeader({
       </div>
       <div className="flex items-center gap-pad-md shrink-0">
         <EstadoConexion className="text-on-primary-container" ocultarTextoEnMovil />
-        {/* Toca el avatar para ver la cuenta y cerrar sesión — accesible
-        desde cualquier pantalla, no solo desde /guardia. */}
-        <Link
-          href="/cuenta"
-          aria-label="Mi cuenta y cerrar sesión"
-          className="flex items-center gap-2 pl-pad-sm border-l border-on-primary-container/30 min-h-touch-min active:opacity-70"
-        >
-          <div className="text-right hidden sm:block">
-            <p className="text-label-sm font-label-sm font-bold text-on-primary leading-tight">
-              {nombreApellido}
-            </p>
-            <p className="text-label-sm font-label-sm text-on-primary-container text-[10px]">
-              {legajo}
-            </p>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-secondary text-on-secondary font-display text-label-md flex items-center justify-center font-bold ring-2 ring-secondary-container/40 shrink-0">
-            {iniciales(nombreApellido)}
-          </div>
-        </Link>
+        <MenuCuenta
+          nombreApellido={agente.nombreApellido}
+          legajo={agente.legajo}
+          rolLabel={ROL_LABEL[agente.rol]}
+          guardiaPuesto={guardia?.puesto.nombre ?? null}
+          cerrarGuardia={cerrarGuardia}
+          cerrarSesion={cerrarSesion}
+        />
       </div>
     </header>
   );

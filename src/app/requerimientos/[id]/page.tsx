@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { esJefe, getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { BotonImprimir } from "@/components/ui/BotonImprimir";
 import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
 import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
@@ -29,8 +30,8 @@ export default async function DetalleRequerimientoPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4">
+      <AppHeader />
+      <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
         <EncabezadoImprimible
           titulo={`Requerimiento — ${TIPO_LABEL[requerimiento.tipo]}`}
           lugar={requerimiento.puesto.nombre}
@@ -106,6 +107,7 @@ export default async function DetalleRequerimientoPage({
           </p>
         </section>
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

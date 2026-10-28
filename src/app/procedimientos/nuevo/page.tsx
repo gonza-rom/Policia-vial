@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAgenteActual } from "@/lib/auth";
+import { esJefe, getAgenteActual } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { ProcedimientoForm, type TipoProcedimientoValor } from "../ProcedimientoForm";
 
 const ERROR_LABEL: Record<string, string> = {
@@ -27,8 +29,15 @@ export default async function NuevoProcedimientoPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-3">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
+        <Link
+          href="/procedimientos"
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
         {error && ERROR_LABEL[error] && (
           <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
             {ERROR_LABEL[error]}
@@ -40,6 +49,7 @@ export default async function NuevoProcedimientoPage({
           puestoOrigenId={puesto.id}
         />
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

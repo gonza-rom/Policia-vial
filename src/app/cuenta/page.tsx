@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
+import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { Boton } from "@/components/ui/Boton";
 import { ROL_LABEL } from "@/lib/formato";
 import { cerrarSesion } from "../guardia/actions";
@@ -22,8 +23,8 @@ export default async function CuentaPage() {
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
         <Link
           href="/guardia"
           className="min-h-touch-min flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
@@ -77,6 +78,7 @@ export default async function CuentaPage() {
           </p>
         </form>
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

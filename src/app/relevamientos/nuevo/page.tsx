@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getAgenteActual } from "@/lib/auth";
+import { esJefe, getAgenteActual } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { NOMBRE_RELEVAMIENTOS } from "@/lib/config";
 import {
   MODALIDAD_LABEL,
@@ -38,8 +39,15 @@ export default async function NuevoRelevamientoPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
+        <Link
+          href="/relevamientos"
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </Link>
         {!modalidadValida ? (
           <>
             <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
@@ -72,6 +80,7 @@ export default async function NuevoRelevamientoPage({
           <RelevamientoForm modalidad={modalidadValida} />
         )}
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

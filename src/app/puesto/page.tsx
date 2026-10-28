@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
+import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
 import { elegirPuesto } from "./actions";
 
@@ -23,8 +24,8 @@ export default async function PuestoPage() {
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
         {actual && (
           <Link
             href="/guardia"
@@ -56,7 +57,7 @@ export default async function PuestoPage() {
                 type="submit"
                 name="puestoId"
                 value={p.id}
-                className={`min-h-[84px] rounded-lg border-2 p-2.5 flex flex-col items-center justify-center gap-1 text-center active:scale-95 transition-all ${
+                className={`min-h-[92px] rounded-lg border-2 p-2.5 flex flex-col items-center justify-center gap-1 text-center active:scale-95 transition-all ${
                   seleccionado
                     ? "border-primary bg-primary-container text-on-primary"
                     : "border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container"
@@ -70,6 +71,15 @@ export default async function PuestoPage() {
                 <span className="text-label-sm font-label-sm leading-tight">
                   {p.nombre}
                 </span>
+                {p.ubicacion && (
+                  <span
+                    className={`text-[11px] leading-tight line-clamp-1 w-full ${
+                      seleccionado ? "text-on-primary/80" : "text-on-surface-variant"
+                    }`}
+                  >
+                    {p.ubicacion}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -79,6 +89,7 @@ export default async function PuestoPage() {
           <EstadoVacio>No hay puestos cargados todavía.</EstadoVacio>
         )}
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

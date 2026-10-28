@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { esJefe, getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { BotonImprimir } from "@/components/ui/BotonImprimir";
 import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
 import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
+import { AvisoOtraJurisdiccion } from "@/components/ui/AvisoOtraJurisdiccion";
 import {
   formatoFecha,
   formatoFechaHora,
@@ -34,8 +36,8 @@ export default async function DetalleProcedimientoPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4">
+      <AppHeader />
+      <main className="imprimible w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
         <EncabezadoImprimible
           titulo={`Procedimiento — ${TIPO_PROCEDIMIENTO_LABEL[procedimiento.tipo]}`}
           lugar={esOtraJurisdiccion ? (procedimiento.puestoTrabajo?.nombre ?? procedimiento.puesto.nombre) : procedimiento.puesto.nombre}
@@ -77,25 +79,12 @@ export default async function DetalleProcedimientoPage({
         </div>
 
         {esOtraJurisdiccion && (
-          <div className="bg-secondary-container/40 border-2 border-secondary rounded-lg p-3 flex items-start gap-2">
-            <span className="material-symbols-outlined text-secondary mt-0.5">
-              travel_explore
-            </span>
-            <div>
-              <p className="text-label-sm font-label-sm font-bold text-secondary uppercase">
-                Realizado en Otra Jurisdicción
-              </p>
-              <p className="text-body-sm text-on-surface">
-                Agente de <strong>{procedimiento.puesto.nombre}</strong> trabajando
-                en <strong>{procedimiento.puestoTrabajo?.nombre ?? "otro puesto"}</strong>.
-              </p>
-              {procedimiento.motivoOtraJurisdiccion && (
-                <p className="text-body-sm text-on-surface-variant mt-1">
-                  Motivo: {procedimiento.motivoOtraJurisdiccion}
-                </p>
-              )}
-            </div>
-          </div>
+          <AvisoOtraJurisdiccion
+            titulo="Realizado"
+            puestoOrigen={procedimiento.puesto.nombre}
+            puestoTrabajo={procedimiento.puestoTrabajo?.nombre}
+            motivo={procedimiento.motivoOtraJurisdiccion}
+          />
         )}
 
         <div className="bg-error-container text-on-error-container rounded-lg p-pad-lg flex items-center justify-between">
@@ -136,6 +125,7 @@ export default async function DetalleProcedimientoPage({
           </p>
         </section>
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }

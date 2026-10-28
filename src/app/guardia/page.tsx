@@ -9,7 +9,7 @@ import { Boton } from "@/components/ui/Boton";
 import { StatTile } from "@/components/ui/StatTile";
 import { formatoMoneda } from "@/lib/formato";
 import { NOMBRE_RELEVAMIENTOS } from "@/lib/config";
-import { cerrarSesion, iniciarGuardia } from "./actions";
+import { cerrarGuardia, cerrarSesion, iniciarGuardia } from "./actions";
 
 export default async function GuardiaPage() {
   const agente = await getAgenteActual();
@@ -23,7 +23,7 @@ export default async function GuardiaPage() {
 
     return (
       <>
-        <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
+        <AppHeader />
         <main className="flex-1 max-w-2xl w-full mx-auto px-pad-lg pt-pad-xl pb-24 space-y-4">
           <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-xl text-center space-y-4">
             <span className="material-symbols-outlined text-5xl text-secondary">
@@ -117,7 +117,7 @@ export default async function GuardiaPage() {
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
+      <AppHeader />
       <main className="flex-1 max-w-2xl w-full mx-auto px-pad-lg py-pad-lg pb-24 space-y-pad-xl">
         <section
           aria-label="Resumen de Guardia"
@@ -266,17 +266,24 @@ export default async function GuardiaPage() {
           </div>
         </section>
 
-        <form action={cerrarSesion}>
-          <Boton
-            type="submit"
-            variante="outline"
-            fullWidth
-            icono="logout"
-            className="text-error border-error"
-          >
-            Cerrar Sesión
-          </Boton>
-        </form>
+        <div className="grid grid-cols-2 gap-pad-md">
+          <form action={cerrarGuardia}>
+            <Boton type="submit" variante="outline" fullWidth icono="lock">
+              Cerrar Guardia
+            </Boton>
+          </form>
+          <form action={cerrarSesion}>
+            <Boton
+              type="submit"
+              variante="outline"
+              fullWidth
+              icono="logout"
+              className="text-error border-error"
+            >
+              Cerrar Sesión
+            </Boton>
+          </form>
+        </div>
       </main>
       <BottomNav verAgentes={esJefe(agente)} />
     </>

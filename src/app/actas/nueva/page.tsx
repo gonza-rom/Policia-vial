@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
-import { getAgenteActual, getGuardiaActiva } from "@/lib/auth";
+import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
+import { BottomNav } from "@/components/ui/BottomNav";
 import { fechaInputHoy, horaInputAhora } from "@/lib/formato";
 import { NuevaActaForm } from "./NuevaActaForm";
 import { ContravencionalActaForm } from "./ContravencionalActaForm";
@@ -29,8 +30,17 @@ export default async function NuevaActaPage({
   if (tipo !== "municipal" && tipo !== "contravencional") {
     return (
       <>
-        <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-4">
+        <AppHeader />
+        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
+          {/* <a> normal (no <Link>), igual que el resto de esta pantalla de
+          selección: para no romper el cacheo offline de Nueva Acta. */}
+          <a
+            href="/guardia"
+            className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            Volver
+          </a>
           <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
             <span className="material-symbols-outlined text-secondary">note_add</span>
             ¿Qué tipo de acta vas a labrar?
@@ -67,6 +77,7 @@ export default async function NuevaActaPage({
             </a>
           </div>
         </main>
+        <BottomNav verAgentes={esJefe(agente)} />
       </>
     );
   }
@@ -84,8 +95,15 @@ export default async function NuevaActaPage({
     });
     return (
       <>
-        <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-3">
+        <AppHeader />
+        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
+          <a
+            href="/actas/nueva"
+            className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            Volver
+          </a>
           {mensajeError && (
             <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
               {mensajeError}
@@ -99,6 +117,7 @@ export default async function NuevaActaPage({
             puestoOrigenId={guardia.puestoId}
           />
         </main>
+        <BottomNav verAgentes={esJefe(agente)} />
       </>
     );
   }
@@ -110,8 +129,15 @@ export default async function NuevaActaPage({
 
   return (
     <>
-      <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-3">
+      <AppHeader />
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
+        <a
+          href="/actas/nueva"
+          className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Volver
+        </a>
         {mensajeError && (
           <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
             {mensajeError}
@@ -130,6 +156,7 @@ export default async function NuevaActaPage({
           jurisdiccionesHabituales={guardia.puesto.jurisdiccionesMunicipales}
         />
       </main>
+      <BottomNav verAgentes={esJefe(agente)} />
     </>
   );
 }
