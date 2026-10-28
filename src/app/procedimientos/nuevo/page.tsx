@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { esJefe, getAgenteActual } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
@@ -31,13 +30,16 @@ export default async function NuevoProcedimientoPage({
     <>
       <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
-        <Link
+        {/* <a> normal, no <Link>: esta pantalla tiene que poder abrirse (y
+        volver) sin conexión — ver sw.js. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
           href="/procedimientos"
           className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Volver
-        </Link>
+        </a>
         {error && ERROR_LABEL[error] && (
           <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
             {ERROR_LABEL[error]}
@@ -47,6 +49,7 @@ export default async function NuevoProcedimientoPage({
           tipoInicial={tipo as TipoProcedimientoValor | undefined}
           puestosDisponibles={puestosDisponibles}
           puestoOrigenId={puesto.id}
+          agenteId={agente.id}
         />
       </main>
       <BottomNav verAgentes={esJefe(agente)} />

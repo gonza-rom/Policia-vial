@@ -8,6 +8,9 @@ import { Campo, CampoTextarea } from "@/components/ui/Campo";
 import { SelectorModalidadTrabajo } from "@/components/ui/SelectorModalidadTrabajo";
 import { Boton } from "@/components/ui/Boton";
 import { TIPO_PROCEDIMIENTO_LABEL, TIPO_PROCEDIMIENTO_ICON } from "@/lib/formato";
+import { soportaIndexedDB } from "@/lib/offline/db";
+import { encolarProcedimiento } from "@/lib/offline/colaProcedimientos";
+import { avisarCambioDeCola } from "@/lib/offline/sincronizar";
 
 export type TipoProcedimientoValor =
   | "ORDEN_JUDICIAL"
@@ -44,20 +47,92 @@ export function ProcedimientoForm({
   tipoInicial,
   puestosDisponibles,
   puestoOrigenId,
+  agenteId,
 }: {
   procedimientoExistente?: ProcedimientoExistenteDTO;
   tipoInicial?: TipoProcedimientoValor;
   /** Solo hacen falta al crear. Ver SelectorModalidadTrabajo. */
   puestosDisponibles?: { id: string; nombre: string }[];
   puestoOrigenId?: string;
+  /** Solo hace falta para poder guardar sin conexión — ver manejarSubmit. */
+  agenteId?: string;
 }) {
   const [tipo, setTipo] = useState<TipoProcedimientoValor>(
     procedimientoExistente?.tipo ?? tipoInicial ?? "DEMORA",
   );
+  const [guardadoOffline, setGuardadoOffline] = useState(false);
+  const [guardandoOffline, setGuardandoOffline] = useState(false);
+
+  /** Mismo mecanismo que NuevaActaForm — solo para altas nuevas, no para
+   * editar un procedimiento ya existente. */
+  async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (procedimientoExistente) return;
+    if (navigator.onLine) return;
+    if (!soportaIndexedDB() || !puestoOrigenId || !agenteId) return;
+
+    e.preventDefault();
+    setGuardandoOffline(true);
+
+    const formData = new FormData(e.currentTarget);
+    const campos: Record<string, string> = {};
+    for (const nombre of [
+      "tipo",
+      "modalidadTrabajo",
+      "puestoTrabajoId",
+      "motivoOtraJurisdiccion",
+      "personaNombre",
+      "personaDni",
+      "vehiculoDominio",
+      "descripcion",
+      "datosOrden",
+      "observaciones",
+    ]) {
+      campos[nombre] = String(formData.get(nombre) ?? "");
+    }
+
+    await encolarProcedimiento({
+      id: crypto.randomUUID(),
+      campos,
+      puestoId: puestoOrigenId,
+      agenteId,
+      creadoEnCliente: new Date().toISOString(),
+    });
+    avisarCambioDeCola();
+    setGuardandoOffline(false);
+    setGuardadoOffline(true);
+  }
+
+  if (guardadoOffline) {
+    return (
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-xl text-center space-y-4">
+        <span className="material-symbols-outlined text-5xl text-secondary">
+          cloud_off
+        </span>
+        <h2 className="text-headline-md font-headline-md text-primary">
+          Guardado sin conexión
+        </h2>
+        <p className="text-body-md text-on-surface-variant">
+          El procedimiento quedó guardado en este celular. Se va a
+          sincronizar solo en cuanto vuelva la señal.
+        </p>
+        <Boton
+          onClick={() => {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga dura intencional, ver NuevaActaForm
+            window.location.href = "/guardia";
+          }}
+          fullWidth
+          icono="home"
+        >
+          Volver al Menú
+        </Boton>
+      </div>
+    );
+  }
 
   return (
     <form
       action={procedimientoExistente ? actualizarProcedimiento : crearProcedimiento}
+      onSubmit={manejarSubmit}
       className="space-y-4"
     >
       {procedimientoExistente && (
@@ -148,12 +223,21 @@ export function ProcedimientoForm({
         />
       </TarjetaSeccion>
 
-      <BotonEnviar esEdicion={Boolean(procedimientoExistente)} />
+      <BotonEnviar
+        esEdicion={Boolean(procedimientoExistente)}
+        guardandoOffline={guardandoOffline}
+      />
     </form>
   );
 }
 
-function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
+function BotonEnviar({
+  esEdicion,
+  guardandoOffline,
+}: {
+  esEdicion: boolean;
+  guardandoOffline: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <div className="pt-2 pb-6">
@@ -161,10 +245,14 @@ function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
         type="submit"
         icono={esEdicion ? "save" : "gavel"}
         fullWidth
-        disabled={pending}
+        disabled={pending || guardandoOffline}
         className="disabled:opacity-60"
       >
-        {pending ? "Guardando…" : esEdicion ? "Guardar Cambios" : "Cargar Procedimiento"}
+        {pending || guardandoOffline
+          ? "Guardando…"
+          : esEdicion
+            ? "Guardar Cambios"
+            : "Cargar Procedimiento"}
       </Boton>
     </div>
   );

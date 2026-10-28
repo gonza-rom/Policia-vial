@@ -18,8 +18,8 @@ de trabajo en otra jurisdicción (rotaciones/refuerzos).
 - **Recharts** para el gráfico de evolución de recaudación (resto de gráficos:
   barras HTML/CSS propias, siguiendo el sistema de diseño de
   `sistema_de_control_y_actas_viales_huillapima/DESIGN.md`)
-- **Service Worker + IndexedDB** para el modo offline de Nueva Acta (ver
-  sección dedicada más abajo)
+- **Service Worker + IndexedDB** para el modo offline de altas de actas,
+  procedimientos y relevamientos (ver sección dedicada más abajo)
 - **Leaflet + react-leaflet** (tiles de OpenStreetMap, sin API key) para el
   mapa de puestos en `/puestos/mapa`
 
@@ -192,63 +192,85 @@ fueron la referencia visual — la app real vive en `src/`.
   marcador verde/gris según el estado operativo real (`Puesto.activo`, no
   deducido de la ubicación) y un enlace para abrir cada uno en Google Maps.
 
-## Modo offline (Nueva Acta)
+## Modo offline
 
-Si se corta la señal durante una guardia, el agente puede seguir labrando
-**actas municipales nuevas** desde `/actas/nueva?tipo=municipal` — quedan
-guardadas en el celular y se sincronizan solas al volver la conexión.
+Pensado para los puestos sin señal: el agente puede seguir cargando actas
+(municipales y contravencionales), procedimientos y relevamientos aunque no
+haya conexión — quedan guardados en el celular y se sincronizan solos al
+volver la señal.
 
 **Alcance** (a propósito, para mantener el riesgo acotado):
-- Solo **Nueva Acta municipal**. Requerimientos, Relevamientos, el acta
-  contravencional y la edición de actas existentes siguen necesitando señal.
-- La firma digital también necesita señal — un acta guardada sin conexión se
-  puede firmar recién cuando ya se sincronizó con el servidor.
-- Las fotos adjuntas se suben directo a Cloudinary desde el celular (preset
+- Solo **altas nuevas**: Nueva Acta (municipal y contravencional), Nuevo
+  Procedimiento y Nuevo Relevamiento (el formulario clásico y la carga
+  rápida de Día de la Virgen). **Editar** un registro ya existente, la firma
+  digital, y las pantallas de listado/detalle siguen necesitando señal.
+- Las fotos del acta se suben directo a Cloudinary desde el celular (preset
   sin firmar, ver variable de entorno arriba); si no hay preset configurado,
-  el acta se sincroniza igual pero sin las fotos.
+  el acta se sincroniza igual pero sin las fotos. Procedimientos y
+  relevamientos no llevan fotos.
 
 **Cómo funciona:**
-- Un Service Worker (`public/sw.js`) cachea el HTML ya renderizado de
-  `/guardia`, `/actas/nueva` y `/actas/nueva?tipo=municipal` — con el
-  catálogo de infracciones y los datos de la guardia activa ya incluidos —
-  cada vez que la app arranca con señal (`precargarRutasCriticas` en
+- Un Service Worker (`public/sw.js`) cachea el HTML ya renderizado de cada
+  pantalla crítica (`/guardia`, las dos actas nuevas, los listados y
+  formularios de procedimientos y relevamientos — con cada modalidad de
+  relevamiento como su propia URL) cada vez que la app arranca con señal o
+  cambia de pantalla (`precargarRutasCriticas` en
   `src/lib/offline/precache.ts`), además de cachearlas cuando se visitan
-  normalmente. Por eso esas 3 rutas usan `<a>` en vez de `<Link>` en los
-  puntos de entrada (tarjeta de "Cargar Nueva Acta", selector de tipo de
-  acta, ítems del menú inferior): una transición cliente de Next no pasa
-  por el Service Worker, y sin esto la página nunca quedaría cacheada.
-- Si al enviar el formulario no hay señal, el acta se guarda en
-  **IndexedDB** del navegador (`src/lib/offline/`) en vez de mandarse al
-  servidor, con un UUID generado en el celular que va a ser el `Acta.id`
-  definitivo (evita duplicados al sincronizar).
+  normalmente. Esa función también sale a buscar y cachear los archivos
+  JS/CSS (`/_next/static/...`) que cada página referencia — cachear solo el
+  HTML no alcanza: si el agente nunca abrió esa pantalla de verdad estando
+  online, el navegador nunca pidió esos archivos, y sin ellos la página se
+  ve bien pero no reacciona a nada (no se puede hidratar). Por eso las rutas
+  de alta usan `<a>` en vez de `<Link>` en los puntos de entrada: una
+  transición cliente de Next no pasa por el Service Worker.
+- Si al enviar un formulario no hay señal, el registro se guarda en
+  **IndexedDB** del navegador (`src/lib/offline/`, una cola por tipo:
+  actas, procedimientos, relevamientos) con un UUID generado en el celular
+  que va a ser el id definitivo (evita duplicados al sincronizar). La carga
+  rápida de Día de la Virgen guarda hasta 3 registros (uno por sexo) bajo un
+  mismo envío.
 - Un indicador fijo arriba de la pantalla (`SincronizadorOffline`) muestra
-  cuántas actas quedan pendientes y permite reintentar a mano. Al volver la
-  señal, se sincroniza sola.
-- **Conflictos:** si dos ediciones del mismo acta llegan por caminos
-  distintos (poco probable en este alcance, ya que es solo creación, pero
-  cubierto igual), gana la última edición por fecha; la que se descarta
-  queda registrada en `ConflictoSincronizacion` para auditoría, no se pierde
-  silenciosamente.
+  cuántos registros quedan pendientes (de las 3 colas juntas) y permite
+  reintentar a mano. Al volver la señal, se sincroniza solo — las 3 colas
+  una atrás de la otra, no en paralelo (correrlas al mismo tiempo llegó a
+  trabar la sincronización, aparentemente por el pool de conexiones a la
+  base; en secuencial cada una tarda alrededor de un segundo, no se nota).
+- Si una sincronización se interrumpe a mitad de camino (la pestaña se
+  cierra o navega justo mientras espera la respuesta del servidor), el
+  próximo intento la vuelve a tomar en vez de darla por perdida — el
+  guardado del lado del servidor es idempotente (upsert por el id del
+  cliente, o "ya existe, no lo vuelvo a crear"), así que reintentar nunca
+  duplica nada.
+- **Conflictos de acta:** si dos ediciones de la misma acta llegan por
+  caminos distintos, gana la última por fecha; la que se descarta queda
+  registrada en `ConflictoSincronizacion` para auditoría, no se pierde
+  silenciosamente. Procedimientos y relevamientos no tienen este mecanismo
+  porque offline solo cubre altas (no hay "otra versión" con la que
+  chocar).
 - **Dispositivo compartido:** al mostrarse `/login` se borra el cache de
   páginas (no el de archivos estáticos), para que las páginas offline
   cacheadas con los datos de un agente no queden disponibles para el
   siguiente que use el mismo celular.
 
 **Cómo probarlo (Chrome DevTools):**
-1. Loguearse y entrar a "Cargar Nueva Acta" → "Acta Municipal" con señal, y
-   esperar 2-3 segundos en esa pantalla (para que el Service Worker termine
-   de cachear).
+1. Loguearse, elegir puesto, y esperar 2-3 segundos en `/guardia` (para que
+   el Service Worker termine de cachear páginas y assets).
 2. DevTools → pestaña **Network** → tilde **Offline** (o **Application** →
    **Service Workers** → **Offline**).
-3. Recargar la página (F5). Debe seguir viéndose el formulario completo
-   (catálogo de infracciones incluido), no un error de conexión.
+3. Abrir "Cargar Nueva Acta", "Procedimientos" → "Nuevo" o
+   "Relevamientos" → "Nuevo". Debe seguir viéndose el formulario completo y
+   **funcional** (botones, selects), no un error de conexión ni una pantalla
+   inerte.
 4. Completar el formulario y enviarlo. Debe aparecer la pantalla "Guardado
    sin conexión" (no el formulario de nuevo ni un error).
-5. DevTools → **Application** → **IndexedDB** → `policia-vial-offline` →
-   `actas_pendientes`: debe aparecer el acta recién guardada.
+5. DevTools → **Application** → **IndexedDB** → `policia-vial-offline`:
+   debe aparecer el registro en la cola correspondiente
+   (`actas_pendientes`, `procedimientos_pendientes` o
+   `relevamientos_pendientes`).
 6. Volver a tocar "Offline" en Network para sacarlo (reconectar). La barra
    de arriba debe pasar a "Sincronizando…" y después desaparecer.
-7. Confirmar en `/actas` que el acta aparece, y que no se duplicó.
+7. Confirmar en el listado correspondiente que el registro aparece, y que
+   no se duplicó.
 
 ## Exportar a PDF (actas, requerimientos, procedimientos, relevamientos, estadísticas, parte de guardia)
 
@@ -314,13 +336,14 @@ arrastrar ningún problema de huso horario en esos dos campos puntuales.
   (nombres de ejemplo — para cambiarlos hoy se edita `prisma/seed.ts` y se
   vuelve a correr `npx prisma db seed`; los agentes ya se dan de alta desde
   `/agentes`, sin tocar código).
-- El modo offline (ver sección "Modo offline" arriba) solo cubre Nueva Acta
-  municipal. Si más adelante hace falta offline para requerimientos,
-  procedimientos, relevamientos, el acta contravencional o la firma, es una
-  extensión del mismo mecanismo (IndexedDB + Service Worker), no un enfoque
-  nuevo — hoy, si se carga una acta municipal sin conexión bajo modalidad
-  "Otra Jurisdicción", esos campos (jurisdicción/puesto de trabajo/motivo)
-  viajan igual en la cola offline y se validan en el servidor al sincronizar.
+- El modo offline (ver sección "Modo offline" arriba) cubre altas de actas
+  (municipal y contravencional), procedimientos y relevamientos. Si más
+  adelante hace falta offline para requerimientos, editar un registro
+  existente, o la firma digital, es una extensión del mismo mecanismo
+  (IndexedDB + Service Worker), no un enfoque nuevo — hoy, si se carga una
+  acta o un procedimiento sin conexión bajo modalidad "Otra Jurisdicción",
+  esos campos (jurisdicción/puesto de trabajo/motivo) viajan igual en la
+  cola offline y se validan en el servidor al sincronizar.
 - Las coordenadas de los 9 puestos (tabla en la sección de Puestos) las
   proveyó la Dirección el 28/10 y ya están cargadas — no son estimaciones.
   Si se agrega un puesto nuevo sin coordenadas verificadas, debe quedar en

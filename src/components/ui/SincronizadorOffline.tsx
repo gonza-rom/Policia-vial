@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { soportaIndexedDB } from "@/lib/offline/db";
 import { listarActasPendientes } from "@/lib/offline/colaActas";
 import { sincronizarCola, EVENTO_COLA_ACTUALIZADA } from "@/lib/offline/sincronizar";
 import { precargarRutasCriticas } from "@/lib/offline/precache";
 
 export function SincronizadorOffline() {
+  const pathname = usePathname();
   const [online, setOnline] = useState(() =>
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
@@ -69,6 +71,18 @@ export function SincronizadorOffline() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // El efecto de arriba corre una sola vez al montar — pero este layout
+  // raíz no se vuelve a montar en una transición del lado del cliente
+  // (p. ej. el form de /puesto redirige a /guardia sin recarga dura), así
+  // que ese precache nunca vuelve a correr con la cookie de puesto ya
+  // puesta. Reintentarlo en cada cambio de pantalla (con señal) es lo que
+  // en los hechos lo mantiene al día.
+  useEffect(() => {
+    if (typeof navigator !== "undefined" && navigator.onLine) {
+      precargarRutasCriticas();
+    }
+  }, [pathname]);
 
   if (!listo || !soportaIndexedDB()) return null;
   if (online && pendientes === 0) return null;

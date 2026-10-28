@@ -15,6 +15,36 @@ import {
   MODALIDAD_ICON,
   type ModalidadRelevamientoValor,
 } from "@/lib/relevamientos";
+import { soportaIndexedDB } from "@/lib/offline/db";
+import { encolarRelevamiento } from "@/lib/offline/colaRelevamientos";
+import { avisarCambioDeCola } from "@/lib/offline/sincronizar";
+
+/** Pantalla "guardado sin conexión" — igual a la de NuevaActaForm y
+ * ProcedimientoForm, repetida acá en vez de compartida porque cada una
+ * tiene su propio texto y no vale la pena una abstracción para 3 usos. */
+function GuardadoOffline({ mensaje }: { mensaje: string }) {
+  return (
+    <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-xl text-center space-y-4">
+      <span className="material-symbols-outlined text-5xl text-secondary">
+        cloud_off
+      </span>
+      <h2 className="text-headline-md font-headline-md text-primary">
+        Guardado sin conexión
+      </h2>
+      <p className="text-body-md text-on-surface-variant">{mensaje}</p>
+      <Boton
+        onClick={() => {
+          // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga dura intencional, ver NuevaActaForm
+          window.location.href = "/guardia";
+        }}
+        fullWidth
+        icono="home"
+      >
+        Volver al Menú
+      </Boton>
+    </div>
+  );
+}
 
 export type RelevamientoExistenteDTO = {
   id: string;
@@ -43,38 +73,103 @@ const SEXOS = [
 export function RelevamientoForm({
   modalidad,
   relevamientoExistente,
+  puestoOrigenId,
+  agenteId,
 }: {
   modalidad: ModalidadRelevamientoValor;
   relevamientoExistente?: RelevamientoExistenteDTO;
+  /** Solo hacen falta para poder guardar sin conexión, y solo al crear. */
+  puestoOrigenId?: string;
+  agenteId?: string;
 }) {
   // La carga rápida (3 cantidades + botones) es solo para un registro
   // NUEVO de Día de la Virgen. Editar uno ya cargado sigue siendo el
   // formulario de siempre — un registro, un sexo — para no complicar la
   // corrección de un dato puntual.
   if (modalidad === "DIA_VIRGEN" && !relevamientoExistente) {
-    return <FormularioDiaVirgenNuevo />;
+    return <FormularioDiaVirgenNuevo puestoOrigenId={puestoOrigenId} agenteId={agenteId} />;
   }
   return (
-    <FormularioClasico modalidad={modalidad} relevamientoExistente={relevamientoExistente} />
+    <FormularioClasico
+      modalidad={modalidad}
+      relevamientoExistente={relevamientoExistente}
+      puestoOrigenId={puestoOrigenId}
+      agenteId={agenteId}
+    />
   );
 }
 
-function FormularioDiaVirgenNuevo() {
+function FormularioDiaVirgenNuevo({
+  puestoOrigenId,
+  agenteId,
+}: {
+  puestoOrigenId?: string;
+  agenteId?: string;
+}) {
   const [masculino, setMasculino] = useState("");
   const [femenino, setFemenino] = useState("");
   const [otros, setOtros] = useState("");
   const [medio, setMedio] = useState<(typeof MEDIOS)[number]["value"]>("VEHICULO");
   const [error, setError] = useState<string | null>(null);
+  const [guardadoOffline, setGuardadoOffline] = useState(false);
+  const [guardandoOffline, setGuardandoOffline] = useState(false);
 
-  function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
-    const total =
-      (Number(masculino) || 0) + (Number(femenino) || 0) + (Number(otros) || 0);
+  async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
+    const cantidades = {
+      MASCULINO: Number(masculino) || 0,
+      FEMENINO: Number(femenino) || 0,
+      NO_BINARIO: Number(otros) || 0,
+    };
+    const total = cantidades.MASCULINO + cantidades.FEMENINO + cantidades.NO_BINARIO;
     if (total <= 0) {
       e.preventDefault();
       setError("Cargá al menos una cantidad mayor a cero.");
       return;
     }
     setError(null);
+
+    if (navigator.onLine) return;
+    if (!soportaIndexedDB() || !puestoOrigenId || !agenteId) return;
+
+    e.preventDefault();
+    setGuardandoOffline(true);
+
+    const formData = new FormData(e.currentTarget);
+    const procedencia = String(formData.get("procedencia") ?? "").trim() || null;
+    const medioTransporte = String(formData.get("medioTransporte") ?? "VEHICULO");
+
+    const registros = (
+      Object.entries(cantidades) as [
+        "MASCULINO" | "FEMENINO" | "NO_BINARIO",
+        number,
+      ][]
+    )
+      .filter(([, cantidad]) => cantidad > 0)
+      .map(([sexo, cantidad]) => ({
+        id: crypto.randomUUID(),
+        modalidad: "DIA_VIRGEN" as const,
+        cantidadPersonas: cantidad,
+        procedencia,
+        medioTransporte,
+        sexo,
+      }));
+
+    await encolarRelevamiento({
+      id: registros[0].id,
+      registros,
+      puestoId: puestoOrigenId,
+      agenteId,
+      creadoEnCliente: new Date().toISOString(),
+    });
+    avisarCambioDeCola();
+    setGuardandoOffline(false);
+    setGuardadoOffline(true);
+  }
+
+  if (guardadoOffline) {
+    return (
+      <GuardadoOffline mensaje="El conteo quedó guardado en este celular. Se va a sincronizar solo en cuanto vuelva la señal." />
+    );
   }
 
   return (
@@ -157,7 +252,7 @@ function FormularioDiaVirgenNuevo() {
         )}
       </TarjetaSeccion>
 
-      <BotonEnviar esEdicion={false} />
+      <BotonEnviar esEdicion={false} guardandoOffline={guardandoOffline} />
     </form>
   );
 }
@@ -165,15 +260,64 @@ function FormularioDiaVirgenNuevo() {
 function FormularioClasico({
   modalidad,
   relevamientoExistente,
+  puestoOrigenId,
+  agenteId,
 }: {
   modalidad: ModalidadRelevamientoValor;
   relevamientoExistente?: RelevamientoExistenteDTO;
+  puestoOrigenId?: string;
+  agenteId?: string;
 }) {
   const esDiaVirgen = modalidad === "DIA_VIRGEN";
+  const [guardadoOffline, setGuardadoOffline] = useState(false);
+  const [guardandoOffline, setGuardandoOffline] = useState(false);
+
+  async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (relevamientoExistente) return;
+    if (navigator.onLine) return;
+    if (!soportaIndexedDB() || !puestoOrigenId || !agenteId) return;
+
+    e.preventDefault();
+    setGuardandoOffline(true);
+
+    const formData = new FormData(e.currentTarget);
+    const cantidadRaw = Number(formData.get("cantidadPersonas"));
+    const id = crypto.randomUUID();
+
+    await encolarRelevamiento({
+      id,
+      registros: [
+        {
+          id,
+          modalidad,
+          cantidadPersonas:
+            Number.isFinite(cantidadRaw) && cantidadRaw > 0 ? Math.round(cantidadRaw) : 1,
+          procedencia: String(formData.get("procedencia") ?? "").trim() || null,
+          medioTransporte: esDiaVirgen
+            ? String(formData.get("medioTransporte") ?? "") || null
+            : null,
+          sexo: esDiaVirgen ? String(formData.get("sexo") ?? "") || null : null,
+        },
+      ],
+      puestoId: puestoOrigenId,
+      agenteId,
+      creadoEnCliente: new Date().toISOString(),
+    });
+    avisarCambioDeCola();
+    setGuardandoOffline(false);
+    setGuardadoOffline(true);
+  }
+
+  if (guardadoOffline) {
+    return (
+      <GuardadoOffline mensaje="El registro quedó guardado en este celular. Se va a sincronizar solo en cuanto vuelva la señal." />
+    );
+  }
 
   return (
     <form
       action={relevamientoExistente ? actualizarRelevamiento : crearRelevamiento}
+      onSubmit={manejarSubmit}
       className="space-y-4"
     >
       {relevamientoExistente && (
@@ -240,12 +384,21 @@ function FormularioClasico({
         />
       </TarjetaSeccion>
 
-      <BotonEnviar esEdicion={Boolean(relevamientoExistente)} />
+      <BotonEnviar
+        esEdicion={Boolean(relevamientoExistente)}
+        guardandoOffline={guardandoOffline}
+      />
     </form>
   );
 }
 
-function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
+function BotonEnviar({
+  esEdicion,
+  guardandoOffline,
+}: {
+  esEdicion: boolean;
+  guardandoOffline: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <div className="pt-2 pb-6">
@@ -253,10 +406,10 @@ function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
         type="submit"
         icono={esEdicion ? "save" : "add"}
         fullWidth
-        disabled={pending}
+        disabled={pending || guardandoOffline}
         className="disabled:opacity-60"
       >
-        {pending ? "Guardando…" : esEdicion ? "Guardar Cambios" : "Cargar"}
+        {pending || guardandoOffline ? "Guardando…" : esEdicion ? "Guardar Cambios" : "Cargar"}
       </Boton>
     </div>
   );

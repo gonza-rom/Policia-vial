@@ -55,7 +55,9 @@ export default async function ProcedimientosPage({
             <span className="material-symbols-outlined text-secondary">gavel</span>
             Procedimientos
           </h1>
-          <Boton as={Link} href="/procedimientos/nuevo" icono="add" className="px-4">
+          {/* as="a" (no Link): esta pantalla ahora se puede cargar sin
+          conexión — ver sw.js. */}
+          <Boton as="a" href="/procedimientos/nuevo" icono="add" className="px-4">
             Nuevo
           </Boton>
         </div>

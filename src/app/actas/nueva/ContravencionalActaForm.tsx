@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
   crearActaContravencional,
@@ -10,6 +11,9 @@ import { Campo, CampoTextarea, CampoSelect } from "@/components/ui/Campo";
 import { CampoArchivo } from "@/components/ui/CampoArchivo";
 import { SelectorModalidadTrabajo } from "@/components/ui/SelectorModalidadTrabajo";
 import { Boton } from "@/components/ui/Boton";
+import { soportaIndexedDB } from "@/lib/offline/db";
+import { encolarActa } from "@/lib/offline/colaActas";
+import { avisarCambioDeCola } from "@/lib/offline/sincronizar";
 
 type CampoDTO = {
   id: string;
@@ -47,6 +51,8 @@ export function ContravencionalActaForm({
   horaPorDefecto,
   puestosDisponibles,
   puestoOrigenId,
+  guardiaId,
+  puestoId,
 }: {
   campos: CampoDTO[];
   actaExistente?: {
@@ -62,12 +68,97 @@ export function ContravencionalActaForm({
    * fijada). Ver SelectorModalidadTrabajo. */
   puestosDisponibles?: { id: string; nombre: string }[];
   puestoOrigenId?: string;
+  /** Solo hacen falta para poder guardar sin conexión — ver manejarSubmit. */
+  guardiaId?: string;
+  puestoId?: string;
 }) {
   const secciones = agruparPorSeccion(campos);
+  const [guardadoOffline, setGuardadoOffline] = useState(false);
+  const [guardandoOffline, setGuardandoOffline] = useState(false);
+
+  /** Mismo mecanismo que NuevaActaForm (ver ese archivo para el porqué) —
+   * acá los campos a juntar son dinámicos (`CampoContravencional`), así
+   * que se arman desde la prop `campos` en vez de una lista fija. */
+  async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (actaExistente) return;
+    if (navigator.onLine) return;
+    if (!soportaIndexedDB() || !guardiaId || !puestoId) return;
+
+    e.preventDefault();
+    setGuardandoOffline(true);
+
+    const formEl = e.currentTarget;
+    const formData = new FormData(formEl);
+    const camposValores: Record<string, string> = {};
+    for (const nombre of [
+      "modalidadTrabajo",
+      "puestoTrabajoId",
+      "motivoOtraJurisdiccion",
+      "lugarControl",
+      ...campos.map((c) => c.clave),
+    ]) {
+      camposValores[nombre] = String(formData.get(nombre) ?? "");
+    }
+
+    const id = crypto.randomUUID();
+    const fotos: { actaId: string; campo: "fotoVehiculo" | "fotoDocumento"; blob: Blob; nombre: string; tipo: string }[] = [];
+    for (const campo of ["fotoVehiculo", "fotoDocumento"] as const) {
+      const archivo = formData.get(campo);
+      if (archivo instanceof File && archivo.size > 0) {
+        fotos.push({ actaId: id, campo, blob: archivo, nombre: archivo.name, tipo: archivo.type });
+      }
+    }
+
+    await encolarActa(
+      {
+        id,
+        tipo: "CONTRAVENCIONAL",
+        campos: camposValores,
+        infraccionIds: [],
+        otraInfraccionId: null,
+        retencionPreventiva: false,
+        guardiaId,
+        puestoId,
+        creadoEnCliente: new Date().toISOString(),
+      },
+      fotos,
+    );
+    avisarCambioDeCola();
+    setGuardandoOffline(false);
+    setGuardadoOffline(true);
+  }
+
+  if (guardadoOffline) {
+    return (
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-xl text-center space-y-4">
+        <span className="material-symbols-outlined text-5xl text-secondary">
+          cloud_off
+        </span>
+        <h2 className="text-headline-md font-headline-md text-primary">
+          Guardado sin conexión
+        </h2>
+        <p className="text-body-md text-on-surface-variant">
+          El acta quedó guardada en este celular. Se va a sincronizar sola —
+          y vas a poder firmarla — en cuanto vuelva la señal.
+        </p>
+        <Boton
+          onClick={() => {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga dura intencional, ver NuevaActaForm
+            window.location.href = "/guardia";
+          }}
+          fullWidth
+          icono="home"
+        >
+          Volver al Menú
+        </Boton>
+      </div>
+    );
+  }
 
   return (
     <form
       action={actaExistente ? actualizarActaContravencional : crearActaContravencional}
+      onSubmit={manejarSubmit}
       className="space-y-4"
     >
       {actaExistente && (
@@ -176,12 +267,18 @@ export function ContravencionalActaForm({
         )}
       </TarjetaSeccion>
 
-      <BotonEnviar esEdicion={Boolean(actaExistente)} />
+      <BotonEnviar esEdicion={Boolean(actaExistente)} guardandoOffline={guardandoOffline} />
     </form>
   );
 }
 
-function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
+function BotonEnviar({
+  esEdicion,
+  guardandoOffline,
+}: {
+  esEdicion: boolean;
+  guardandoOffline: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <div className="pt-2 pb-6">
@@ -189,10 +286,10 @@ function BotonEnviar({ esEdicion }: { esEdicion: boolean }) {
         type="submit"
         icono={esEdicion ? "save" : "draw"}
         fullWidth
-        disabled={pending}
+        disabled={pending || guardandoOffline}
         className="disabled:opacity-60"
       >
-        {pending
+        {pending || guardandoOffline
           ? "Guardando…"
           : esEdicion
             ? "Guardar Cambios"

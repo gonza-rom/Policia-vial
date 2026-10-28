@@ -82,8 +82,10 @@ export default async function RelevamientosPage({
             </span>
             {NOMBRE_RELEVAMIENTOS}
           </h1>
+          {/* as="a" (no Link): esta pantalla ahora se puede cargar sin
+          conexión — ver sw.js. */}
           <Boton
-            as={Link}
+            as="a"
             href={`/relevamientos/nuevo?modalidad=${modalidad}`}
             icono="add"
             className="px-4"

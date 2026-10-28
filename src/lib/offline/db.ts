@@ -3,10 +3,16 @@
 // navegador no soporta IndexedDB (se degrada a "no hay guardado local").
 
 const DB_NAME = "policia-vial-offline";
-const DB_VERSION = 1;
+// v2: agrega las colas de procedimientos y relevamientos (Módulo 6b — antes
+// solo cubría el acta municipal). Subir DB_VERSION dispara onupgradeneeded
+// incluso en un navegador que ya tenía la v1 guardada, sin tocar lo que ya
+// había en actas_pendientes/fotos_pendientes.
+const DB_VERSION = 2;
 
 export const STORE_ACTAS = "actas_pendientes";
 export const STORE_FOTOS = "fotos_pendientes";
+export const STORE_PROCEDIMIENTOS = "procedimientos_pendientes";
+export const STORE_RELEVAMIENTOS = "relevamientos_pendientes";
 
 function abrirDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -18,6 +24,12 @@ function abrirDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_FOTOS)) {
         db.createObjectStore(STORE_FOTOS, { keyPath: "clave" });
+      }
+      if (!db.objectStoreNames.contains(STORE_PROCEDIMIENTOS)) {
+        db.createObjectStore(STORE_PROCEDIMIENTOS, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(STORE_RELEVAMIENTOS)) {
+        db.createObjectStore(STORE_RELEVAMIENTOS, { keyPath: "id" });
       }
     };
     req.onsuccess = () => resolve(req.result);

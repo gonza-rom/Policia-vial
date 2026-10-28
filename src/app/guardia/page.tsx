@@ -60,12 +60,14 @@ export default async function GuardiaPage() {
             icono="gavel"
             titulo="Procedimientos"
             descripcion="Órdenes judiciales, secuestros, demoras, arrestos, detenciones y más."
+            offline
           />
           <TarjetaAccion
             href="/relevamientos"
             icono="groups"
             titulo={NOMBRE_RELEVAMIENTOS}
             descripcion="Conteos de Fines Largos y Día de la Virgen."
+            offline
           />
           {esJefe(agente) && (
             <TarjetaAccion
@@ -240,6 +242,7 @@ export default async function GuardiaPage() {
               icono="gavel"
               titulo="Procedimientos"
               descripcion="Órdenes judiciales, secuestros, demoras, arrestos y más."
+              offline
             />
             <TarjetaAccion
               href="/relevamientos"
@@ -247,6 +250,7 @@ export default async function GuardiaPage() {
               titulo={NOMBRE_RELEVAMIENTOS}
               descripcion="Conteos de Fines Largos y Día de la Virgen."
               className={esJefe(agente) ? undefined : "sm:col-span-2"}
+              offline
             />
             {esJefe(agente) && (
               <TarjetaAccion
@@ -296,6 +300,7 @@ function TarjetaAccion({
   descripcion,
   badge,
   className,
+  offline,
 }: {
   href: string;
   icono: string;
@@ -303,12 +308,15 @@ function TarjetaAccion({
   descripcion: string;
   badge?: string;
   className?: string;
+  /** Procedimientos y Relevamientos ahora se pueden cargar sin conexión
+   * (ver sw.js) — el link de entrada tiene que ser una navegación dura
+   * para que el Service Worker la intercepte, igual que "Cargar Nueva
+   * Acta" más arriba en esta misma pantalla. */
+  offline?: boolean;
 }) {
-  return (
-    <Link
-      href={href}
-      className={`block bg-surface-container-lowest rounded-xl border border-outline-variant p-pad-lg shadow-sm hover:bg-surface-container transition-colors ${className ?? ""}`}
-    >
+  const className_ = `block bg-surface-container-lowest rounded-xl border border-outline-variant p-pad-lg shadow-sm hover:bg-surface-container transition-colors ${className ?? ""}`;
+  const contenido = (
+    <>
       <div className="flex items-center justify-between mb-2">
         <span className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center">
           <span className="material-symbols-outlined text-secondary">
@@ -325,6 +333,19 @@ function TarjetaAccion({
         {titulo}
       </h3>
       <p className="text-body-sm text-on-surface-variant">{descripcion}</p>
+    </>
+  );
+
+  if (offline) {
+    return (
+      <a href={href} className={className_}>
+        {contenido}
+      </a>
+    );
+  }
+  return (
+    <Link href={href} className={className_}>
+      {contenido}
     </Link>
   );
 }

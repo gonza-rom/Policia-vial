@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { esJefe, getAgenteActual } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
@@ -41,13 +40,16 @@ export default async function NuevoRelevamientoPage({
     <>
       <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-4">
-        <Link
+        {/* <a> normal, no <Link>: esta pantalla tiene que poder abrirse (y
+        volver) sin conexión — ver sw.js. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
           href="/relevamientos"
           className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Volver
-        </Link>
+        </a>
         {!modalidadValida ? (
           <>
             <h1 className="text-headline-md font-headline-md text-primary flex items-center gap-2">
@@ -57,8 +59,11 @@ export default async function NuevoRelevamientoPage({
               Nuevo Conteo — {NOMBRE_RELEVAMIENTOS}
             </h1>
             <div className="grid gap-pad-md">
+              {/* <a> normal, no <Link>: cada modalidad es una URL propia
+              que el Service Worker tiene que poder cachear y servir sin
+              conexión (ver sw.js) — una transición cliente no pasa por ahí. */}
               {MODALIDADES_RELEVAMIENTO.map((m) => (
-                <Link
+                <a
                   key={m}
                   href={`/relevamientos/nuevo?modalidad=${m}`}
                   className="block bg-surface-container-lowest rounded-xl border-2 border-outline-variant p-pad-lg shadow-sm hover:border-primary transition-colors"
@@ -72,12 +77,16 @@ export default async function NuevoRelevamientoPage({
                   <p className="text-body-sm text-on-surface-variant mt-1">
                     {DESCRIPCION_MODALIDAD[m]}
                   </p>
-                </Link>
+                </a>
               ))}
             </div>
           </>
         ) : (
-          <RelevamientoForm modalidad={modalidadValida} />
+          <RelevamientoForm
+            modalidad={modalidadValida}
+            puestoOrigenId={puesto.id}
+            agenteId={agente.id}
+          />
         )}
       </main>
       <BottomNav verAgentes={esJefe(agente)} />

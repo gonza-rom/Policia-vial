@@ -115,6 +115,8 @@ export default async function NuevaActaPage({
             horaPorDefecto={horaInputAhora()}
             puestosDisponibles={puestosDisponibles}
             puestoOrigenId={guardia.puestoId}
+            guardiaId={guardia.id}
+            puestoId={guardia.puestoId}
           />
         </main>
         <BottomNav verAgentes={esJefe(agente)} />

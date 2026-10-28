@@ -1,9 +1,14 @@
 import { guardar, obtener, obtenerTodos, eliminar, STORE_ACTAS, STORE_FOTOS } from "./db";
 
-/** Todo lo que el formulario junta para una acta municipal, tal cual se
- * manda al servidor — más los metadatos de la cola. */
+/** Todo lo que el formulario junta para una acta (municipal o
+ * contravencional), tal cual se manda al servidor — más los metadatos de
+ * la cola. `tipo` es opcional porque actas encoladas antes de agregar
+ * contravencional offline no lo tienen — se tratan como MUNICIPAL (ver
+ * sincronizar.ts), así no se pierde lo que ya estaba guardado en el
+ * celular de un agente al actualizar la app. */
 export type ActaOfflinePayload = {
   id: string; // UUID generado en el cliente — va a ser el Acta.id
+  tipo?: "MUNICIPAL" | "CONTRAVENCIONAL";
   campos: Record<string, string>;
   infraccionIds: string[];
   otraInfraccionId: string | null;

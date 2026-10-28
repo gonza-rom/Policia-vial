@@ -184,3 +184,106 @@ export async function sincronizarActaOffline(
     return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };
   }
 }
+
+type SincronizarActaContravencionalInput = {
+  id: string;
+  campos: Record<string, string>;
+  guardiaId: string;
+  puestoId: string;
+  creadoEnCliente: string;
+  fotoVehiculoUrl: string | null;
+  fotoDocumentoUrl: string | null;
+};
+
+/**
+ * Igual idea que `sincronizarActaOffline`, para el acta contravencional —
+ * sin infracciones, sin montos ni jurisdicción municipal, y los campos
+ * dinámicos (`CampoContravencional`) se guardan tal cual vinieron, sin
+ * tipar (mismo criterio que `crearActaContravencional`). Separada de la
+ * municipal a propósito: son flujos distintos en el servidor y así no se
+ * arriesga el camino municipal ya probado.
+ */
+export async function sincronizarActaContravencionalOffline(
+  input: SincronizarActaContravencionalInput,
+): Promise<ResultadoSincronizacion> {
+  const agente = await getAgenteActual();
+
+  const guardia = await prisma.guardia.findUnique({
+    where: { id: input.guardiaId },
+  });
+  if (!guardia || guardia.agenteId !== agente.id) {
+    return { ok: false, error: "La guardia de esta acta ya no es válida para tu usuario." };
+  }
+
+  const c = input.campos;
+  const texto = (k: string) => (c[k] ?? "").trim();
+
+  const modalidadTrabajo =
+    texto("modalidadTrabajo") === "OTRA_JURISDICCION"
+      ? ("OTRA_JURISDICCION" as const)
+      : ("HABITUAL" as const);
+  const puestoTrabajoId =
+    modalidadTrabajo === "OTRA_JURISDICCION" ? texto("puestoTrabajoId") || null : null;
+  const motivoOtraJurisdiccion =
+    modalidadTrabajo === "OTRA_JURISDICCION" ? texto("motivoOtraJurisdiccion") || null : null;
+  if (modalidadTrabajo === "OTRA_JURISDICCION" && !motivoOtraJurisdiccion) {
+    return { ok: false, error: "Falta el motivo de \"Otra Jurisdicción\"." };
+  }
+
+  const camposConfigurados = await prisma.campoContravencional.findMany({
+    where: { activo: true },
+  });
+  const datos: Record<string, string> = {};
+  for (const campo of camposConfigurados) {
+    const valor = texto(campo.clave);
+    if (valor) datos[campo.clave] = valor;
+  }
+
+  const datosActa = {
+    tipo: "CONTRAVENCIONAL" as const,
+    guardiaId: guardia.id,
+    agenteId: agente.id,
+    puestoId: input.puestoId,
+    modalidadTrabajo,
+    puestoTrabajoId,
+    motivoOtraJurisdiccion,
+    lugarControl: texto("lugarControl") || null,
+    datosContravencional: datos,
+    ...(input.fotoVehiculoUrl ? { fotoVehiculoUrl: input.fotoVehiculoUrl } : {}),
+    ...(input.fotoDocumentoUrl ? { fotoDocumentoUrl: input.fotoDocumentoUrl } : {}),
+  };
+
+  try {
+    const existente = await prisma.acta.findUnique({ where: { id: input.id } });
+    if (existente && existente.updatedAt > new Date(input.creadoEnCliente)) {
+      await prisma.conflictoSincronizacion.create({
+        data: {
+          actaId: input.id,
+          agenteId: agente.id,
+          descartado: datosActa,
+          motivo:
+            "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
+        },
+      });
+      console.warn(
+        `[auditoria-sync] conflicto en acta contravencional ${input.id}: se descartó la versión offline de agente=${agente.legajo}`,
+      );
+      return { ok: true, actaId: existente.id, numero: existente.numero, conflicto: true };
+    }
+
+    const acta = await prisma.acta.upsert({
+      where: { id: input.id },
+      create: { id: input.id, ...datosActa },
+      update: datosActa,
+    });
+
+    console.info(
+      `[auditoria-actas] sincronizada acta contravencional offline N°${acta.numero} por agente=${agente.legajo}`,
+    );
+
+    return { ok: true, actaId: acta.id, numero: acta.numero, conflicto: false };
+  } catch (err) {
+    console.error("[sync-acta-contravencional] error al sincronizar:", err);
+    return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };
+  }
+}
