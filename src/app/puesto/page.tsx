@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
-import { elegirPuesto } from "./actions";
+import { SelectorPuesto } from "./SelectorPuesto";
 
 export default async function PuestoPage() {
   const agente = await getAgenteActual();
@@ -48,42 +48,7 @@ export default async function PuestoPage() {
           </p>
         </div>
 
-        <form action={elegirPuesto} className="grid grid-cols-3 gap-2.5">
-          {puestos.map((p) => {
-            const seleccionado = p.id === actual?.id;
-            return (
-              <button
-                key={p.id}
-                type="submit"
-                name="puestoId"
-                value={p.id}
-                className={`min-h-[92px] rounded-lg border-2 p-2.5 flex flex-col items-center justify-center gap-1 text-center active:scale-95 transition-all ${
-                  seleccionado
-                    ? "border-primary bg-primary-container text-on-primary"
-                    : "border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container"
-                }`}
-              >
-                <span
-                  className={`material-symbols-outlined ${seleccionado ? "text-secondary-container" : "text-secondary"}`}
-                >
-                  shield
-                </span>
-                <span className="text-label-sm font-label-sm leading-tight">
-                  {p.nombre}
-                </span>
-                {p.ubicacion && (
-                  <span
-                    className={`text-[11px] leading-tight line-clamp-1 w-full ${
-                      seleccionado ? "text-on-primary/80" : "text-on-surface-variant"
-                    }`}
-                  >
-                    {p.ubicacion}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </form>
+        <SelectorPuesto puestos={puestos} actualId={actual?.id} />
 
         {puestos.length === 0 && (
           <EstadoVacio>No hay puestos cargados todavía.</EstadoVacio>

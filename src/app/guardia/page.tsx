@@ -5,7 +5,8 @@ import { getPuestoSeleccionado } from "@/lib/puesto";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { Boton } from "@/components/ui/Boton";
+import { BotonEnviar } from "@/components/ui/BotonEnviar";
+import { BotonCerrarGuardiaConConfirmacion } from "@/components/ui/BotonCerrarGuardiaConConfirmacion";
 import { StatTile } from "@/components/ui/StatTile";
 import { formatoMoneda } from "@/lib/formato";
 import { NOMBRE_RELEVAMIENTOS } from "@/lib/config";
@@ -37,9 +38,9 @@ export default async function GuardiaPage() {
             </p>
             <form action={iniciarGuardia} className="space-y-3">
               <input type="hidden" name="puestoId" value={puestoContexto.id} />
-              <Boton type="submit" icono="play_arrow" fullWidth>
+              <BotonEnviar icono="play_arrow" fullWidth textoEnviando="Iniciando…">
                 Iniciar Guardia en {puestoContexto.nombre}
-              </Boton>
+              </BotonEnviar>
             </form>
             <Link
               href="/puesto"
@@ -83,15 +84,15 @@ export default async function GuardiaPage() {
             />
           )}
           <form action={cerrarSesion}>
-            <Boton
-              type="submit"
+            <BotonEnviar
               variante="outline"
               fullWidth
               icono="logout"
               className="text-error border-error"
+              textoEnviando="Cerrando sesión…"
             >
               Cerrar Sesión
-            </Boton>
+            </BotonEnviar>
           </form>
         </main>
         <BottomNav verAgentes={esJefe(agente)} />
@@ -268,20 +269,18 @@ export default async function GuardiaPage() {
 
         <div className="grid grid-cols-2 gap-pad-md">
           <form action={cerrarGuardia}>
-            <Boton type="submit" variante="outline" fullWidth icono="lock">
-              Cerrar Guardia
-            </Boton>
+            <BotonCerrarGuardiaConConfirmacion puestoNombre={guardia.puesto.nombre} />
           </form>
           <form action={cerrarSesion}>
-            <Boton
-              type="submit"
+            <BotonEnviar
               variante="outline"
               fullWidth
               icono="logout"
               className="text-error border-error"
+              textoEnviando="Cerrando sesión…"
             >
               Cerrar Sesión
-            </Boton>
+            </BotonEnviar>
           </form>
         </div>
       </main>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { Boton } from "./Boton";
 
 /** Confirmación de borrado propia de la app en vez del confirm() nativo del
@@ -9,6 +10,7 @@ import { Boton } from "./Boton";
  * empujar el layout de la fila donde vive (header de acta, item de lista). */
 export function BotonEliminarConConfirmacion({ mensaje }: { mensaje: string }) {
   const [confirmando, setConfirmando] = useState(false);
+  const { pending } = useFormStatus();
 
   return (
     <div className="relative">
@@ -25,13 +27,20 @@ export function BotonEliminarConConfirmacion({ mensaje }: { mensaje: string }) {
         <div className="absolute right-0 top-full mt-1 z-20 w-52 bg-surface-container-lowest border-2 border-error rounded-lg shadow-md p-3 space-y-3">
           <p className="text-body-sm text-on-surface">{mensaje}</p>
           <div className="flex flex-col gap-2">
-            <Boton type="submit" variante="destructivo" fullWidth className="text-label-sm">
-              Sí, Eliminar
+            <Boton
+              type="submit"
+              variante="destructivo"
+              fullWidth
+              disabled={pending}
+              className="text-label-sm disabled:opacity-60"
+            >
+              {pending ? "Eliminando…" : "Sí, Eliminar"}
             </Boton>
             <Boton
               type="button"
               variante="fantasma"
               fullWidth
+              disabled={pending}
               className="text-label-sm"
               onClick={() => setConfirmando(false)}
             >

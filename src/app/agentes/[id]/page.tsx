@@ -5,7 +5,8 @@ import { getAgenteACargo, getJefeActual } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { Boton } from "@/components/ui/Boton";
+import { BotonEnviar } from "@/components/ui/BotonEnviar";
+import { BotonCerrarGuardiaConConfirmacion } from "@/components/ui/BotonCerrarGuardiaConConfirmacion";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { StatTile } from "@/components/ui/StatTile";
 import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
@@ -147,9 +148,11 @@ export default async function AgentePage({
               </p>
               <form action={cerrarGuardiaDeAgente}>
                 <input type="hidden" name="agenteId" value={agente.id} />
-                <Boton type="submit" variante="destructivo" icono="lock" fullWidth>
-                  Cerrar su Guardia
-                </Boton>
+                <BotonCerrarGuardiaConConfirmacion
+                  puestoNombre={guardiaActiva.puesto.nombre}
+                  agenteNombre={agente.nombreApellido}
+                  variante="destructivo"
+                />
               </form>
             </>
           ) : (
@@ -233,13 +236,23 @@ export default async function AgentePage({
           <form action={cambiarEstadoAgente} className="pt-2 border-t border-outline-variant">
             <input type="hidden" name="agenteId" value={agente.id} />
             {agente.activo ? (
-              <Boton type="submit" variante="destructivo" icono="person_off" fullWidth>
+              <BotonEnviar
+                variante="destructivo"
+                icono="person_off"
+                fullWidth
+                textoEnviando="Dando de baja…"
+              >
                 Dar de Baja
-              </Boton>
+              </BotonEnviar>
             ) : (
-              <Boton type="submit" variante="secundario" icono="person_check" fullWidth>
+              <BotonEnviar
+                variante="secundario"
+                icono="person_check"
+                fullWidth
+                textoEnviando="Reactivando…"
+              >
                 Reactivar Agente
-              </Boton>
+              </BotonEnviar>
             )}
           </form>
           {agente.activo && (

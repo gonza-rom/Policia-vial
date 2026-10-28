@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Boton } from "./Boton";
+import { BotonEnviar } from "./BotonEnviar";
+import { BotonCerrarGuardiaConConfirmacion } from "./BotonCerrarGuardiaConConfirmacion";
 
 function iniciales(nombreApellido: string) {
   const partes = nombreApellido.trim().split(/\s+/);
@@ -78,30 +79,24 @@ export function MenuCuenta({
 
             {guardiaPuesto && (
               <form action={cerrarGuardia}>
-                <Boton
-                  type="submit"
-                  variante="outline"
-                  fullWidth
-                  icono="lock"
+                <BotonCerrarGuardiaConConfirmacion
+                  puestoNombre={guardiaPuesto}
                   className="text-label-sm"
-                  onClick={() => setAbierto(false)}
-                >
-                  Cerrar Guardia ({guardiaPuesto})
-                </Boton>
+                />
               </form>
             )}
 
             <form action={cerrarSesion}>
-              <Boton
-                type="submit"
+              <BotonEnviar
                 variante="outline"
                 fullWidth
                 icono="logout"
                 className="text-label-sm text-error border-error"
+                textoEnviando="Cerrando sesión…"
                 onClick={() => setAbierto(false)}
               >
                 Cerrar Sesión
-              </Boton>
+              </BotonEnviar>
             </form>
           </div>
         </>

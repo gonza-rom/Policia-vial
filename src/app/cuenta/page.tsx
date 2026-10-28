@@ -2,9 +2,10 @@ import Link from "next/link";
 import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { Boton } from "@/components/ui/Boton";
+import { BotonEnviar } from "@/components/ui/BotonEnviar";
+import { BotonCerrarGuardiaConConfirmacion } from "@/components/ui/BotonCerrarGuardiaConConfirmacion";
 import { ROL_LABEL } from "@/lib/formato";
-import { cerrarSesion } from "../guardia/actions";
+import { cerrarGuardia, cerrarSesion } from "../guardia/actions";
 
 function iniciales(nombreApellido: string) {
   const partes = nombreApellido.trim().split(/\s+/);
@@ -48,31 +49,36 @@ export default async function CuentaPage() {
         </div>
 
         {guardia && (
-          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-lg flex items-center gap-3">
-            <span className="material-symbols-outlined text-secondary text-[28px]">
-              location_on
-            </span>
-            <div>
-              <p className="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                Guardia activa en
-              </p>
-              <p className="text-body-lg font-bold text-on-surface">
-                {guardia.puesto.nombre}
-              </p>
+          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-lg space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-secondary text-[28px]">
+                location_on
+              </span>
+              <div>
+                <p className="text-label-sm font-label-sm text-on-surface-variant uppercase">
+                  Guardia activa en
+                </p>
+                <p className="text-body-lg font-bold text-on-surface">
+                  {guardia.puesto.nombre}
+                </p>
+              </div>
             </div>
+            <form action={cerrarGuardia}>
+              <BotonCerrarGuardiaConConfirmacion puestoNombre={guardia.puesto.nombre} />
+            </form>
           </div>
         )}
 
         <form action={cerrarSesion} className="pt-4">
-          <Boton
-            type="submit"
+          <BotonEnviar
             variante="outline"
             fullWidth
             icono="logout"
             className="text-error border-error"
+            textoEnviando="Cerrando sesión…"
           >
             Cerrar Sesión
-          </Boton>
+          </BotonEnviar>
           <p className="text-body-sm text-on-surface-variant text-center mt-2">
             Vas a tener que volver a ingresar tu legajo y contraseña.
           </p>

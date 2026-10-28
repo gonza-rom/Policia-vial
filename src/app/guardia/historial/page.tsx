@@ -3,7 +3,7 @@ import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { Boton } from "@/components/ui/Boton";
+import { BotonCerrarGuardiaConConfirmacion } from "@/components/ui/BotonCerrarGuardiaConConfirmacion";
 import { StatTile } from "@/components/ui/StatTile";
 import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
 import { EstadoVacio } from "@/components/ui/EstadoVacio";
@@ -186,9 +186,10 @@ export default async function HistorialGuardiaPage() {
                 className="w-full bg-surface-container-low border border-outline rounded text-body-md p-3"
               />
             </div>
-            <Boton type="submit" variante="destructivo" icono="lock" fullWidth>
-              Cerrar Guardia
-            </Boton>
+            <BotonCerrarGuardiaConConfirmacion
+              puestoNombre={guardia.puesto.nombre}
+              variante="destructivo"
+            />
           </form>
         </TarjetaSeccion>
 
