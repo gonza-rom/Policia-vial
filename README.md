@@ -3,8 +3,11 @@
 Aplicación para la Dirección de Seguridad Vial (Policía de Catamarca, convenio
 Municipalidad de Huillapima) que digitaliza el acta de infracción de tránsito en
 papel: carga del acta en guardia, firma digital del infractor y del actuante,
-historial y cierre de guardia, y un dashboard mensual de estadísticas y
-recaudación.
+historial y cierre de guardia, un dashboard mensual de estadísticas y
+recaudación, procedimientos (órdenes judiciales, secuestros, arrestos, etc.),
+relevamientos de eventos puntuales, y un registro geolocalizado de los 9
+puestos de Policía Vial con reglas de jurisdicción municipal y una modalidad
+de trabajo en otra jurisdicción (rotaciones/refuerzos).
 
 ## Stack
 
@@ -17,6 +20,8 @@ recaudación.
   `sistema_de_control_y_actas_viales_huillapima/DESIGN.md`)
 - **Service Worker + IndexedDB** para el modo offline de Nueva Acta (ver
   sección dedicada más abajo)
+- **Leaflet + react-leaflet** (tiles de OpenStreetMap, sin API key) para el
+  mapa de puestos en `/puestos/mapa`
 
 Las 6 pantallas originales en `*/code.html` (mockups estáticos con Tailwind CDN)
 fueron la referencia visual — la app real vive en `src/`.
@@ -103,7 +108,12 @@ fueron la referencia visual — la app real vive en `src/`.
 - `/actas/nueva` → primero se elige el **tipo de acta**:
   - **Municipal** (Ordenanza 385/12): el formulario de siempre — conductor,
     vehículo, checklist de infracciones tipificadas, liquidación con 40% de
-    descuento por pago voluntario.
+    descuento por pago voluntario. Tiene **jurisdicción** (Capital,
+    Huillapima, La Puerta) y reglas de acceso por puesto bajo modalidad
+    habitual: Base Vial → Capital, Tango 51 → Capital y Huillapima,
+    Tango 53 → La Puerta, el resto → ninguna (ver `Puesto.jurisdiccionesMunicipales`
+    y `puedeCrearActaMunicipalEnJurisdiccion` en `src/lib/auth.ts`, validado
+    siempre en el servidor, no solo oculto en la UI).
   - **Contravencional** (Ley Provincial N° 5171/05, Código de Faltas de
     Catamarca): formulario policial aparte, con sus propios campos agrupados
     por sección (fecha y hora, vehículo, conductor, "comprobándose",
@@ -114,6 +124,15 @@ fueron la referencia visual — la app real vive en `src/`.
     desplegable (`tipo: SELECT`, con las opciones en `opciones: string[]`).
     El acta municipal tiene 7 tipos de vehículo (Auto, Moto, Pick-Up, Carga,
     Pasajeros, Emergencias, Otros — con texto libre si se elige "Otros").
+  - **Modalidad de trabajo (ambos tipos de acta)**: "Mi Puesto Habitual" u
+    "Otra Jurisdicción" (`SelectorModalidadTrabajo`). No hay autorización
+    previa de un jefe — el agente elige el puesto donde está reforzando y
+    tiene que escribir el **motivo** (obligatorio), que queda grabado en el
+    acta (`modalidadTrabajo`, `puestoTrabajoId`, `motivoOtraJurisdiccion`)
+    para trazabilidad. El puesto de origen (`Acta.puestoId`, el de la
+    guardia) nunca cambia por esto. Si el puesto de origen no tiene ninguna
+    jurisdicción municipal habitual, el modo "Habitual" queda deshabilitado
+    y fuerza a declarar "Otra Jurisdicción".
 - `/actas/[id]/firma` → resumen legal del acta + firma digital (canvas): el
   acta municipal firma Infractor/Actuante, la contravencional firma
   Conductor/Instructor/Secretario Autorizante (3 firmas, como en el papel).
@@ -121,6 +140,8 @@ fueron la referencia visual — la app real vive en `src/`.
   agente dueño o un jefe/admin), **Eliminar** (solo jefe/admin, con
   confirmación) y **Exportar PDF** (imprime la página con una hoja de estilos
   dedicada — usa "Guardar como PDF" del diálogo de impresión del navegador).
+  Las fotos adjuntas (vehículo/documentación) también salen en el PDF, sin
+  recortar ni deformar (`object-contain`) — antes se ocultaban al imprimir.
 - `/actas` → listado y búsqueda de actas del turno activo.
 - `/guardia/historial` → parte diario del turno y cierre de guardia.
 - `/agentes` → solo JEFE/ADMIN: listado del personal a cargo (en guardia,
@@ -143,16 +164,33 @@ fueron la referencia visual — la app real vive en `src/`.
   agente carga y edita los suyos; solo jefe/admin edita los de otros y
   elimina (con confirmación).
 - `/relevamientos` ("Relevamientos", nombre configurable) → conteos rápidos
-  de personas en operativos puntuales, separados de las actas. Dos
-  modalidades: **Fines Largos** (cantidad de personas + provincia de
-  origen) y **Día de la Virgen** (medio de transporte + cantidad de
-  Masculino/Femenino/Otros + procedencia — un solo envío carga hasta 3
-  registros atrás, uno por categoría con cantidad > 0, para no cambiar cómo
-  se arman después las estadísticas). Tampoco depende de guardia abierta.
-  Cada registro tiene su propia pantalla de detalle con **Exportar PDF**.
-  Panel con totales y desgloses por procedencia/medio/sexo, filtrable por
-  puesto. Mismo esquema de permisos que Requerimientos — editar un registro
-  ya cargado sigue siendo el formulario de siempre (un registro, un sexo).
+  de personas en operativos puntuales, separados de las actas. Cinco
+  modalidades: **Fines Largos** y **Día de la Virgen** (medio de transporte +
+  cantidad de Masculino/Femenino/Otros + procedencia — un solo envío carga
+  hasta 3 registros atrás, uno por categoría con cantidad > 0, para no
+  cambiar cómo se arman después las estadísticas), más **Semana
+  Estudiantil**, **Festivales** y **Poncho** (mismos campos que Fines
+  Largos: cantidad de personas + procedencia). Tampoco depende de guardia
+  abierta. Cada registro tiene su propia pantalla de detalle con **Exportar
+  PDF**. Panel con totales y desgloses por procedencia/medio/sexo, filtrable
+  por puesto. Mismo esquema de permisos que Requerimientos — editar un
+  registro ya cargado sigue siendo el formulario de siempre (un registro,
+  un sexo).
+- `/procedimientos` → 7 categorías (Orden Judicial, Pedido de Secuestro,
+  Demora, Arresto, Detención, Ubicación y Paradero, Estupefacientes), mismo
+  patrón que Requerimientos (no depende de guardia abierta, campos
+  genéricos: descripción, persona, vehículo, datos de la orden,
+  observaciones) y misma modalidad de trabajo que las actas (habitual /
+  otra jurisdicción con motivo obligatorio). Filtro por tipo, exportar a
+  PDF, mismo esquema de permisos que Requerimientos/Relevamientos.
+- `/puestos` → solo JEFE/ADMIN: registro centralizado de los 9 puestos
+  (código, ubicación descriptiva, coordenadas, jurisdicción municipal
+  habitual, estado activo/inactivo). Un puesto sin coordenadas se marca
+  "Pendiente de Geolocalización" en el listado — nunca se inventa una
+  ubicación. `/puestos/mapa` muestra los puestos con coordenadas en un
+  mapa (Leaflet + tiles de OpenStreetMap, sin API key ni costo) con
+  marcador verde/gris según el estado operativo real (`Puesto.activo`, no
+  deducido de la ubicación) y un enlace para abrir cada uno en Google Maps.
 
 ## Modo offline (Nueva Acta)
 
@@ -212,12 +250,12 @@ guardadas en el celular y se sincronizan solas al volver la conexión.
    de arriba debe pasar a "Sincronizando…" y después desaparecer.
 7. Confirmar en `/actas` que el acta aparece, y que no se duplicó.
 
-## Exportar a PDF (actas, requerimientos, relevamientos, estadísticas, parte de guardia)
+## Exportar a PDF (actas, requerimientos, procedimientos, relevamientos, estadísticas, parte de guardia)
 
 No hay ninguna librería de generación de PDF en el proyecto — "Exportar PDF"
 sigue siendo imprimir la página (`window.print()`, botón `BotonImprimir`) con
 una hoja de estilos dedicada (`.imprimible` en `globals.css`, que oculta el
-header/nav/footer de la app al imprimir). Las cinco pantallas que se pueden
+header/nav/footer de la app al imprimir). Las seis pantallas que se pueden
 exportar comparten un único encabezado de impresión
 (`src/components/ui/EncabezadoImprimible.tsx`) con el logo y un bloque de
 **Lugar / Fecha / Hora**. Si se agrega exportación a un módulo nuevo,
@@ -240,6 +278,14 @@ reutilizar ese componente en vez de armar el encabezado de nuevo.
 > a propósito: el bloque arranca oculto (`hidden print:flex`) y sin esa
 > prop Next.js nunca llega a pedir la imagen, porque el observer de carga
 > diferida no dispara para un elemento que nunca tuvo caja de layout.
+
+## Vista previa de fotos (`CampoArchivo`)
+
+El campo compartido de adjuntar fotos (`src/components/ui/CampoArchivo.tsx`,
+usado en actas y procedimientos) muestra una miniatura real apenas se elige
+el archivo (vista previa local con `URL.createObjectURL`, antes de subir
+nada a Cloudinary), con botones para verla más grande o quitarla y elegir
+otra, y un mensaje claro si el archivo elegido no es una imagen.
 
 ## Zona horaria
 
@@ -270,8 +316,25 @@ arrastrar ningún problema de huso horario en esos dos campos puntuales.
   `/agentes`, sin tocar código).
 - El modo offline (ver sección "Modo offline" arriba) solo cubre Nueva Acta
   municipal. Si más adelante hace falta offline para requerimientos,
-  relevamientos, el acta contravencional o la firma, es una extensión del
-  mismo mecanismo (IndexedDB + Service Worker), no un enfoque nuevo.
+  procedimientos, relevamientos, el acta contravencional o la firma, es una
+  extensión del mismo mecanismo (IndexedDB + Service Worker), no un enfoque
+  nuevo — hoy, si se carga una acta municipal sin conexión bajo modalidad
+  "Otra Jurisdicción", esos campos (jurisdicción/puesto de trabajo/motivo)
+  viajan igual en la cola offline y se validan en el servidor al sincronizar.
+- Las coordenadas de los 9 puestos (tabla en la sección de Puestos) las
+  proveyó la Dirección el 28/10 y ya están cargadas — no son estimaciones.
+  Si se agrega un puesto nuevo sin coordenadas verificadas, debe quedar en
+  blanco (se ve como "Pendiente de Geolocalización" en `/puestos`), nunca
+  inventarlas.
+- El mapa (`/puestos/mapa`) usa Leaflet + OpenStreetMap porque no había
+  ninguna librería de mapas en el proyecto y no requiere API key ni
+  facturación — si en algún momento se necesita algo que OSM no cubre
+  (routing, imágenes satelitales), es una decisión aparte.
+- La modalidad "Otra Jurisdicción" es autodeclarada (sin autorización
+  previa de un jefe): el agente elige el puesto y escribe el motivo, y
+  queda grabado en el acta/procedimiento. Si más adelante se necesita que
+  un jefe apruebe antes, es un cambio de modelo (agregar una tabla de
+  autorizaciones), no solo una validación nueva.
 - La restricción de recaudación a jefe/admin está en el código del servidor
   (Server Components/Actions), no en políticas RLS de Postgres — ya
   documentado como decisión de arquitectura: no hay ningún otro camino a la

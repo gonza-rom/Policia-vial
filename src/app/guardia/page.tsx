@@ -55,6 +55,12 @@ export default async function GuardiaPage() {
             descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
           />
           <TarjetaAccion
+            href="/procedimientos"
+            icono="gavel"
+            titulo="Procedimientos"
+            descripcion="Órdenes judiciales, secuestros, demoras, arrestos, detenciones y más."
+          />
+          <TarjetaAccion
             href="/relevamientos"
             icono="groups"
             titulo={NOMBRE_RELEVAMIENTOS}
@@ -66,6 +72,14 @@ export default async function GuardiaPage() {
               icono="groups"
               titulo="Mis Agentes"
               descripcion="Alta de usuarios, guardias y actas de tu personal."
+            />
+          )}
+          {esJefe(agente) && (
+            <TarjetaAccion
+              href="/puestos"
+              icono="location_on"
+              titulo="Puestos y Mapa"
+              descripcion="Registro de puestos, coordenadas y jurisdicción municipal."
             />
           )}
           <form action={cerrarSesion}>
@@ -221,6 +235,12 @@ export default async function GuardiaPage() {
               descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
             />
             <TarjetaAccion
+              href="/procedimientos"
+              icono="gavel"
+              titulo="Procedimientos"
+              descripcion="Órdenes judiciales, secuestros, demoras, arrestos y más."
+            />
+            <TarjetaAccion
               href="/relevamientos"
               icono="groups"
               titulo={NOMBRE_RELEVAMIENTOS}
@@ -233,7 +253,14 @@ export default async function GuardiaPage() {
                 icono="groups"
                 titulo="Mis Agentes"
                 descripcion="Alta de usuarios, guardias y actas de tu personal."
-                className="sm:col-span-2"
+              />
+            )}
+            {esJefe(agente) && (
+              <TarjetaAccion
+                href="/puestos"
+                icono="location_on"
+                titulo="Puestos y Mapa"
+                descripcion="Registro de puestos, coordenadas y jurisdicción municipal."
               />
             )}
           </div>

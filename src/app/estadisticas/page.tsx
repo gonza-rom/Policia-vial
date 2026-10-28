@@ -14,7 +14,10 @@ import {
   TIPO_RODADO_LABEL,
   TIPO_RODADO_ICON,
   GRAVEDAD_LABEL,
+  TIPO_PROCEDIMIENTO_LABEL,
+  TIPO_PROCEDIMIENTO_ICON,
 } from "@/lib/formato";
+import { MODALIDAD_LABEL, MODALIDAD_ICON } from "@/lib/relevamientos";
 import {
   agruparPorDia,
   agruparPorEdad,
@@ -81,32 +84,46 @@ export default async function EstadisticasPage({
   // La recaudación (este mes, mes anterior, evolución) es monetaria: solo se
   // consulta a la base si quien mira el panel es jefe/admin — un agente ni
   // siquiera dispara esas queries, no es solo una cuestión de qué se pinta.
-  const [actas, actasContravencionales, agregadoMesAnterior] = await Promise.all([
-    prisma.acta.findMany({
-      where: whereBase,
-      include: { infracciones: { include: { infraccion: true } } },
-      orderBy: { fecha: "asc" },
-    }),
-    prisma.acta.count({
-      where: {
-        tipo: "CONTRAVENCIONAL",
-        fecha: { gte: inicioMes, lt: finMes },
-        estado: { not: "ANULADA" },
-        ...(puestoParam ? { puestoId: puestoParam } : {}),
-      },
-    }),
-    puedeVerRecaudacion
-      ? prisma.acta.aggregate({
-          where: {
-            tipo: "MUNICIPAL",
-            fecha: { gte: inicioMesAnterior, lt: inicioMes },
-            estado: { not: "ANULADA" },
-            ...(puestoParam ? { puestoId: puestoParam } : {}),
-          },
-          _sum: { montoConDescuento: true },
-        })
-      : Promise.resolve(null),
-  ]);
+  const periodoBase = { fecha: { gte: inicioMes, lt: finMes } };
+  const filtroPuesto = puestoParam ? { puestoId: puestoParam } : {};
+
+  const [actas, actasContravencionales, agregadoMesAnterior, relevamientosPorModalidad, procedimientosPorTipo] =
+    await Promise.all([
+      prisma.acta.findMany({
+        where: whereBase,
+        include: { infracciones: { include: { infraccion: true } } },
+        orderBy: { fecha: "asc" },
+      }),
+      prisma.acta.count({
+        where: {
+          tipo: "CONTRAVENCIONAL",
+          fecha: { gte: inicioMes, lt: finMes },
+          estado: { not: "ANULADA" },
+          ...(puestoParam ? { puestoId: puestoParam } : {}),
+        },
+      }),
+      puedeVerRecaudacion
+        ? prisma.acta.aggregate({
+            where: {
+              tipo: "MUNICIPAL",
+              fecha: { gte: inicioMesAnterior, lt: inicioMes },
+              estado: { not: "ANULADA" },
+              ...(puestoParam ? { puestoId: puestoParam } : {}),
+            },
+            _sum: { montoConDescuento: true },
+          })
+        : Promise.resolve(null),
+      prisma.relevamiento.groupBy({
+        by: ["modalidad"],
+        where: { ...periodoBase, ...filtroPuesto },
+        _sum: { cantidadPersonas: true },
+      }),
+      prisma.procedimiento.groupBy({
+        by: ["tipo"],
+        where: { ...periodoBase, ...filtroPuesto },
+        _count: { _all: true },
+      }),
+    ]);
 
   const totalMes = puedeVerRecaudacion
     ? actas.reduce((acc, a) => acc + Number(a.montoConDescuento), 0)
@@ -135,6 +152,16 @@ export default async function EstadisticasPage({
   const maxVehiculo = Math.max(1, ...Array.from(vehiculos.values()).map((v) => v.cantidad));
   const maxEdad = Math.max(1, ...edadBuckets.map((b) => b.cantidad));
   const totalGravedad = Math.max(1, actas.length);
+
+  const relevamientos = relevamientosPorModalidad
+    .map((r) => ({ modalidad: r.modalidad, cantidad: r._sum.cantidadPersonas ?? 0 }))
+    .sort((a, b) => b.cantidad - a.cantidad);
+  const maxRelevamiento = Math.max(1, ...relevamientos.map((r) => r.cantidad));
+
+  const procedimientos = procedimientosPorTipo
+    .map((p) => ({ tipo: p.tipo, cantidad: p._count._all }))
+    .sort((a, b) => b.cantidad - a.cantidad);
+  const maxProcedimiento = Math.max(1, ...procedimientos.map((p) => p.cantidad));
 
   return (
     <>
@@ -340,6 +367,36 @@ export default async function EstadisticasPage({
               {edadSinDato} acta(s) sin edad registrada.
             </p>
           )}
+        </TarjetaSeccion>
+
+        <TarjetaSeccion icono="groups" titulo="Relevamientos del Mes (por Tipo de Evento)">
+          {relevamientos.length === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
+          {relevamientos.map((r) => (
+            <BarraHorizontal
+              key={r.modalidad}
+              etiqueta={MODALIDAD_LABEL[r.modalidad]}
+              valor={r.cantidad}
+              valorMostrado={`${r.cantidad} personas`}
+              porcentaje={(r.cantidad / maxRelevamiento) * 100}
+              color={PALETA_CATEGORICA[3 % PALETA_CATEGORICA.length]}
+              icono={MODALIDAD_ICON[r.modalidad]}
+            />
+          ))}
+        </TarjetaSeccion>
+
+        <TarjetaSeccion icono="gavel" titulo="Procedimientos del Mes (por Tipo)">
+          {procedimientos.length === 0 && <EstadoVacio>Sin datos en el período.</EstadoVacio>}
+          {procedimientos.map((p) => (
+            <BarraHorizontal
+              key={p.tipo}
+              etiqueta={TIPO_PROCEDIMIENTO_LABEL[p.tipo]}
+              valor={p.cantidad}
+              valorMostrado={String(p.cantidad)}
+              porcentaje={(p.cantidad / maxProcedimiento) * 100}
+              color={PALETA_CATEGORICA[4 % PALETA_CATEGORICA.length]}
+              icono={TIPO_PROCEDIMIENTO_ICON[p.tipo]}
+            />
+          ))}
         </TarjetaSeccion>
       </main>
       <BottomNav verAgentes={esJefe(agente)} />
