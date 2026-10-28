@@ -9,13 +9,18 @@ import {
   puedeEditarRegistroPropio,
 } from "@/lib/auth";
 import { getPuestoSeleccionado } from "@/lib/puesto";
+import { MODALIDADES_RELEVAMIENTO } from "@/lib/relevamientos";
 
 function leerCampos(formData: FormData) {
   const texto = (campo: string) => String(formData.get(campo) ?? "").trim();
-  const modalidad =
-    texto("modalidad") === "DIA_VIRGEN"
-      ? ("DIA_VIRGEN" as const)
-      : ("FINES_LARGOS" as const);
+  const modalidadTexto = texto("modalidad");
+  const modalidad = (
+    MODALIDADES_RELEVAMIENTO.includes(
+      modalidadTexto as (typeof MODALIDADES_RELEVAMIENTO)[number],
+    )
+      ? modalidadTexto
+      : "FINES_LARGOS"
+  ) as (typeof MODALIDADES_RELEVAMIENTO)[number];
 
   const cantidadRaw = Number(texto("cantidadPersonas"));
   const cantidadPersonas =

@@ -8,6 +8,7 @@ import {
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { Campo, CampoTextarea, CampoSelect } from "@/components/ui/Campo";
 import { CampoArchivo } from "@/components/ui/CampoArchivo";
+import { SelectorModalidadTrabajo } from "@/components/ui/SelectorModalidadTrabajo";
 import { Boton } from "@/components/ui/Boton";
 
 type CampoDTO = {
@@ -44,6 +45,8 @@ export function ContravencionalActaForm({
   actaExistente,
   fechaPorDefecto,
   horaPorDefecto,
+  puestosDisponibles,
+  puestoOrigenId,
 }: {
   campos: CampoDTO[];
   actaExistente?: {
@@ -55,6 +58,10 @@ export function ContravencionalActaForm({
    * al agente a tipear la fecha/hora de algo que está pasando ahora mismo. */
   fechaPorDefecto?: string;
   horaPorDefecto?: string;
+  /** Solo hacen falta al crear (no al editar, donde la modalidad ya quedó
+   * fijada). Ver SelectorModalidadTrabajo. */
+  puestosDisponibles?: { id: string; nombre: string }[];
+  puestoOrigenId?: string;
 }) {
   const secciones = agruparPorSeccion(campos);
 
@@ -66,6 +73,14 @@ export function ContravencionalActaForm({
       {actaExistente && (
         <input type="hidden" name="actaId" value={actaExistente.id} />
       )}
+
+      {!actaExistente && puestosDisponibles && puestoOrigenId && (
+        <SelectorModalidadTrabajo
+          puestosDisponibles={puestosDisponibles}
+          puestoOrigenId={puestoOrigenId}
+        />
+      )}
+
       <div className="bg-surface-container-lowest border-l-4 border-secondary p-3 rounded shadow-sm border border-outline-variant">
         <div className="flex items-center justify-between">
           <span className="text-label-sm font-label-sm text-secondary uppercase font-bold">

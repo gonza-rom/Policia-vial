@@ -2,7 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getAgenteActual, getGuardiaActiva, puedeEditarActa } from "@/lib/auth";
+import {
+  getAgenteActual,
+  getGuardiaActiva,
+  puedeEditarActa,
+  puedeCrearActaMunicipalEnJurisdiccion,
+} from "@/lib/auth";
 import { subirImagen } from "@/lib/cloudinary";
 
 async function subirSiHayArchivo(
@@ -20,10 +25,50 @@ async function subirSiHayArchivo(
   }
 }
 
+/** Lee la modalidad de trabajo (habitual / otra jurisdicción) común a los
+ * dos tipos de acta. No hay autorización previa: si es otra jurisdicción,
+ * alcanza con declarar un puesto de trabajo y un motivo — ver
+ * `puedeCrearActaMunicipalEnJurisdiccion` para la única regla real
+ * (jurisdicción municipal por puesto, que sí se valida en servidor). */
+function leerModalidadTrabajo(formData: FormData) {
+  const texto = (campo: string) => String(formData.get(campo) ?? "").trim();
+  const modalidadTrabajo =
+    texto("modalidadTrabajo") === "OTRA_JURISDICCION"
+      ? ("OTRA_JURISDICCION" as const)
+      : ("HABITUAL" as const);
+  const jurisdiccionTexto = texto("jurisdiccion");
+  const JURISDICCIONES_VALIDAS = ["CAPITAL", "HUILLAPIMA", "LA_PUERTA"] as const;
+  const jurisdiccion = (
+    JURISDICCIONES_VALIDAS as readonly string[]
+  ).includes(jurisdiccionTexto)
+    ? (jurisdiccionTexto as (typeof JURISDICCIONES_VALIDAS)[number])
+    : null;
+  const puestoTrabajoId =
+    modalidadTrabajo === "OTRA_JURISDICCION" ? texto("puestoTrabajoId") || null : null;
+  const motivoOtraJurisdiccion =
+    modalidadTrabajo === "OTRA_JURISDICCION"
+      ? texto("motivoOtraJurisdiccion") || null
+      : null;
+
+  return { modalidadTrabajo, jurisdiccion, puestoTrabajoId, motivoOtraJurisdiccion };
+}
+
 export async function crearActa(formData: FormData) {
   const agente = await getAgenteActual();
   const guardia = await getGuardiaActiva(agente.id);
   if (!guardia) redirect("/guardia");
+
+  const { modalidadTrabajo, jurisdiccion, puestoTrabajoId, motivoOtraJurisdiccion } =
+    leerModalidadTrabajo(formData);
+
+  if (
+    !puedeCrearActaMunicipalEnJurisdiccion(guardia.puesto, modalidadTrabajo, jurisdiccion)
+  ) {
+    redirect("/actas/nueva?tipo=municipal&error=jurisdiccion");
+  }
+  if (modalidadTrabajo === "OTRA_JURISDICCION" && !motivoOtraJurisdiccion) {
+    redirect("/actas/nueva?tipo=municipal&error=motivo");
+  }
 
   const texto = (campo: string) => String(formData.get(campo) ?? "").trim();
   // Numérico no-negativo: ante un valor inválido o negativo, se descarta
@@ -77,6 +122,10 @@ export async function crearActa(formData: FormData) {
       guardiaId: guardia.id,
       agenteId: agente.id,
       puestoId: guardia.puestoId,
+      jurisdiccion,
+      modalidadTrabajo,
+      puestoTrabajoId,
+      motivoOtraJurisdiccion,
       lugarControl: texto("lugarControl") || null,
 
       conductorNombre: texto("conductorNombre"),
@@ -239,6 +288,14 @@ export async function crearActaContravencional(formData: FormData) {
   const guardia = await getGuardiaActiva(agente.id);
   if (!guardia) redirect("/guardia");
 
+  // La contravencional no tiene jurisdicción municipal — solo se guarda la
+  // modalidad/motivo para trazabilidad (ver leerModalidadTrabajo).
+  const { modalidadTrabajo, puestoTrabajoId, motivoOtraJurisdiccion } =
+    leerModalidadTrabajo(formData);
+  if (modalidadTrabajo === "OTRA_JURISDICCION" && !motivoOtraJurisdiccion) {
+    redirect("/actas/nueva?tipo=contravencional&error=motivo");
+  }
+
   const campos = await prisma.campoContravencional.findMany({
     where: { activo: true },
   });
@@ -262,6 +319,9 @@ export async function crearActaContravencional(formData: FormData) {
       guardiaId: guardia.id,
       agenteId: agente.id,
       puestoId: guardia.puestoId,
+      modalidadTrabajo,
+      puestoTrabajoId,
+      motivoOtraJurisdiccion,
       lugarControl: String(formData.get("lugarControl") ?? "").trim() || null,
       datosContravencional: datos,
       fotoVehiculoUrl,

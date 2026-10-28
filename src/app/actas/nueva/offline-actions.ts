@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getAgenteActual } from "@/lib/auth";
+import { getAgenteActual, puedeCrearActaMunicipalEnJurisdiccion } from "@/lib/auth";
 
 type SincronizarActaInput = {
   id: string;
@@ -36,7 +36,10 @@ export async function sincronizarActaOffline(
 ): Promise<ResultadoSincronizacion> {
   const agente = await getAgenteActual();
 
-  const guardia = await prisma.guardia.findUnique({ where: { id: input.guardiaId } });
+  const guardia = await prisma.guardia.findUnique({
+    where: { id: input.guardiaId },
+    include: { puesto: true },
+  });
   if (!guardia || guardia.agenteId !== agente.id) {
     return { ok: false, error: "La guardia de esta acta ya no es válida para tu usuario." };
   }
@@ -56,11 +59,34 @@ export async function sincronizarActaOffline(
   const porcentajeDescuento = 40;
   const montoConDescuento = Math.round(montoBase * (1 - porcentajeDescuento / 100));
 
+  const modalidadTrabajo = texto("modalidadTrabajo") === "OTRA_JURISDICCION"
+    ? ("OTRA_JURISDICCION" as const)
+    : ("HABITUAL" as const);
+  const jurisdiccionTexto = texto("jurisdiccion");
+  const JURISDICCIONES_VALIDAS = ["CAPITAL", "HUILLAPIMA", "LA_PUERTA"] as const;
+  const jurisdiccion = (
+    JURISDICCIONES_VALIDAS as readonly string[]
+  ).includes(jurisdiccionTexto)
+    ? (jurisdiccionTexto as (typeof JURISDICCIONES_VALIDAS)[number])
+    : null;
+
+  if (!puedeCrearActaMunicipalEnJurisdiccion(guardia.puesto, modalidadTrabajo, jurisdiccion)) {
+    return {
+      ok: false,
+      error: "Tu puesto no tiene esa jurisdicción municipal habitual asignada.",
+    };
+  }
+
   const datosActa = {
     tipo: "MUNICIPAL" as const,
     guardiaId: guardia.id,
     agenteId: agente.id,
     puestoId: input.puestoId,
+    jurisdiccion,
+    modalidadTrabajo,
+    puestoTrabajoId: modalidadTrabajo === "OTRA_JURISDICCION" ? texto("puestoTrabajoId") || null : null,
+    motivoOtraJurisdiccion:
+      modalidadTrabajo === "OTRA_JURISDICCION" ? texto("motivoOtraJurisdiccion") || null : null,
     lugarControl: texto("lugarControl") || null,
 
     conductorNombre: texto("conductorNombre"),

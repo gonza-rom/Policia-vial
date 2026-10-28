@@ -6,12 +6,19 @@ import { fechaInputHoy, horaInputAhora } from "@/lib/formato";
 import { NuevaActaForm } from "./NuevaActaForm";
 import { ContravencionalActaForm } from "./ContravencionalActaForm";
 
+const ERROR_MODALIDAD_LABEL: Record<string, string> = {
+  jurisdiccion:
+    "Tu puesto no tiene esa jurisdicción municipal habitual. Si estás reforzando otra zona, elegí \"Otra Jurisdicción\" e indicá el motivo.",
+  motivo: "Si elegís \"Otra Jurisdicción\" tenés que indicar el motivo.",
+};
+
 export default async function NuevaActaPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tipo?: string }>;
+  searchParams: Promise<{ tipo?: string; error?: string }>;
 }) {
-  const { tipo } = await searchParams;
+  const { tipo, error } = await searchParams;
+  const mensajeError = error ? ERROR_MODALIDAD_LABEL[error] : null;
   const agente = await getAgenteActual();
   const guardia = await getGuardiaActiva(agente.id);
 
@@ -64,6 +71,12 @@ export default async function NuevaActaPage({
     );
   }
 
+  const puestosDisponibles = await prisma.puesto.findMany({
+    where: { activo: true },
+    orderBy: { orden: "asc" },
+    select: { id: true, nombre: true },
+  });
+
   if (tipo === "contravencional") {
     const campos = await prisma.campoContravencional.findMany({
       where: { activo: true },
@@ -72,11 +85,18 @@ export default async function NuevaActaPage({
     return (
       <>
         <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+        <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-3">
+          {mensajeError && (
+            <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
+              {mensajeError}
+            </p>
+          )}
           <ContravencionalActaForm
             campos={campos}
             fechaPorDefecto={fechaInputHoy()}
             horaPorDefecto={horaInputAhora()}
+            puestosDisponibles={puestosDisponibles}
+            puestoOrigenId={guardia.puestoId}
           />
         </main>
       </>
@@ -91,7 +111,12 @@ export default async function NuevaActaPage({
   return (
     <>
       <AppHeader nombreApellido={agente.nombreApellido} legajo={agente.legajo} />
-      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10">
+      <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-10 space-y-3">
+        {mensajeError && (
+          <p className="text-body-sm text-error bg-error-container/40 border border-error rounded p-2">
+            {mensajeError}
+          </p>
+        )}
         <NuevaActaForm
           catalogo={catalogo.map((i) => ({
             ...i,
@@ -100,6 +125,9 @@ export default async function NuevaActaPage({
           lugarControlSugerido={guardia.puesto.kmRuta ?? guardia.puesto.nombre}
           guardiaId={guardia.id}
           puestoId={guardia.puestoId}
+          puestosDisponibles={puestosDisponibles}
+          puestoOrigenId={guardia.puestoId}
+          jurisdiccionesHabituales={guardia.puesto.jurisdiccionesMunicipales}
         />
       </main>
     </>

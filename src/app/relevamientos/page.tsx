@@ -15,6 +15,9 @@ import {
   agruparPorClave,
   MEDIO_TRANSPORTE_LABEL,
   SEXO_LABEL,
+  MODALIDAD_LABEL,
+  MODALIDADES_RELEVAMIENTO,
+  type ModalidadRelevamientoValor,
 } from "@/lib/relevamientos";
 import { eliminarRelevamiento } from "./actions";
 import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
@@ -27,8 +30,11 @@ export default async function RelevamientosPage({
   const { modalidad: modalidadParam, puesto: puestoParam } = await searchParams;
   const agente = await getAgenteActual();
 
-  const modalidad =
-    modalidadParam === "DIA_VIRGEN" ? "DIA_VIRGEN" : ("FINES_LARGOS" as const);
+  const modalidad = MODALIDADES_RELEVAMIENTO.includes(
+    modalidadParam as ModalidadRelevamientoValor,
+  )
+    ? (modalidadParam as ModalidadRelevamientoValor)
+    : "FINES_LARGOS";
   const esDiaVirgen = modalidad === "DIA_VIRGEN";
 
   const [puestos, registros] = await Promise.all([
@@ -82,13 +88,16 @@ export default async function RelevamientosPage({
           Conteos de operativos puntuales — no son actas ni recaudación.
         </p>
 
-        <div className="flex gap-2">
-          <FiltroPill href="/relevamientos?modalidad=FINES_LARGOS" activo={!esDiaVirgen}>
-            Fines Largos
-          </FiltroPill>
-          <FiltroPill href="/relevamientos?modalidad=DIA_VIRGEN" activo={esDiaVirgen}>
-            Día de la Virgen
-          </FiltroPill>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {MODALIDADES_RELEVAMIENTO.map((m) => (
+            <FiltroPill
+              key={m}
+              href={`/relevamientos?modalidad=${m}`}
+              activo={modalidad === m}
+            >
+              {MODALIDAD_LABEL[m]}
+            </FiltroPill>
+          ))}
         </div>
 
         <form className="flex items-center gap-2">

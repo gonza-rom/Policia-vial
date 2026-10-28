@@ -113,6 +113,37 @@ export const ROL_LABEL: Record<string, string> = {
   ADMIN: "Dirección",
 };
 
+export const JURISDICCION_LABEL: Record<string, string> = {
+  CAPITAL: "San Fernando del Valle de Catamarca (Capital)",
+  HUILLAPIMA: "Huillapima",
+  LA_PUERTA: "La Puerta",
+};
+
+export const MODALIDAD_TRABAJO_LABEL: Record<string, string> = {
+  HABITUAL: "Puesto Habitual",
+  OTRA_JURISDICCION: "Otra Jurisdicción",
+};
+
+export const TIPO_PROCEDIMIENTO_LABEL: Record<string, string> = {
+  ORDEN_JUDICIAL: "Orden Judicial",
+  SECUESTRO: "Pedido de Secuestro",
+  DEMORA: "Demora",
+  ARRESTO: "Arresto",
+  DETENCION: "Detención",
+  UBICACION_PARADERO: "Ubicación y Paradero",
+  ESTUPEFACIENTES: "Estupefacientes",
+};
+
+export const TIPO_PROCEDIMIENTO_ICON: Record<string, string> = {
+  ORDEN_JUDICIAL: "gavel",
+  SECUESTRO: "inventory_2",
+  DEMORA: "schedule",
+  ARRESTO: "front_hand",
+  DETENCION: "lock",
+  UBICACION_PARADERO: "person_search",
+  ESTUPEFACIENTES: "medication",
+};
+
 /** El acta contravencional guarda al conductor en `datosContravencional`
  * (JSON), no en la columna `conductorNombre` — este helper lo resuelve sin
  * importar el tipo de acta. */

@@ -46,29 +46,40 @@ async function main() {
     },
   });
 
+  // Coordenadas provistas por la Dirección (28 oct 2026) y reglas de acceso
+  // a actas municipales por jurisdicción: solo Base Vial, Tango 51 y
+  // Tango 53 tienen jurisdicción municipal habitual; el resto no accede a
+  // acta municipal salvo que trabajen bajo modalidad OTRA_JURISDICCION.
   const puestosSeed = [
-    "Base Vial",
-    "Tango 50",
-    "Tango 51",
-    "Tango 52",
-    "Tango 53",
-    "Tango 54",
-    "Tango 55",
-    "Tango 56",
-    "Tango 57",
+    { nombre: "Base Vial", ubicacion: "Las Rejas", lat: -28.469296919831947, lng: -65.82468969420398, jurisdicciones: ["CAPITAL"] as const },
+    { nombre: "Tango 50", ubicacion: "El Portezuelo", lat: -28.498509600657247, lng: -65.60866306325029, jurisdicciones: [] as const },
+    { nombre: "Tango 51", ubicacion: "Nueva Coneta", lat: -28.55152151162221, lng: -65.8312951018282, jurisdicciones: ["CAPITAL", "HUILLAPIMA"] as const },
+    { nombre: "Tango 52", ubicacion: "Sumalao", lat: -28.592606267478608, lng: -65.75821113299423, jurisdicciones: [] as const },
+    { nombre: "Tango 53", ubicacion: "La Puerta", lat: -28.19388, lng: -65.770447, jurisdicciones: ["LA_PUERTA"] as const },
+    { nombre: "Tango 54", ubicacion: "La Atravesada, Balcozna", lat: -27.838041329131357, lng: -65.78247381905491, jurisdicciones: [] as const },
+    { nombre: "Tango 55", ubicacion: "Las Salinas, referencias 157 y 60", lat: -29.511015778037514, lng: -64.92065009294869, jurisdicciones: [] as const },
+    { nombre: "Tango 56", ubicacion: "El Clavillo, Aconquija", lat: -27.346150633985534, lng: -65.97125014673429, jurisdicciones: [] as const },
+    { nombre: "Tango 57", ubicacion: "La Viña, Ruta 38, antes de Huacra", lat: -28.005090960815874, lng: -65.58027437622454, jurisdicciones: [] as const },
   ];
   const puestos = [];
-  for (const [i, nombre] of puestosSeed.entries()) {
-    const p = await prisma.puesto.upsert({
-      where: { id: `puesto-${nombre.toLowerCase().replace(/\s+/g, "-")}` },
-      update: { nombre, orden: i },
-      create: {
-        id: `puesto-${nombre.toLowerCase().replace(/\s+/g, "-")}`,
-        nombre,
-        orden: i,
-      },
+  for (const [i, p] of puestosSeed.entries()) {
+    const id = `puesto-${p.nombre.toLowerCase().replace(/\s+/g, "-")}`;
+    const codigo = p.nombre.toUpperCase().replace(/\s+/g, "-");
+    const data = {
+      nombre: p.nombre,
+      orden: i,
+      codigo,
+      ubicacion: p.ubicacion,
+      latitud: p.lat,
+      longitud: p.lng,
+      jurisdiccionesMunicipales: [...p.jurisdicciones],
+    };
+    const creado = await prisma.puesto.upsert({
+      where: { id },
+      update: data,
+      create: { id, ...data },
     });
-    puestos.push(p);
+    puestos.push(creado);
   }
   const puesto = puestos[0];
 

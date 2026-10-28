@@ -7,7 +7,15 @@ import { AppHeader } from "@/components/ui/AppHeader";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { BadgeEstadoActa } from "@/components/ui/BadgeEstadoActa";
 import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
-import { formatoFecha, formatoHora, formatoMoneda, numeroActa, TIPO_RODADO_LABEL } from "@/lib/formato";
+import {
+  formatoFecha,
+  formatoHora,
+  formatoMoneda,
+  numeroActa,
+  TIPO_RODADO_LABEL,
+  JURISDICCION_LABEL,
+} from "@/lib/formato";
+import { ImagenConFallback } from "@/components/ui/ImagenConFallback";
 import { FirmaForm } from "./FirmaForm";
 import { BotonImprimir } from "@/components/ui/BotonImprimir";
 import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConConfirmacion";
@@ -26,6 +34,7 @@ export default async function FirmaActaPage({
     include: {
       agente: true,
       puesto: true,
+      puestoTrabajo: true,
       infracciones: { include: { infraccion: true } },
     },
   });
@@ -110,6 +119,28 @@ export default async function FirmaActaPage({
           <BotonImprimir />
         </div>
 
+        {acta.modalidadTrabajo === "OTRA_JURISDICCION" && (
+          <div className="bg-secondary-container/40 border-2 border-secondary rounded-lg p-3 flex items-start gap-2">
+            <span className="material-symbols-outlined text-secondary mt-0.5">
+              travel_explore
+            </span>
+            <div>
+              <p className="text-label-sm font-label-sm font-bold text-secondary uppercase">
+                Labrada en Otra Jurisdicción
+              </p>
+              <p className="text-body-sm text-on-surface">
+                Agente de <strong>{acta.puesto.nombre}</strong> trabajando en{" "}
+                <strong>{acta.puestoTrabajo?.nombre ?? "otro puesto"}</strong>.
+              </p>
+              {acta.motivoOtraJurisdiccion && (
+                <p className="text-body-sm text-on-surface-variant mt-1">
+                  Motivo: {acta.motivoOtraJurisdiccion}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="bg-primary-container text-on-primary rounded-lg p-pad-lg flex items-center justify-between">
           <div>
             <span className="text-body-sm text-primary-fixed-dim uppercase block">
@@ -120,7 +151,9 @@ export default async function FirmaActaPage({
                 ? "Ley Prov. N° 5171/05"
                 : "Ordenanza N° 385/12"}
               {" · "}
-              {acta.puesto.nombre}
+              {acta.tipo === "MUNICIPAL" && acta.jurisdiccion
+                ? JURISDICCION_LABEL[acta.jurisdiccion]
+                : acta.puesto.nombre}
             </span>
           </div>
           <span className="font-display text-xl tracking-widest">
@@ -231,29 +264,41 @@ export default async function FirmaActaPage({
         )}
 
         {(acta.fotoVehiculoUrl || acta.fotoDocumentoUrl) && (
-          <TarjetaSeccion
-            icono="photo_camera"
-            titulo="Evidencia Fotográfica"
-            className="print:hidden"
-          >
-            <div className="grid grid-cols-2 gap-2">
+          // Sin print:hidden: la evidencia también tiene que salir en el PDF
+          // (a diferencia de otras secciones de esta página). object-contain
+          // en vez de cover: se ve la foto completa, sin recortar ni
+          // deformar — importante tratándose de evidencia con valor legal.
+          <TarjetaSeccion icono="photo_camera" titulo="Evidencia Fotográfica">
+            <div className="grid grid-cols-2 gap-2 print:break-inside-avoid">
               {acta.fotoVehiculoUrl && (
-                <Image
-                  src={acta.fotoVehiculoUrl}
-                  alt="Foto del vehículo"
-                  width={200}
-                  height={150}
-                  className="w-full h-28 object-cover rounded border border-outline-variant"
-                />
+                <figure className="print:break-inside-avoid">
+                  <ImagenConFallback
+                    src={acta.fotoVehiculoUrl}
+                    alt="Foto del vehículo"
+                    width={400}
+                    height={300}
+                    priority
+                    className="w-full h-28 print:h-auto object-contain print:aspect-[4/3] rounded border border-outline-variant bg-surface-container-low"
+                  />
+                  <figcaption className="text-body-sm text-on-surface-variant text-center mt-1">
+                    Vehículo
+                  </figcaption>
+                </figure>
               )}
               {acta.fotoDocumentoUrl && (
-                <Image
-                  src={acta.fotoDocumentoUrl}
-                  alt="Foto de la infracción/documentación"
-                  width={200}
-                  height={150}
-                  className="w-full h-28 object-cover rounded border border-outline-variant"
-                />
+                <figure className="print:break-inside-avoid">
+                  <ImagenConFallback
+                    src={acta.fotoDocumentoUrl}
+                    alt="Foto de la infracción/documentación"
+                    width={400}
+                    height={300}
+                    priority
+                    className="w-full h-28 print:h-auto object-contain print:aspect-[4/3] rounded border border-outline-variant bg-surface-container-low"
+                  />
+                  <figcaption className="text-body-sm text-on-surface-variant text-center mt-1">
+                    Documentación / Infracción
+                  </figcaption>
+                </figure>
               )}
             </div>
           </TarjetaSeccion>

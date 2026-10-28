@@ -7,6 +7,7 @@ import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { Campo, CampoSelect, CampoTextarea } from "@/components/ui/Campo";
 import { ChipInfraccion } from "@/components/ui/ChipInfraccion";
 import { CampoArchivo } from "@/components/ui/CampoArchivo";
+import { SelectorModalidadTrabajo } from "@/components/ui/SelectorModalidadTrabajo";
 import { Boton } from "@/components/ui/Boton";
 import { soportaIndexedDB } from "@/lib/offline/db";
 import { encolarActa } from "@/lib/offline/colaActas";
@@ -79,6 +80,9 @@ export function NuevaActaForm({
   actaExistente,
   guardiaId,
   puestoId,
+  puestosDisponibles,
+  puestoOrigenId,
+  jurisdiccionesHabituales,
 }: {
   catalogo: InfraccionCatalogoDTO[];
   lugarControlSugerido: string;
@@ -87,7 +91,12 @@ export function NuevaActaForm({
    * no hay forma de que el servidor nos diga cuál es la guardia activa. */
   guardiaId?: string;
   puestoId?: string;
+  /** Solo hacen falta al crear (no al editar). Ver SelectorModalidadTrabajo. */
+  puestosDisponibles?: { id: string; nombre: string }[];
+  puestoOrigenId?: string;
+  jurisdiccionesHabituales?: ("CAPITAL" | "HUILLAPIMA" | "LA_PUERTA")[];
 }) {
+  const [modalidadHabilitada, setModalidadHabilitada] = useState(true);
   const [guardadoOffline, setGuardadoOffline] = useState(false);
   const [guardandoOffline, setGuardandoOffline] = useState(false);
   const [seleccionadas, setSeleccionadas] = useState<Set<string>>(
@@ -147,6 +156,10 @@ export function NuevaActaForm({
     const formData = new FormData(formEl);
     const campos: Record<string, string> = {};
     for (const campo of [
+      "modalidadTrabajo",
+      "jurisdiccion",
+      "puestoTrabajoId",
+      "motivoOtraJurisdiccion",
       "lugarControl",
       "conductorNombre",
       "conductorDni",
@@ -235,6 +248,16 @@ export function NuevaActaForm({
       {actaExistente && (
         <input type="hidden" name="actaId" value={actaExistente.id} />
       )}
+
+      {!actaExistente && puestosDisponibles && puestoOrigenId && (
+        <SelectorModalidadTrabajo
+          puestosDisponibles={puestosDisponibles}
+          puestoOrigenId={puestoOrigenId}
+          jurisdiccionesHabituales={jurisdiccionesHabituales ?? []}
+          onHabilitadoCambia={setModalidadHabilitada}
+        />
+      )}
+
       <div className="bg-surface-container-lowest border-l-4 border-secondary p-3 rounded shadow-sm border border-outline-variant">
         <div className="flex items-center justify-between">
           <span className="text-label-sm font-label-sm text-secondary uppercase font-bold">
@@ -584,7 +607,11 @@ export function NuevaActaForm({
         </div>
       </TarjetaSeccion>
 
-      <BotonEnviar esEdicion={Boolean(actaExistente)} guardandoOffline={guardandoOffline} />
+      <BotonEnviar
+        esEdicion={Boolean(actaExistente)}
+        guardandoOffline={guardandoOffline}
+        bloqueado={!modalidadHabilitada}
+      />
     </form>
   );
 }
@@ -592,9 +619,11 @@ export function NuevaActaForm({
 function BotonEnviar({
   esEdicion,
   guardandoOffline,
+  bloqueado,
 }: {
   esEdicion: boolean;
   guardandoOffline: boolean;
+  bloqueado?: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -603,7 +632,7 @@ function BotonEnviar({
         type="submit"
         icono={esEdicion ? "save" : "draw"}
         fullWidth
-        disabled={pending || guardandoOffline}
+        disabled={pending || guardandoOffline || bloqueado}
         className="disabled:opacity-60"
       >
         {pending || guardandoOffline

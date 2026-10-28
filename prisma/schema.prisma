@@ -80,6 +80,37 @@ enum TipoRequerimiento {
 enum ModalidadRelevamiento {
   FINES_LARGOS
   DIA_VIRGEN
+  SEMANA_ESTUDIANTIL
+  FESTIVALES
+  PONCHO
+}
+
+/// Jurisdicción municipal de un acta tipo MUNICIPAL. No aplica a la
+/// CONTRAVENCIONAL (Ley Provincial 5171/05, sin distinción municipal).
+enum Jurisdiccion {
+  CAPITAL
+  HUILLAPIMA
+  LA_PUERTA
+}
+
+/// HABITUAL: el agente trabaja en su puesto de siempre (el de su guardia).
+/// OTRA_JURISDICCION: está reforzando/rotando en otro puesto — el sistema
+/// no lo autoriza de antemano, pero exige que declare el motivo (ver
+/// Acta.motivoOtraJurisdiccion / Procedimiento.motivoOtraJurisdiccion) para
+/// que quede trazable quién trabajó dónde y por qué.
+enum ModalidadTrabajo {
+  HABITUAL
+  OTRA_JURISDICCION
+}
+
+enum TipoProcedimiento {
+  ORDEN_JUDICIAL
+  SECUESTRO
+  DEMORA
+  ARRESTO
+  DETENCION
+  UBICACION_PARADERO
+  ESTUPEFACIENTES
 }
 
 enum MedioTransporte {
@@ -116,23 +147,35 @@ model Agente {
   actas          Acta[]
   requerimientos Requerimiento[]
   relevamientos  Relevamiento[]
+  procedimientos Procedimiento[]
 
   @@index([jefeId])
 }
 
 model Puesto {
   id        String   @id @default(cuid())
+  codigo    String?  @unique
   nombre    String
   orden     Int      @default(0)
   kmRuta    String?
   ubicacion String?
+  latitud   Decimal? @db.Decimal(9, 6)
+  longitud  Decimal? @db.Decimal(9, 6)
   activo    Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  guardias       Guardia[]
-  actas          Acta[]
-  requerimientos Requerimiento[]
-  relevamientos  Relevamiento[]
+  // Jurisdicciones municipales habituales de este puesto (vacío = sin
+  // acceso habitual a actas municipales, salvo modalidad OTRA_JURISDICCION).
+  // La acta contravencional no está restringida por jurisdicción.
+  jurisdiccionesMunicipales Jurisdiccion[] @default([])
+
+  guardias              Guardia[]
+  actas                 Acta[]          @relation("PuestoOrigenActa")
+  actasTrabajo          Acta[]          @relation("PuestoTrabajoActa")
+  requerimientos        Requerimiento[]
+  relevamientos         Relevamiento[]
+  procedimientos        Procedimiento[] @relation("PuestoOrigenProcedimiento")
+  procedimientosTrabajo Procedimiento[] @relation("PuestoTrabajoProcedimiento")
 }
 
 model Guardia {
@@ -175,8 +218,23 @@ model Acta {
   guardia   Guardia @relation(fields: [guardiaId], references: [id])
   agenteId  String
   agente    Agente  @relation(fields: [agenteId], references: [id])
+  // Puesto de ORIGEN (el de la guardia) — nunca cambia por trabajar en otra
+  // jurisdicción, así se preserva siempre de dónde es el agente.
   puestoId  String
-  puesto    Puesto  @relation(fields: [puestoId], references: [id])
+  puesto    Puesto  @relation("PuestoOrigenActa", fields: [puestoId], references: [id])
+
+  // Jurisdicción municipal del acta (solo aplica a tipo = MUNICIPAL).
+  jurisdiccion Jurisdiccion?
+
+  // Modalidad bajo la que se labró: HABITUAL (puesto de origen) u
+  // OTRA_JURISDICCION (refuerzo/rotación). En este segundo caso,
+  // puestoTrabajo es dónde se hizo realmente la intervención y
+  // motivoOtraJurisdiccion es obligatorio (autodeclarado, sin
+  // autorización previa — ver enum ModalidadTrabajo).
+  modalidadTrabajo      ModalidadTrabajo @default(HABITUAL)
+  puestoTrabajoId       String?
+  puestoTrabajo         Puesto?          @relation("PuestoTrabajoActa", fields: [puestoTrabajoId], references: [id])
+  motivoOtraJurisdiccion String?         @db.Text
 
   fecha        DateTime @default(now())
   lugarControl String?
@@ -321,6 +379,50 @@ model Relevamiento {
   updatedAt DateTime @updatedAt
 
   @@index([modalidad])
+  @@index([fecha])
+  @@index([puestoId])
+}
+
+/// Órdenes judiciales, secuestros, demoras, arrestos, detenciones, ubicación
+/// y paradero, y estupefacientes. Mismo patrón que Requerimiento: no depende
+/// de una guardia abierta, es un registro puntual asociado a puesto/agente/
+/// fecha. Campos genéricos comunes a las 7 categorías — si en el futuro
+/// aparece un formulario oficial distinto por categoría, se ajusta puntual.
+model Procedimiento {
+  id     String            @id @default(cuid())
+  numero Int               @unique @default(autoincrement())
+  tipo   TipoProcedimiento
+
+  // Puesto de ORIGEN (de dónde es el agente) y agente responsable.
+  puestoId String
+  puesto   Puesto   @relation("PuestoOrigenProcedimiento", fields: [puestoId], references: [id])
+  agenteId String
+  agente   Agente   @relation(fields: [agenteId], references: [id])
+  fecha    DateTime @default(now())
+
+  // Igual mecánica que en Acta: HABITUAL u OTRA_JURISDICCION con motivo
+  // autodeclarado — ver enum ModalidadTrabajo.
+  modalidadTrabajo       ModalidadTrabajo @default(HABITUAL)
+  puestoTrabajoId        String?
+  puestoTrabajo          Puesto?          @relation("PuestoTrabajoProcedimiento", fields: [puestoTrabajoId], references: [id])
+  jurisdiccion           Jurisdiccion?
+  motivoOtraJurisdiccion String?          @db.Text
+
+  // Datos de la persona y/o vehículo involucrado (ambos opcionales: según
+  // la categoría, el procedimiento puede ser solo sobre una persona, solo
+  // sobre un vehículo, o ninguno de los dos todavía identificado).
+  personaNombre   String?
+  personaDni      String?
+  vehiculoDominio String?
+
+  descripcion   String  @db.Text
+  datosOrden    String? @db.Text
+  observaciones String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tipo])
   @@index([fecha])
   @@index([puestoId])
 }

@@ -8,13 +8,12 @@ import { BotonEliminarConConfirmacion } from "@/components/ui/BotonEliminarConCo
 import { EncabezadoImprimible } from "@/components/ui/EncabezadoImprimible";
 import { formatoFecha, formatoHora } from "@/lib/formato";
 import { NOMBRE_RELEVAMIENTOS } from "@/lib/config";
-import { MEDIO_TRANSPORTE_LABEL, SEXO_LABEL } from "@/lib/relevamientos";
+import {
+  MEDIO_TRANSPORTE_LABEL,
+  SEXO_LABEL,
+  MODALIDAD_LABEL,
+} from "@/lib/relevamientos";
 import { eliminarRelevamiento } from "../actions";
-
-const MODALIDAD_LABEL: Record<string, string> = {
-  FINES_LARGOS: "Fines Largos",
-  DIA_VIRGEN: "Día de la Virgen",
-};
 
 export default async function DetalleRelevamientoPage({
   params,

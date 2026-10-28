@@ -37,4 +37,25 @@ export const SEXO_LABEL: Record<string, string> = {
 export const MODALIDAD_LABEL: Record<string, string> = {
   FINES_LARGOS: "Fines Largos",
   DIA_VIRGEN: "Día de la Virgen",
+  SEMANA_ESTUDIANTIL: "Semana Estudiantil",
+  FESTIVALES: "Festivales",
+  PONCHO: "Poncho",
 };
+
+export const MODALIDAD_ICON: Record<string, string> = {
+  FINES_LARGOS: "groups",
+  DIA_VIRGEN: "church",
+  SEMANA_ESTUDIANTIL: "school",
+  FESTIVALES: "celebration",
+  PONCHO: "festival",
+};
+
+export const MODALIDADES_RELEVAMIENTO = [
+  "FINES_LARGOS",
+  "DIA_VIRGEN",
+  "SEMANA_ESTUDIANTIL",
+  "FESTIVALES",
+  "PONCHO",
+] as const;
+
+export type ModalidadRelevamientoValor = (typeof MODALIDADES_RELEVAMIENTO)[number];

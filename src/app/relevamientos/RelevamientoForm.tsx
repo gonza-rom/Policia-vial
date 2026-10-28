@@ -10,10 +10,15 @@ import {
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { Campo, CampoSelect } from "@/components/ui/Campo";
 import { Boton } from "@/components/ui/Boton";
+import {
+  MODALIDAD_LABEL,
+  MODALIDAD_ICON,
+  type ModalidadRelevamientoValor,
+} from "@/lib/relevamientos";
 
 export type RelevamientoExistenteDTO = {
   id: string;
-  modalidad: "FINES_LARGOS" | "DIA_VIRGEN";
+  modalidad: ModalidadRelevamientoValor;
   cantidadPersonas: number;
   procedencia: string | null;
   medioTransporte: string | null;
@@ -39,7 +44,7 @@ export function RelevamientoForm({
   modalidad,
   relevamientoExistente,
 }: {
-  modalidad: "FINES_LARGOS" | "DIA_VIRGEN";
+  modalidad: ModalidadRelevamientoValor;
   relevamientoExistente?: RelevamientoExistenteDTO;
 }) {
   // La carga rápida (3 cantidades + botones) es solo para un registro
@@ -161,7 +166,7 @@ function FormularioClasico({
   modalidad,
   relevamientoExistente,
 }: {
-  modalidad: "FINES_LARGOS" | "DIA_VIRGEN";
+  modalidad: ModalidadRelevamientoValor;
   relevamientoExistente?: RelevamientoExistenteDTO;
 }) {
   const esDiaVirgen = modalidad === "DIA_VIRGEN";
@@ -176,10 +181,7 @@ function FormularioClasico({
       )}
       <input type="hidden" name="modalidad" value={modalidad} />
 
-      <TarjetaSeccion
-        icono={esDiaVirgen ? "church" : "groups"}
-        titulo={esDiaVirgen ? "Día de la Virgen" : "Fines Largos"}
-      >
+      <TarjetaSeccion icono={MODALIDAD_ICON[modalidad]} titulo={MODALIDAD_LABEL[modalidad]}>
         <Campo
           label="Cantidad de Personas"
           id="cantidadPersonas"

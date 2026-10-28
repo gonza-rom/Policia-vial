@@ -81,6 +81,26 @@ export function puedeEditarRegistroPropio(
   return registro.agenteId === agente.id || esJefe(agente);
 }
 
+/**
+ * Regla de acceso a acta MUNICIPAL por jurisdicción (ver DESIGN / pedido
+ * de ampliación de oct-2026): bajo modalidad HABITUAL, un puesto solo puede
+ * labrar la(s) jurisdicción(es) municipal(es) que tiene asignadas
+ * (`Puesto.jurisdiccionesMunicipales`). Bajo OTRA_JURISDICCION no hay
+ * autorización previa: el agente puede elegir cualquier jurisdicción,
+ * pero tiene que declarar un motivo (ver `motivoOtraJurisdiccion`) — la
+ * trazabilidad es la que reemplaza al permiso. La contravencional no está
+ * restringida por jurisdicción en ningún caso.
+ */
+export function puedeCrearActaMunicipalEnJurisdiccion(
+  puestoOrigen: { jurisdiccionesMunicipales: string[] },
+  modalidadTrabajo: string,
+  jurisdiccion: string | null,
+) {
+  if (!jurisdiccion) return false;
+  if (modalidadTrabajo === "OTRA_JURISDICCION") return true;
+  return puestoOrigen.jurisdiccionesMunicipales.includes(jurisdiccion);
+}
+
 export async function getGuardiaActiva(agenteId: string) {
   return prisma.guardia.findFirst({
     where: { agenteId, estado: "ACTIVA" },
