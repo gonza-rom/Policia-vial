@@ -82,17 +82,20 @@ export default async function NuevaActaPage({
     );
   }
 
-  const puestosDisponibles = await prisma.puesto.findMany({
+  const puestosQuery = prisma.puesto.findMany({
     where: { activo: true },
     orderBy: { orden: "asc" },
     select: { id: true, nombre: true },
   });
 
   if (tipo === "contravencional") {
-    const campos = await prisma.campoContravencional.findMany({
-      where: { activo: true },
-      orderBy: { orden: "asc" },
-    });
+    const [puestosDisponibles, campos] = await Promise.all([
+      puestosQuery,
+      prisma.campoContravencional.findMany({
+        where: { activo: true },
+        orderBy: { orden: "asc" },
+      }),
+    ]);
     return (
       <>
         <AppHeader />
@@ -124,10 +127,13 @@ export default async function NuevaActaPage({
     );
   }
 
-  const catalogo = await prisma.infraccionCatalogo.findMany({
-    where: { activo: true },
-    orderBy: { orden: "asc" },
-  });
+  const [puestosDisponibles, catalogo] = await Promise.all([
+    puestosQuery,
+    prisma.infraccionCatalogo.findMany({
+      where: { activo: true },
+      orderBy: { orden: "asc" },
+    }),
+  ]);
 
   return (
     <>

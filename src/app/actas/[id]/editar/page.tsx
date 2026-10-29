@@ -16,13 +16,20 @@ export default async function EditarActaPage({
 
   const acta = await prisma.acta.findUnique({
     where: { id },
-    include: { infracciones: true },
+    include: { infracciones: true, fotos: { orderBy: { orden: "asc" } } },
   });
   if (!acta) notFound();
 
   if (!puedeEditarActa(agente, acta)) {
     redirect(`/actas/${id}/firma`);
   }
+
+  const fotosVehiculo = acta.fotos
+    .filter((f) => f.categoria === "VEHICULO")
+    .map((f) => ({ id: f.id, url: f.url }));
+  const fotosDocumento = acta.fotos
+    .filter((f) => f.categoria === "DOCUMENTO")
+    .map((f) => ({ id: f.id, url: f.url }));
 
   if (acta.tipo === "CONTRAVENCIONAL") {
     const campos = await prisma.campoContravencional.findMany({
@@ -48,6 +55,8 @@ export default async function EditarActaPage({
               id: acta.id,
               lugarControl: acta.lugarControl,
               datos: (acta.datosContravencional ?? {}) as Record<string, string>,
+              fotosVehiculo,
+              fotosDocumento,
             }}
           />
         </main>
@@ -100,6 +109,8 @@ export default async function EditarActaPage({
             alcoholemiaGraduacion: acta.alcoholemiaGraduacion
               ? Number(acta.alcoholemiaGraduacion)
               : null,
+            fotosVehiculo,
+            fotosDocumento,
           }}
         />
       </main>

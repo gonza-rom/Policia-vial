@@ -1,4 +1,5 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { esJefe, getAgenteActual } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
@@ -26,8 +27,21 @@ import {
   agruparPorSemana,
   agruparPorVehiculo,
 } from "@/lib/estadisticas";
-import { EvolucionChart } from "./EvolucionChart";
 import { COLOR_GRAVEDAD, COLOR_VEHICULO, PALETA_CATEGORICA } from "@/lib/chartColors";
+
+// Recharts es pesado (arrastra d3 internamente) y el resto de la pantalla
+// no depende de él — cargarlo en su propio chunk, aparte del resto de
+// /estadisticas, para no retrasar la hidratación de todo lo demás.
+const EvolucionChart = dynamic(
+  () => import("./EvolucionChart").then((m) => m.EvolucionChart),
+  {
+    loading: () => (
+      <div className="bg-surface-container-lowest rounded-lg border border-outline-variant p-4 shadow-sm">
+        <div className="h-[220px] rounded bg-surface-container animate-pulse" />
+      </div>
+    ),
+  },
+);
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",

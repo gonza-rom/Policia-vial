@@ -107,10 +107,19 @@ async function sincronizarActas() {
 
     try {
       const fotos = await obtenerFotosDeActa(acta.id);
-      const urls: Record<string, string> = {};
-      for (const foto of fotos) {
-        urls[foto.campo] = await subirFotoOffline(foto.blob, "actas/fotos");
-      }
+      // Varias fotos por categoría ahora — se suben todas y se agrupan en
+      // dos listas de URLs, en el mismo orden en que se encolaron.
+      const fotosVehiculo = fotos
+        .filter((f) => f.campo === "fotoVehiculo")
+        .sort((a, b) => a.orden - b.orden);
+      const fotosDocumento = fotos
+        .filter((f) => f.campo === "fotoDocumento")
+        .sort((a, b) => a.orden - b.orden);
+      const [fotosVehiculoNuevas, fotosDocumentoNuevas] = await Promise.all([
+        Promise.all(fotosVehiculo.map((f) => subirFotoOffline(f.blob, "actas/fotos"))),
+        Promise.all(fotosDocumento.map((f) => subirFotoOffline(f.blob, "actas/fotos"))),
+      ]);
+      const fotosABorrar = acta.fotosABorrar ?? [];
 
       // `tipo`/`accion` pueden faltar en actas encoladas antes de agregar
       // contravencional y edición offline — se tratan como
@@ -125,8 +134,9 @@ async function sincronizarActas() {
               guardiaId: acta.guardiaId,
               puestoId: acta.puestoId,
               creadoEnCliente: acta.creadoEnCliente,
-              fotoVehiculoUrl: urls.fotoVehiculo ?? null,
-              fotoDocumentoUrl: urls.fotoDocumento ?? null,
+              fotosVehiculoNuevas,
+              fotosDocumentoNuevas,
+              fotosABorrar,
             })
           : await sincronizarActaOffline({
               id: acta.id,
@@ -138,8 +148,9 @@ async function sincronizarActas() {
               guardiaId: acta.guardiaId,
               puestoId: acta.puestoId,
               creadoEnCliente: acta.creadoEnCliente,
-              fotoVehiculoUrl: urls.fotoVehiculo ?? null,
-              fotoDocumentoUrl: urls.fotoDocumento ?? null,
+              fotosVehiculoNuevas,
+              fotosDocumentoNuevas,
+              fotosABorrar,
             });
 
       if (resultado.ok) {

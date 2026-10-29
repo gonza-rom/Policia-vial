@@ -19,6 +19,9 @@ export type ActaOfflinePayload = {
   retencionPreventiva: boolean;
   guardiaId: string;
   puestoId: string;
+  /** Solo aplica en "editar": ids de `FotoActa` ya existentes que el agente
+   * sacó en el celular y hay que borrar del servidor al sincronizar. */
+  fotosABorrar?: string[];
   creadoEnCliente: string; // ISO — "cuándo se escribió esto" para resolver conflictos
   estado: "pendiente" | "sincronizando" | "error";
   intentos: number;
@@ -26,9 +29,10 @@ export type ActaOfflinePayload = {
 };
 
 export type FotoOffline = {
-  clave: string; // `${actaId}:${campo}`
+  clave: string; // `${actaId}:${campo}:${orden}`
   actaId: string;
   campo: "fotoVehiculo" | "fotoDocumento";
+  orden: number;
   blob: Blob;
   nombre: string;
   tipo: string;
@@ -47,7 +51,7 @@ export async function encolarActa(
   for (const foto of fotos) {
     await guardar<FotoOffline>(STORE_FOTOS, {
       ...foto,
-      clave: `${foto.actaId}:${foto.campo}`,
+      clave: `${foto.actaId}:${foto.campo}:${foto.orden}`,
     });
   }
 }

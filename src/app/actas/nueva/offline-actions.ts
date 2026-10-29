@@ -6,6 +6,7 @@ import {
   puedeCrearActaMunicipalEnJurisdiccion,
   puedeEditarActa,
 } from "@/lib/auth";
+import { aplicarCambiosDeFotos } from "./fotos";
 
 type SincronizarActaInput = {
   id: string;
@@ -21,8 +22,12 @@ type SincronizarActaInput = {
   guardiaId: string;
   puestoId: string;
   creadoEnCliente: string;
-  fotoVehiculoUrl: string | null;
-  fotoDocumentoUrl: string | null;
+  /** Nuevas fotos ya subidas a Cloudinary (URLs) — se agregan a las que ya
+   * hubiera, nunca las reemplazan. */
+  fotosVehiculoNuevas: string[];
+  fotosDocumentoNuevas: string[];
+  /** Solo en "editar": ids de `FotoActa` que el agente sacó en el celular. */
+  fotosABorrar: string[];
 };
 
 export type ResultadoSincronizacion =
@@ -98,9 +103,6 @@ export async function sincronizarActaOffline(
     porcentajeDescuento,
     montoConDescuento,
 
-    ...(input.fotoVehiculoUrl ? { fotoVehiculoUrl: input.fotoVehiculoUrl } : {}),
-    ...(input.fotoDocumentoUrl ? { fotoDocumentoUrl: input.fotoDocumentoUrl } : {}),
-
     retencionPreventiva: input.retencionPreventiva,
     tipoRetencion:
       (texto("tipoRetencion") as
@@ -127,7 +129,13 @@ export async function sincronizarActaOffline(
           data: {
             actaId: input.id,
             agenteId: agente.id,
-            descartado: { ...datosContenido, infracciones: input.infraccionIds },
+            descartado: {
+              ...datosContenido,
+              infracciones: input.infraccionIds,
+              fotosVehiculoNuevas: input.fotosVehiculoNuevas,
+              fotosDocumentoNuevas: input.fotosDocumentoNuevas,
+              fotosABorrar: input.fotosABorrar,
+            },
             motivo:
               "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
           },
@@ -136,6 +144,13 @@ export async function sincronizarActaOffline(
       }
 
       const acta = await prisma.$transaction(async (tx) => {
+        await aplicarCambiosDeFotos(
+          tx,
+          input.id,
+          input.fotosABorrar,
+          input.fotosVehiculoNuevas,
+          input.fotosDocumentoNuevas,
+        );
         const acta = await tx.acta.update({ where: { id: input.id }, data: datosContenido });
         await tx.actaInfraccion.deleteMany({ where: { actaId: acta.id } });
         if (nuevasInfracciones.length > 0) {
@@ -193,6 +208,12 @@ export async function sincronizarActaOffline(
     motivoOtraJurisdiccion:
       modalidadTrabajo === "OTRA_JURISDICCION" ? texto("motivoOtraJurisdiccion") || null : null,
     ...datosContenido,
+    fotos: {
+      create: [
+        ...input.fotosVehiculoNuevas.map((url, orden) => ({ categoria: "VEHICULO" as const, url, orden })),
+        ...input.fotosDocumentoNuevas.map((url, orden) => ({ categoria: "DOCUMENTO" as const, url, orden })),
+      ],
+    },
   };
 
   try {
@@ -234,8 +255,9 @@ type SincronizarActaContravencionalInput = {
   guardiaId: string;
   puestoId: string;
   creadoEnCliente: string;
-  fotoVehiculoUrl: string | null;
-  fotoDocumentoUrl: string | null;
+  fotosVehiculoNuevas: string[];
+  fotosDocumentoNuevas: string[];
+  fotosABorrar: string[];
 };
 
 /**
@@ -268,8 +290,6 @@ export async function sincronizarActaContravencionalOffline(
   const datosContenido = {
     lugarControl: texto("lugarControl") || null,
     datosContravencional: datosDinamicos,
-    ...(input.fotoVehiculoUrl ? { fotoVehiculoUrl: input.fotoVehiculoUrl } : {}),
-    ...(input.fotoDocumentoUrl ? { fotoDocumentoUrl: input.fotoDocumentoUrl } : {}),
   };
 
   if (input.accion === "editar") {
@@ -286,7 +306,12 @@ export async function sincronizarActaContravencionalOffline(
           data: {
             actaId: input.id,
             agenteId: agente.id,
-            descartado: datosContenido,
+            descartado: {
+              ...datosContenido,
+              fotosVehiculoNuevas: input.fotosVehiculoNuevas,
+              fotosDocumentoNuevas: input.fotosDocumentoNuevas,
+              fotosABorrar: input.fotosABorrar,
+            },
             motivo:
               "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
           },
@@ -294,7 +319,16 @@ export async function sincronizarActaContravencionalOffline(
         return { ok: true, actaId: actual.id, numero: actual.numero, conflicto: true };
       }
 
-      const acta = await prisma.acta.update({ where: { id: input.id }, data: datosContenido });
+      const acta = await prisma.$transaction(async (tx) => {
+        await aplicarCambiosDeFotos(
+          tx,
+          input.id,
+          input.fotosABorrar,
+          input.fotosVehiculoNuevas,
+          input.fotosDocumentoNuevas,
+        );
+        return tx.acta.update({ where: { id: input.id }, data: datosContenido });
+      });
       console.info(
         `[auditoria-actas] editada contravencional offline N°${acta.numero} por agente=${agente.legajo}`,
       );
@@ -333,6 +367,12 @@ export async function sincronizarActaContravencionalOffline(
     puestoTrabajoId,
     motivoOtraJurisdiccion,
     ...datosContenido,
+    fotos: {
+      create: [
+        ...input.fotosVehiculoNuevas.map((url, orden) => ({ categoria: "VEHICULO" as const, url, orden })),
+        ...input.fotosDocumentoNuevas.map((url, orden) => ({ categoria: "DOCUMENTO" as const, url, orden })),
+      ],
+    },
   };
 
   try {

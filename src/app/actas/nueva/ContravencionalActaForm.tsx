@@ -8,7 +8,7 @@ import {
 } from "./actions";
 import { TarjetaSeccion } from "@/components/ui/Tarjeta";
 import { Campo, CampoTextarea, CampoSelect } from "@/components/ui/Campo";
-import { CampoArchivo } from "@/components/ui/CampoArchivo";
+import { CampoFotos } from "@/components/ui/CampoFotos";
 import { SelectorModalidadTrabajo } from "@/components/ui/SelectorModalidadTrabajo";
 import { Boton } from "@/components/ui/Boton";
 import { soportaIndexedDB } from "@/lib/offline/db";
@@ -59,6 +59,8 @@ export function ContravencionalActaForm({
     id: string;
     lugarControl: string | null;
     datos: Record<string, string>;
+    fotosVehiculo: { id: string; url: string }[];
+    fotosDocumento: { id: string; url: string }[];
   };
   /** Solo se usan al cargar un acta nueva (no al editar), para no obligar
    * al agente a tipear la fecha/hora de algo que está pasando ahora mismo. */
@@ -101,13 +103,18 @@ export function ContravencionalActaForm({
     }
 
     const id = actaExistente?.id ?? crypto.randomUUID();
-    const fotos: { actaId: string; campo: "fotoVehiculo" | "fotoDocumento"; blob: Blob; nombre: string; tipo: string }[] = [];
+    const fotos: { actaId: string; campo: "fotoVehiculo" | "fotoDocumento"; orden: number; blob: Blob; nombre: string; tipo: string }[] = [];
     for (const campo of ["fotoVehiculo", "fotoDocumento"] as const) {
-      const archivo = formData.get(campo);
-      if (archivo instanceof File && archivo.size > 0) {
-        fotos.push({ actaId: id, campo, blob: archivo, nombre: archivo.name, tipo: archivo.type });
-      }
+      formData.getAll(campo).forEach((archivo, orden) => {
+        if (archivo instanceof File && archivo.size > 0) {
+          fotos.push({ actaId: id, campo, orden, blob: archivo, nombre: archivo.name, tipo: archivo.type });
+        }
+      });
     }
+    const fotosABorrar = [
+      ...formData.getAll("fotoVehiculoBorrar"),
+      ...formData.getAll("fotoDocumentoBorrar"),
+    ].map(String);
 
     await encolarActa(
       {
@@ -120,6 +127,7 @@ export function ContravencionalActaForm({
         retencionPreventiva: false,
         guardiaId: guardiaId ?? "",
         puestoId: puestoId ?? "",
+        fotosABorrar,
         creadoEnCliente: new Date().toISOString(),
       },
       fotos,
@@ -259,12 +267,20 @@ export function ContravencionalActaForm({
 
       <TarjetaSeccion icono="photo_camera" titulo="Evidencia Fotográfica">
         <div className="grid grid-cols-2 gap-3">
-          <CampoArchivo label="Foto del Vehículo" id="fotoVehiculo" name="fotoVehiculo" />
-          <CampoArchivo label="Foto de la Infracción" id="fotoDocumento" name="fotoDocumento" />
+          <CampoFotos
+            label="Foto del Vehículo"
+            name="fotoVehiculo"
+            existentes={actaExistente?.fotosVehiculo}
+          />
+          <CampoFotos
+            label="Foto de la Infracción"
+            name="fotoDocumento"
+            existentes={actaExistente?.fotosDocumento}
+          />
         </div>
         {actaExistente && (
           <p className="text-body-sm text-on-surface-variant">
-            Si no adjuntás una foto nueva, se conserva la que ya estaba cargada.
+            Podés agregar varias fotos por categoría, y sacar las que no sirvan.
           </p>
         )}
       </TarjetaSeccion>

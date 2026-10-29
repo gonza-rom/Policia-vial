@@ -9,20 +9,36 @@ import {
   puedeCrearActaMunicipalEnJurisdiccion,
 } from "@/lib/auth";
 import { subirImagen } from "@/lib/cloudinary";
+import { aplicarCambiosDeFotos } from "./fotos";
 
-async function subirSiHayArchivo(
-  file: FormDataEntryValue | null,
+async function subirArchivos(
+  files: FormDataEntryValue[],
   folder: "actas/fotos",
 ) {
-  if (!(file instanceof File) || file.size === 0) return null;
-  try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const dataUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
-    return await subirImagen(dataUrl, folder);
-  } catch (err) {
-    console.warn("No se pudo subir la imagen a Cloudinary:", err);
-    return null;
-  }
+  const subidas = await Promise.all(
+    files
+      .filter((f): f is File => f instanceof File && f.size > 0)
+      .map(async (file) => {
+        try {
+          const buffer = Buffer.from(await file.arrayBuffer());
+          const dataUrl = `data:${file.type};base64,${buffer.toString("base64")}`;
+          return await subirImagen(dataUrl, folder);
+        } catch (err) {
+          console.warn("No se pudo subir una imagen a Cloudinary:", err);
+          return null;
+        }
+      }),
+  );
+  return subidas.filter((u): u is string => u != null);
+}
+
+/** Ids de `FotoActa` existentes que el agente marcó para borrar en
+ * `CampoFotos` (hidden inputs `${campo}Borrar`), de las dos categorías. */
+function leerFotosABorrar(formData: FormData) {
+  return [
+    ...formData.getAll("fotoVehiculoBorrar"),
+    ...formData.getAll("fotoDocumentoBorrar"),
+  ].map(String);
 }
 
 /** Lee la modalidad de trabajo (habitual / otra jurisdicción) común a los
@@ -111,9 +127,9 @@ export async function crearActa(formData: FormData) {
   const porcentajeDescuento = 40;
   const montoConDescuento = Math.round(montoBase * (1 - porcentajeDescuento / 100));
 
-  const [fotoVehiculoUrl, fotoDocumentoUrl] = await Promise.all([
-    subirSiHayArchivo(formData.get("fotoVehiculo"), "actas/fotos"),
-    subirSiHayArchivo(formData.get("fotoDocumento"), "actas/fotos"),
+  const [fotosVehiculo, fotosDocumento] = await Promise.all([
+    subirArchivos(formData.getAll("fotoVehiculo"), "actas/fotos"),
+    subirArchivos(formData.getAll("fotoDocumento"), "actas/fotos"),
   ]);
 
   const acta = await prisma.acta.create({
@@ -155,8 +171,12 @@ export async function crearActa(formData: FormData) {
       porcentajeDescuento,
       montoConDescuento,
 
-      fotoVehiculoUrl,
-      fotoDocumentoUrl,
+      fotos: {
+        create: [
+          ...fotosVehiculo.map((url, orden) => ({ categoria: "VEHICULO" as const, url, orden })),
+          ...fotosDocumento.map((url, orden) => ({ categoria: "DOCUMENTO" as const, url, orden })),
+        ],
+      },
 
       retencionPreventiva: formData.get("retencionPreventiva") === "on",
       tipoRetencion:
@@ -210,14 +230,16 @@ export async function actualizarActa(formData: FormData) {
   const porcentajeDescuento = 40;
   const montoConDescuento = Math.round(montoBase * (1 - porcentajeDescuento / 100));
 
-  const [fotoVehiculoUrl, fotoDocumentoUrl] = await Promise.all([
-    subirSiHayArchivo(formData.get("fotoVehiculo"), "actas/fotos"),
-    subirSiHayArchivo(formData.get("fotoDocumento"), "actas/fotos"),
+  const [fotosVehiculo, fotosDocumento] = await Promise.all([
+    subirArchivos(formData.getAll("fotoVehiculo"), "actas/fotos"),
+    subirArchivos(formData.getAll("fotoDocumento"), "actas/fotos"),
   ]);
+  const fotosABorrar = leerFotosABorrar(formData);
 
-  await prisma.$transaction([
-    prisma.actaInfraccion.deleteMany({ where: { actaId } }),
-    prisma.acta.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.actaInfraccion.deleteMany({ where: { actaId } });
+    await aplicarCambiosDeFotos(tx, actaId, fotosABorrar, fotosVehiculo, fotosDocumento);
+    await tx.acta.update({
       where: { id: actaId },
       data: {
         lugarControl: texto("lugarControl") || null,
@@ -249,10 +271,6 @@ export async function actualizarActa(formData: FormData) {
         porcentajeDescuento,
         montoConDescuento,
 
-        // Solo se pisa la foto si se adjuntó una nueva; si no, se conserva.
-        ...(fotoVehiculoUrl ? { fotoVehiculoUrl } : {}),
-        ...(fotoDocumentoUrl ? { fotoDocumentoUrl } : {}),
-
         retencionPreventiva: formData.get("retencionPreventiva") === "on",
         tipoRetencion:
           (texto("tipoRetencion") as
@@ -273,8 +291,8 @@ export async function actualizarActa(formData: FormData) {
           })),
         },
       },
-    }),
-  ]);
+    });
+  });
 
   console.info(
     `[auditoria-actas] editada acta N°${actaActual.numero} por agente=${agente.legajo}`,
@@ -308,9 +326,9 @@ export async function crearActaContravencional(formData: FormData) {
     if (valor) datos[campo.clave] = valor;
   }
 
-  const [fotoVehiculoUrl, fotoDocumentoUrl] = await Promise.all([
-    subirSiHayArchivo(formData.get("fotoVehiculo"), "actas/fotos"),
-    subirSiHayArchivo(formData.get("fotoDocumento"), "actas/fotos"),
+  const [fotosVehiculo, fotosDocumento] = await Promise.all([
+    subirArchivos(formData.getAll("fotoVehiculo"), "actas/fotos"),
+    subirArchivos(formData.getAll("fotoDocumento"), "actas/fotos"),
   ]);
 
   const acta = await prisma.acta.create({
@@ -324,8 +342,12 @@ export async function crearActaContravencional(formData: FormData) {
       motivoOtraJurisdiccion,
       lugarControl: String(formData.get("lugarControl") ?? "").trim() || null,
       datosContravencional: datos,
-      fotoVehiculoUrl,
-      fotoDocumentoUrl,
+      fotos: {
+        create: [
+          ...fotosVehiculo.map((url, orden) => ({ categoria: "VEHICULO" as const, url, orden })),
+          ...fotosDocumento.map((url, orden) => ({ categoria: "DOCUMENTO" as const, url, orden })),
+        ],
+      },
     },
   });
 
@@ -350,19 +372,21 @@ export async function actualizarActaContravencional(formData: FormData) {
     if (valor) datos[campo.clave] = valor;
   }
 
-  const [fotoVehiculoUrl, fotoDocumentoUrl] = await Promise.all([
-    subirSiHayArchivo(formData.get("fotoVehiculo"), "actas/fotos"),
-    subirSiHayArchivo(formData.get("fotoDocumento"), "actas/fotos"),
+  const [fotosVehiculo, fotosDocumento] = await Promise.all([
+    subirArchivos(formData.getAll("fotoVehiculo"), "actas/fotos"),
+    subirArchivos(formData.getAll("fotoDocumento"), "actas/fotos"),
   ]);
+  const fotosABorrar = leerFotosABorrar(formData);
 
-  await prisma.acta.update({
-    where: { id: actaId },
-    data: {
-      lugarControl: String(formData.get("lugarControl") ?? "").trim() || null,
-      datosContravencional: datos,
-      ...(fotoVehiculoUrl ? { fotoVehiculoUrl } : {}),
-      ...(fotoDocumentoUrl ? { fotoDocumentoUrl } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await aplicarCambiosDeFotos(tx, actaId, fotosABorrar, fotosVehiculo, fotosDocumento);
+    await tx.acta.update({
+      where: { id: actaId },
+      data: {
+        lugarControl: String(formData.get("lugarControl") ?? "").trim() || null,
+        datosContravencional: datos,
+      },
+    });
   });
 
   console.info(

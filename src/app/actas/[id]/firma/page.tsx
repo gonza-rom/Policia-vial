@@ -38,10 +38,14 @@ export default async function FirmaActaPage({
       puesto: true,
       puestoTrabajo: true,
       infracciones: { include: { infraccion: true } },
+      fotos: { orderBy: { orden: "asc" } },
     },
   });
 
   if (!acta) notFound();
+
+  const fotosVehiculo = acta.fotos.filter((f) => f.categoria === "VEHICULO");
+  const fotosDocumento = acta.fotos.filter((f) => f.categoria === "DOCUMENTO");
 
   const campos =
     acta.tipo === "CONTRAVENCIONAL"
@@ -255,43 +259,44 @@ export default async function FirmaActaPage({
           ))
         )}
 
-        {(acta.fotoVehiculoUrl || acta.fotoDocumentoUrl) && (
+        {(fotosVehiculo.length > 0 || fotosDocumento.length > 0) && (
           // Sin print:hidden: la evidencia también tiene que salir en el PDF
           // (a diferencia de otras secciones de esta página). object-contain
           // en vez de cover: se ve la foto completa, sin recortar ni
           // deformar — importante tratándose de evidencia con valor legal.
           <TarjetaSeccion icono="photo_camera" titulo="Evidencia Fotográfica">
             <div className="grid grid-cols-2 gap-2 print:break-inside-avoid">
-              {acta.fotoVehiculoUrl && (
-                <figure className="print:break-inside-avoid">
+              {fotosVehiculo.map((foto, i) => (
+                <figure key={foto.id} className="print:break-inside-avoid">
                   <ImagenConFallback
-                    src={acta.fotoVehiculoUrl}
-                    alt="Foto del vehículo"
+                    src={foto.url}
+                    alt={`Foto del vehículo ${i + 1}`}
                     width={400}
                     height={300}
-                    priority
+                    priority={i === 0}
                     className="w-full h-28 print:h-auto object-contain print:aspect-[4/3] rounded border border-outline-variant bg-surface-container-low"
                   />
                   <figcaption className="text-body-sm text-on-surface-variant text-center mt-1">
-                    Vehículo
+                    Vehículo{fotosVehiculo.length > 1 ? ` (${i + 1}/${fotosVehiculo.length})` : ""}
                   </figcaption>
                 </figure>
-              )}
-              {acta.fotoDocumentoUrl && (
-                <figure className="print:break-inside-avoid">
+              ))}
+              {fotosDocumento.map((foto, i) => (
+                <figure key={foto.id} className="print:break-inside-avoid">
                   <ImagenConFallback
-                    src={acta.fotoDocumentoUrl}
-                    alt="Foto de la infracción/documentación"
+                    src={foto.url}
+                    alt={`Foto de la infracción/documentación ${i + 1}`}
                     width={400}
                     height={300}
-                    priority
+                    priority={i === 0}
                     className="w-full h-28 print:h-auto object-contain print:aspect-[4/3] rounded border border-outline-variant bg-surface-container-low"
                   />
                   <figcaption className="text-body-sm text-on-surface-variant text-center mt-1">
                     Documentación / Infracción
+                    {fotosDocumento.length > 1 ? ` (${i + 1}/${fotosDocumento.length})` : ""}
                   </figcaption>
                 </figure>
-              )}
+              ))}
             </div>
           </TarjetaSeccion>
         )}

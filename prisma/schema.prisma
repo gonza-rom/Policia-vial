@@ -63,6 +63,11 @@ enum TipoActa {
   CONTRAVENCIONAL
 }
 
+enum CategoriaFotoActa {
+  VEHICULO
+  DOCUMENTO
+}
+
 enum TipoCampoContravencional {
   TEXTO
   TEXTO_LARGO
@@ -270,8 +275,7 @@ model Acta {
 
   // Evidencia y firmas (compartido por ambos tipos; el tercer firmante
   // —"Secretario Autorizante"— solo aplica al acta contravencional)
-  fotoVehiculoUrl         String?
-  fotoDocumentoUrl        String?
+  fotos                   FotoActa[]
   firmaInfractorUrl       String?
   firmaActuanteUrl        String?
   firmaSecretarioUrl      String?
@@ -297,6 +301,20 @@ model Acta {
   @@index([guardiaId])
   @@index([vehiculoDominio])
   @@index([conductorDni])
+}
+
+/// Varias fotos por acta, agrupadas por categoría (Vehículo / Documento) —
+/// antes eran dos campos de una sola URL cada uno en Acta.
+model FotoActa {
+  id        String            @id @default(cuid())
+  actaId    String
+  acta      Acta              @relation(fields: [actaId], references: [id], onDelete: Cascade)
+  categoria CategoriaFotoActa
+  url       String
+  orden     Int               @default(0)
+  createdAt DateTime          @default(now())
+
+  @@index([actaId])
 }
 
 /// Esquema editable de campos del acta contravencional (Ley Provincial

@@ -336,13 +336,60 @@ reutilizar ese componente en vez de armar el encabezado de nuevo.
 > prop Next.js nunca llega a pedir la imagen, porque el observer de carga
 > diferida no dispara para un elemento que nunca tuvo caja de layout.
 
-## Vista previa de fotos (`CampoArchivo`)
+## Fotos del acta: varias por categoría (`CampoFotos`)
 
-El campo compartido de adjuntar fotos (`src/components/ui/CampoArchivo.tsx`,
-usado en actas y procedimientos) muestra una miniatura real apenas se elige
-el archivo (vista previa local con `URL.createObjectURL`, antes de subir
-nada a Cloudinary), con botones para verla más grande o quitarla y elegir
-otra, y un mensaje claro si el archivo elegido no es una imagen.
+El acta (municipal y contravencional) tiene dos categorías de evidencia —
+**Vehículo** y **Documento/Infracción** — y cada una admite **varias
+fotos**, no una sola. Se guardan en su propia tabla (`FotoActa`, con
+`categoria` y `orden`) en vez de una columna de una sola URL en `Acta`.
+Procedimientos y relevamientos no llevan fotos.
+
+`src/components/ui/CampoFotos.tsx` es el selector: al elegir fotos nuevas
+se ven como miniaturas reales (vista previa local con
+`URL.createObjectURL`, antes de subir nada a Cloudinary) junto a las que ya
+estaban guardadas (si se está editando), cada una con un botón para verla
+más grande o sacarla. Al editar, las fotos que se sacan se borran del
+servidor y las nuevas se **agregan** a las que quedaron — nunca se
+reemplaza todo el grupo de una. El input real (`<input type="file"
+multiple>`) sincroniza su lista de archivos con el estado de React vía un
+`DataTransfer` cada vez que se agrega o se saca una, para que un solo
+`<input>` nativo refleje una selección editable en vez de solo "lo último
+que eligió el selector".
+
+## Rendimiento / velocidad percibida
+
+- **`loading.tsx` en cada pantalla de listado/detalle** (actas,
+  procedimientos, relevamientos, requerimientos, agentes, estadísticas,
+  puestos, guardia, historial, cuenta): antes, al navegar, la pantalla
+  quedaba en blanco hasta que terminaba la consulta a la base; ahora
+  Next.js muestra al instante un esqueleto (`EsqueletoLista`, en
+  `src/components/ui/`) con el header y la barra de navegación ya puestos,
+  así la navegación se siente inmediata aunque la consulta tarde lo mismo.
+  Importante: esto solo aplica a una transición de cliente (`<Link>`) —
+  las rutas que usan `<a>` a propósito por el modo offline (ver esa
+  sección) hacen una recarga completa del navegador, que no pasa por
+  `loading.tsx`.
+- **Gráfico de estadísticas cargado aparte**: `EvolucionChart` (Recharts,
+  que arrastra d3) se carga con `next/dynamic` en vez de venir incluido en
+  el bundle de `/estadisticas` desde el arranque — el resto de la
+  pantalla (que no depende de él) no espera a que cargue.
+- **Fotos comprimidas antes de subir**: `src/lib/imagenes.ts`
+  (`comprimirImagen`) achica cualquier foto de más de 1600px de lado más
+  largo a JPEG calidad 0.82 en el navegador (con `canvas`, antes de
+  mandarla a Cloudinary) — una foto de cámara sin tocar pesa varios MB, y
+  con el acta ahora admitiendo varias fotos por categoría eso se nota
+  mucho con poca señal. Si algo falla (formato raro, navegador viejo), se
+  sube el archivo original tal cual, nunca bloquea la carga.
+- **A propósito, sin cache de datos del servidor** (`unstable_cache`,
+  `revalidate`): esta app escribe todo el tiempo (actas, guardias,
+  sincronización offline) y la detección de conflictos (ver "Modo
+  offline") depende de leer el `updatedAt` real de la base en el momento
+  exacto de sincronizar — cachear esas lecturas arriesgaría mostrar datos
+  viejos o, peor, que una sincronización compare contra una versión
+  cacheada en vez de la real. Si en algún momento se agrega cache de
+  lectura, tiene que ser solo en pantallas que no participan de ningún
+  camino de escritura/conflicto (por ejemplo el catálogo de infracciones,
+  que casi no cambia).
 
 ## Zona horaria
 
