@@ -2,7 +2,7 @@ import Link from "next/link";
 import { esJefe, getAgenteActual, getGuardiaActiva } from "@/lib/auth";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
-import { BotonEnviar } from "@/components/ui/BotonEnviar";
+import { BotonCerrarSesion } from "@/components/ui/BotonCerrarSesion";
 import { BotonCerrarGuardiaConConfirmacion } from "@/components/ui/BotonCerrarGuardiaConConfirmacion";
 import { ROL_LABEL } from "@/lib/formato";
 import { cerrarGuardia, cerrarSesion } from "../guardia/actions";
@@ -64,21 +64,23 @@ export default async function CuentaPage() {
               </div>
             </div>
             <form action={cerrarGuardia}>
-              <BotonCerrarGuardiaConConfirmacion puestoNombre={guardia.puesto.nombre} />
+              <BotonCerrarGuardiaConConfirmacion
+                guardiaId={guardia.id}
+                puestoNombre={guardia.puesto.nombre}
+              />
             </form>
           </div>
         )}
 
         <form action={cerrarSesion} className="pt-4">
-          <BotonEnviar
+          <BotonCerrarSesion
             variante="outline"
             fullWidth
             icono="logout"
             className="text-error border-error"
-            textoEnviando="Cerrando sesión…"
           >
             Cerrar Sesión
-          </BotonEnviar>
+          </BotonCerrarSesion>
           <p className="text-body-sm text-on-surface-variant text-center mt-2">
             Vas a tener que volver a ingresar tu legajo y contraseña.
           </p>

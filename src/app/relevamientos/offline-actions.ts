@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getAgenteActual } from "@/lib/auth";
+import { getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
 import { MODALIDADES_RELEVAMIENTO } from "@/lib/relevamientos";
 
 type RegistroInput = {
@@ -14,13 +14,15 @@ type RegistroInput = {
 };
 
 type SincronizarRelevamientoInput = {
+  accion: "crear" | "editar";
   registros: RegistroInput[];
   puestoId: string;
   agenteId: string;
+  creadoEnCliente: string;
 };
 
 export type ResultadoSincronizacionRelevamiento =
-  | { ok: true; creados: number; yaExistian: number }
+  | { ok: true; creados: number; yaExistian: number; conflicto: boolean }
   | { ok: false; error: string };
 
 const MEDIOS_VALIDOS = [
@@ -33,13 +35,28 @@ const MEDIOS_VALIDOS = [
 ] as const;
 const SEXOS_VALIDOS = ["FEMENINO", "MASCULINO", "NO_BINARIO"] as const;
 
+function normalizarRegistro(r: RegistroInput) {
+  const modalidad = (MODALIDADES_RELEVAMIENTO as readonly string[]).includes(r.modalidad)
+    ? (r.modalidad as (typeof MODALIDADES_RELEVAMIENTO)[number])
+    : "FINES_LARGOS";
+  const cantidadPersonas =
+    Number.isFinite(r.cantidadPersonas) && r.cantidadPersonas > 0
+      ? Math.round(r.cantidadPersonas)
+      : 1;
+  const medioTransporte = (MEDIOS_VALIDOS as readonly string[]).includes(r.medioTransporte ?? "")
+    ? (r.medioTransporte as (typeof MEDIOS_VALIDOS)[number])
+    : null;
+  const sexo = (SEXOS_VALIDOS as readonly string[]).includes(r.sexo ?? "")
+    ? (r.sexo as (typeof SEXOS_VALIDOS)[number])
+    : null;
+  return { modalidad, cantidadPersonas, procedencia: r.procedencia || null, medioTransporte, sexo };
+}
+
 /**
  * Sincroniza uno o más registros de relevamiento cargados sin conexión
- * (la carga rápida de Día de la Virgen manda hasta 3 de una vez). Solo
- * alta, igual criterio que el acta municipal y los procedimientos — y por
- * la misma razón no hace falta resolver conflictos: si un id ya existe en
- * el servidor es que ya se sincronizó antes, se lo cuenta como hecho y no
- * se duplica.
+ * (la carga rápida de Día de la Virgen manda hasta 3 de una vez) o la
+ * edición de uno existente (siempre un solo registro — el formulario de
+ * Día de la Virgen no tiene modo edición).
  */
 export async function sincronizarRelevamientoOffline(
   input: SincronizarRelevamientoInput,
@@ -50,6 +67,39 @@ export async function sincronizarRelevamientoOffline(
   }
   if (input.registros.length === 0) {
     return { ok: false, error: "No hay nada para sincronizar." };
+  }
+
+  if (input.accion === "editar") {
+    const r = input.registros[0];
+    const actual = await prisma.relevamiento.findUnique({ where: { id: r.id } });
+    if (!actual) {
+      return { ok: false, error: "El relevamiento ya no existe en el servidor." };
+    }
+    if (!puedeEditarRegistroPropio(agente, actual)) {
+      return { ok: false, error: "Ya no tenés permiso para editar este relevamiento." };
+    }
+    const datosEditados = normalizarRegistro(r);
+
+    if (actual.updatedAt > new Date(input.creadoEnCliente)) {
+      await prisma.conflictoSincronizacion.create({
+        data: {
+          relevamientoId: r.id,
+          agenteId: agente.id,
+          descartado: datosEditados,
+          motivo:
+            "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
+        },
+      });
+      return { ok: true, creados: 0, yaExistian: 0, conflicto: true };
+    }
+
+    try {
+      await prisma.relevamiento.update({ where: { id: r.id }, data: datosEditados });
+      return { ok: true, creados: 0, yaExistian: 0, conflicto: false };
+    } catch (err) {
+      console.error("[sync-relevamiento] error al editar:", err);
+      return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };
+    }
   }
 
   let creados = 0;
@@ -63,32 +113,10 @@ export async function sincronizarRelevamientoOffline(
         continue;
       }
 
-      const modalidad = (
-        MODALIDADES_RELEVAMIENTO as readonly string[]
-      ).includes(r.modalidad)
-        ? (r.modalidad as (typeof MODALIDADES_RELEVAMIENTO)[number])
-        : "FINES_LARGOS";
-      const cantidadPersonas =
-        Number.isFinite(r.cantidadPersonas) && r.cantidadPersonas > 0
-          ? Math.round(r.cantidadPersonas)
-          : 1;
-      const medioTransporte = (
-        MEDIOS_VALIDOS as readonly string[]
-      ).includes(r.medioTransporte ?? "")
-        ? (r.medioTransporte as (typeof MEDIOS_VALIDOS)[number])
-        : null;
-      const sexo = (SEXOS_VALIDOS as readonly string[]).includes(r.sexo ?? "")
-        ? (r.sexo as (typeof SEXOS_VALIDOS)[number])
-        : null;
-
       await prisma.relevamiento.create({
         data: {
           id: r.id,
-          modalidad,
-          cantidadPersonas,
-          procedencia: r.procedencia || null,
-          medioTransporte,
-          sexo,
+          ...normalizarRegistro(r),
           puestoId: input.puestoId,
           agenteId: agente.id,
         },
@@ -100,7 +128,7 @@ export async function sincronizarRelevamientoOffline(
       `[auditoria-relevamientos] sincronizados offline ${creados} registro(s) por agente=${agente.legajo}`,
     );
 
-    return { ok: true, creados, yaExistian };
+    return { ok: true, creados, yaExistian, conflicto: false };
   } catch (err) {
     console.error("[sync-relevamiento] error al sincronizar:", err);
     return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };

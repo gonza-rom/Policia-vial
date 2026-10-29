@@ -142,12 +142,12 @@ export function NuevaActaForm({
 
   /** Si no hay señal, no tiene sentido mandar el form al servidor — se
    * guarda en el celular (IndexedDB) y se sincroniza solo cuando vuelva la
-   * conexión. Solo aplica a actas nuevas: editar offline una que ya existe
-   * en el servidor queda fuera de este alcance. */
+   * conexión. Cubre alta y edición: para editar offline, esta pantalla
+   * tiene que haberse abierto alguna vez con señal (ver README). */
   async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (actaExistente) return; // edición: siempre va al servidor
     if (navigator.onLine) return; // hay señal: que siga el submit normal
-    if (!soportaIndexedDB() || !guardiaId || !puestoId) return; // sin forma de guardar local, se intenta igual (fallará con un error claro)
+    if (!soportaIndexedDB()) return;
+    if (actaExistente ? false : !guardiaId || !puestoId) return; // alta sin forma de guardar local: se intenta igual (fallará con un error claro)
 
     e.preventDefault();
     setGuardandoOffline(true);
@@ -182,7 +182,7 @@ export function NuevaActaForm({
       campos[campo] = String(formData.get(campo) ?? "");
     }
 
-    const id = crypto.randomUUID();
+    const id = actaExistente?.id ?? crypto.randomUUID();
     const fotos: { actaId: string; campo: "fotoVehiculo" | "fotoDocumento"; blob: Blob; nombre: string; tipo: string }[] = [];
     for (const campo of ["fotoVehiculo", "fotoDocumento"] as const) {
       const archivo = formData.get(campo);
@@ -194,12 +194,13 @@ export function NuevaActaForm({
     await encolarActa(
       {
         id,
+        accion: actaExistente ? "editar" : "crear",
         campos,
         infraccionIds: Array.from(seleccionadas),
         otraInfraccionId: otraInfraccion?.id ?? null,
         retencionPreventiva: retencion,
-        guardiaId,
-        puestoId,
+        guardiaId: guardiaId ?? "",
+        puestoId: puestoId ?? "",
         creadoEnCliente: new Date().toISOString(),
       },
       fotos,
@@ -219,8 +220,9 @@ export function NuevaActaForm({
           Guardado sin conexión
         </h2>
         <p className="text-body-md text-on-surface-variant">
-          El acta quedó guardada en este celular. Se va a sincronizar sola —
-          y vas a poder firmarla — en cuanto vuelva la señal.
+          {actaExistente
+            ? "Los cambios quedaron guardados en este celular. Se van a sincronizar solos en cuanto vuelva la señal."
+            : "El acta quedó guardada en este celular. Se va a sincronizar sola — y vas a poder firmarla — en cuanto vuelva la señal."}
         </p>
         {/* Navegación dura (no router.push): si no hay señal, una
         transición cliente intenta pedir el RSC de /guardia y falla; una

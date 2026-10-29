@@ -1,11 +1,12 @@
 import { guardar, obtener, obtenerTodos, eliminar, STORE_PROCEDIMIENTOS } from "./db";
 
 /** Igual mecánica que colaActas.ts, pero más simple: un procedimiento no
- * lleva fotos ni infracciones, es un solo registro de texto. Solo cubre
- * ALTA (como el acta municipal, editar un procedimiento existente offline
- * queda fuera de alcance). */
+ * lleva fotos ni infracciones, es un solo registro de texto. Cubre alta y
+ * edición. */
 export type ProcedimientoOfflinePayload = {
-  id: string; // UUID generado en el cliente — va a ser el Procedimiento.id
+  id: string; // UUID generado en el cliente (alta) o id real (edición)
+  /** Ver el mismo campo en ActaOfflinePayload. */
+  accion?: "crear" | "editar";
   campos: Record<string, string>;
   puestoId: string;
   agenteId: string;

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { esJefe, getAgenteActual, puedeEditarActa } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -34,13 +33,15 @@ export default async function EditarActaPage({
       <>
         <AppHeader />
         <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
-          <Link
+          {/* <a> normal, no <Link>: esta pantalla ahora se puede editar sin
+          conexión si ya se abrió con señal alguna vez — ver sw.js. */}
+          <a
             href={`/actas/${id}/firma`}
             className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
           >
             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             Volver
-          </Link>
+          </a>
           <ContravencionalActaForm
             campos={campos}
             actaExistente={{
@@ -64,13 +65,13 @@ export default async function EditarActaPage({
     <>
       <AppHeader />
       <main className="w-full max-w-2xl mx-auto px-pad-lg pt-4 pb-24 space-y-3">
-        <Link
+        <a
           href={`/actas/${id}/firma`}
           className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Volver
-        </Link>
+        </a>
         <NuevaActaForm
           catalogo={catalogo.map((i) => ({ ...i, montoBase: Number(i.montoBase) }))}
           lugarControlSugerido={acta.lugarControl ?? ""}

@@ -41,6 +41,7 @@ export async function AppHeader() {
           nombreApellido={agente.nombreApellido}
           legajo={agente.legajo}
           rolLabel={ROL_LABEL[agente.rol]}
+          guardiaId={guardia?.id ?? null}
           guardiaPuesto={guardia?.puesto.nombre ?? null}
           cerrarGuardia={cerrarGuardia}
           cerrarSesion={cerrarSesion}

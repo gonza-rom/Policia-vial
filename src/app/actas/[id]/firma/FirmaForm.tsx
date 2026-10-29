@@ -5,6 +5,21 @@ import { useFormStatus } from "react-dom";
 import { firmarActa } from "./actions";
 import { FirmaCanvas, type FirmaCanvasHandle } from "@/components/ui/FirmaCanvas";
 import { Boton } from "@/components/ui/Boton";
+import { soportaIndexedDB } from "@/lib/offline/db";
+import { encolarFirma } from "@/lib/offline/colaFirmas";
+import { avisarCambioDeCola } from "@/lib/offline/sincronizar";
+
+/** `canvas.toDataURL()` da un string base64 — para guardarlo en IndexedDB
+ * y subirlo después a Cloudinary (mismo mecanismo que las fotos offline)
+ * hace falta como Blob, no como string. */
+function dataUrlABlob(dataUrl: string): Blob {
+  const [header, base64] = dataUrl.split(",");
+  const mime = header.match(/:(.*?);/)?.[1] ?? "image/png";
+  const binario = atob(base64);
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
 
 export function FirmaForm({
   actaId,
@@ -24,8 +39,14 @@ export function FirmaForm({
   const inputFirmaSecretario = useRef<HTMLInputElement>(null);
   const [seNiega, setSeNiega] = useState(false);
   const [errorFirma, setErrorFirma] = useState<string | null>(null);
+  const [guardadoOffline, setGuardadoOffline] = useState(false);
+  const [guardandoOffline, setGuardandoOffline] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  /** Firmar offline solo aplica a un acta YA sincronizada — esta pantalla
+   * (`/actas/[id]/firma`) solo se llega a abrir para una que ya tiene
+   * número real, así que no hace falta distinguir casos como en los
+   * demás formularios. */
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     const firmaActuante = canvasActuante.current?.obtenerDataUrl() ?? null;
     if (!firmaActuante) {
       e.preventDefault();
@@ -34,8 +55,9 @@ export function FirmaForm({
       );
       return;
     }
+    let firmaInfractor: string | null = null;
     if (!seNiega) {
-      const firmaInfractor = canvasInfractor.current?.obtenerDataUrl() ?? null;
+      firmaInfractor = canvasInfractor.current?.obtenerDataUrl() ?? null;
       if (!firmaInfractor) {
         e.preventDefault();
         setErrorFirma(
@@ -43,25 +65,69 @@ export function FirmaForm({
         );
         return;
       }
-      if (inputFirmaInfractor.current) {
-        inputFirmaInfractor.current.value = firmaInfractor;
-      }
     }
+    let firmaSecretario: string | null = null;
     if (esContravencional) {
-      const firmaSecretario = canvasSecretario.current?.obtenerDataUrl() ?? null;
+      firmaSecretario = canvasSecretario.current?.obtenerDataUrl() ?? null;
       if (!firmaSecretario) {
         e.preventDefault();
         setErrorFirma("Falta la firma del secretario autorizante.");
         return;
       }
-      if (inputFirmaSecretario.current) {
-        inputFirmaSecretario.current.value = firmaSecretario;
-      }
-    }
-    if (inputFirmaActuante.current) {
-      inputFirmaActuante.current.value = firmaActuante;
     }
     setErrorFirma(null);
+
+    if (navigator.onLine || !soportaIndexedDB()) {
+      // Hay señal (o no hay forma de guardar local): sigue el submit
+      // normal, solo hay que volcar los data URL a los inputs ocultos.
+      if (inputFirmaInfractor.current) inputFirmaInfractor.current.value = firmaInfractor ?? "";
+      if (inputFirmaActuante.current) inputFirmaActuante.current.value = firmaActuante;
+      if (inputFirmaSecretario.current) inputFirmaSecretario.current.value = firmaSecretario ?? "";
+      return;
+    }
+
+    e.preventDefault();
+    setGuardandoOffline(true);
+
+    await encolarFirma({
+      id: actaId,
+      tipo,
+      infractorSeNiegaAFirmar: seNiega,
+      firmaInfractorBlob: firmaInfractor ? dataUrlABlob(firmaInfractor) : null,
+      firmaActuanteBlob: dataUrlABlob(firmaActuante),
+      firmaSecretarioBlob: firmaSecretario ? dataUrlABlob(firmaSecretario) : null,
+      creadoEnCliente: new Date().toISOString(),
+    });
+    avisarCambioDeCola();
+    setGuardandoOffline(false);
+    setGuardadoOffline(true);
+  }
+
+  if (guardadoOffline) {
+    return (
+      <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm p-pad-xl text-center space-y-4">
+        <span className="material-symbols-outlined text-5xl text-secondary">
+          cloud_off
+        </span>
+        <h2 className="text-headline-md font-headline-md text-primary">
+          Guardado sin conexión
+        </h2>
+        <p className="text-body-md text-on-surface-variant">
+          La firma quedó guardada en este celular. El acta se va a marcar
+          como firmada en cuanto vuelva la señal.
+        </p>
+        <Boton
+          onClick={() => {
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- recarga dura intencional, ver NuevaActaForm
+            window.location.href = "/guardia";
+          }}
+          fullWidth
+          icono="home"
+        >
+          Volver al Menú
+        </Boton>
+      </div>
+    );
   }
 
   return (
@@ -149,22 +215,22 @@ export function FirmaForm({
         </p>
       )}
 
-      <BotonCerrar />
+      <BotonCerrar guardandoOffline={guardandoOffline} />
     </form>
   );
 }
 
-function BotonCerrar() {
+function BotonCerrar({ guardandoOffline }: { guardandoOffline: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Boton
       type="submit"
       icono="task_alt"
       fullWidth
-      disabled={pending}
+      disabled={pending || guardandoOffline}
       className="disabled:opacity-60"
     >
-      {pending ? "Cerrando acta…" : "Firmar y Cerrar Acta"}
+      {pending || guardandoOffline ? "Cerrando acta…" : "Firmar y Cerrar Acta"}
     </Boton>
   );
 }

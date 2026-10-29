@@ -46,7 +46,9 @@ export default async function RequerimientosPage({
             </span>
             Requerimientos
           </h1>
-          <Boton as={Link} href="/requerimientos/nuevo" icono="add" className="px-4">
+          {/* as="a" (no Link): esta pantalla ahora se puede cargar sin
+          conexión — ver sw.js. */}
+          <Boton as="a" href="/requerimientos/nuevo" icono="add" className="px-4">
             Nuevo
           </Boton>
         </div>

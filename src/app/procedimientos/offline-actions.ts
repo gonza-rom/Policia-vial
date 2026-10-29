@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getAgenteActual } from "@/lib/auth";
+import { getAgenteActual, puedeEditarRegistroPropio } from "@/lib/auth";
 
 const TIPOS_VALIDOS = [
   "ORDEN_JUDICIAL",
@@ -15,22 +15,24 @@ const TIPOS_VALIDOS = [
 
 type SincronizarProcedimientoInput = {
   id: string;
+  accion: "crear" | "editar";
   campos: Record<string, string>;
   puestoId: string;
   agenteId: string;
+  creadoEnCliente: string;
 };
 
 export type ResultadoSincronizacionProcedimiento =
-  | { ok: true; yaExistia: boolean }
+  | { ok: true; conflicto: boolean }
   | { ok: false; error: string };
 
 /**
- * Sincroniza un procedimiento cargado sin conexión. Solo alta (como el
- * acta municipal, editar uno existente sigue necesitando señal) — por eso
- * no hace falta resolver conflictos de "última edición gana": si el id ya
- * existe en el servidor, es que un intento de sincronización anterior tuvo
- * éxito pero el cliente no llegó a enterarse (se cortó la conexión justo
- * después); no se vuelve a crear ni se pisa nada.
+ * Sincroniza un procedimiento cargado o editado sin conexión.
+ * - Alta: si el id ya existe en el servidor, es que un intento anterior ya
+ *   tuvo éxito pero el cliente no llegó a enterarse — no se vuelve a crear.
+ * - Edición: misma mecánica de "última edición gana" que las actas — la
+ *   modalidad/jurisdicción no se vuelven a pedir (igual que al editar con
+ *   señal, quedaron fijadas al crear).
  */
 export async function sincronizarProcedimientoOffline(
   input: SincronizarProcedimientoInput,
@@ -40,22 +42,66 @@ export async function sincronizarProcedimientoOffline(
     return { ok: false, error: "Esta carga pertenece a otra sesión de agente." };
   }
 
-  const existente = await prisma.procedimiento.findUnique({ where: { id: input.id } });
-  if (existente) {
-    return { ok: true, yaExistia: true };
-  }
-
   const c = input.campos;
   const texto = (k: string) => (c[k] ?? "").trim();
-  const tipoTexto = texto("tipo");
-  const tipo = (TIPOS_VALIDOS as readonly string[]).includes(tipoTexto)
-    ? (tipoTexto as (typeof TIPOS_VALIDOS)[number])
-    : "DEMORA";
-
   const descripcion = texto("descripcion");
   if (!descripcion) {
     return { ok: false, error: "Falta la descripción del procedimiento." };
   }
+
+  if (input.accion === "editar") {
+    const actual = await prisma.procedimiento.findUnique({ where: { id: input.id } });
+    if (!actual) {
+      return { ok: false, error: "El procedimiento ya no existe en el servidor." };
+    }
+    if (!puedeEditarRegistroPropio(agente, actual)) {
+      return { ok: false, error: "Ya no tenés permiso para editar este procedimiento." };
+    }
+    const tipoTexto = texto("tipo");
+    const tipo = (TIPOS_VALIDOS as readonly string[]).includes(tipoTexto)
+      ? (tipoTexto as (typeof TIPOS_VALIDOS)[number])
+      : actual.tipo;
+    const datosEditados = {
+      tipo,
+      personaNombre: texto("personaNombre") || null,
+      personaDni: texto("personaDni") || null,
+      vehiculoDominio: texto("vehiculoDominio").toUpperCase() || null,
+      descripcion,
+      datosOrden: texto("datosOrden") || null,
+      observaciones: texto("observaciones") || null,
+    };
+
+    if (actual.updatedAt > new Date(input.creadoEnCliente)) {
+      await prisma.conflictoSincronizacion.create({
+        data: {
+          procedimientoId: input.id,
+          agenteId: agente.id,
+          descartado: datosEditados,
+          motivo:
+            "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
+        },
+      });
+      return { ok: true, conflicto: true };
+    }
+
+    try {
+      await prisma.procedimiento.update({ where: { id: input.id }, data: datosEditados });
+      return { ok: true, conflicto: false };
+    } catch (err) {
+      console.error("[sync-procedimiento] error al editar:", err);
+      return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };
+    }
+  }
+
+  const existente = await prisma.procedimiento.findUnique({ where: { id: input.id } });
+  if (existente) {
+    return { ok: true, conflicto: false };
+  }
+
+  const tipoTexto = texto("tipo");
+  const tipo = (TIPOS_VALIDOS as readonly string[]).includes(tipoTexto)
+    ? (tipoTexto as (typeof TIPOS_VALIDOS)[number])
+    : "DEMORA";
 
   const modalidadTrabajo =
     texto("modalidadTrabajo") === "OTRA_JURISDICCION"
@@ -92,9 +138,9 @@ export async function sincronizarProcedimientoOffline(
       `[auditoria-procedimientos] sincronizado offline N°${procedimiento.numero} (${procedimiento.tipo}) por agente=${agente.legajo}`,
     );
 
-    return { ok: true, yaExistia: false };
+    return { ok: true, conflicto: false };
   } catch (err) {
-    console.error("[sync-procedimiento] error al sincronizar:", err);
+    console.error("[sync-procedimiento] error al crear:", err);
     return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };
   }
 }

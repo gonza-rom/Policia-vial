@@ -17,6 +17,10 @@ export type RegistroRelevamientoOffline = {
 
 export type RelevamientoOfflinePayload = {
   id: string; // clave de la cola — igual al id del primer registro
+  /** Ver el mismo campo en ActaOfflinePayload. Una edición siempre tiene
+   * exactamente 1 registro (el formulario de Día de la Virgen no tiene
+   * modo edición, solo alta). */
+  accion?: "crear" | "editar";
   registros: RegistroRelevamientoOffline[];
   puestoId: string;
   agenteId: string;

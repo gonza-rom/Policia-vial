@@ -63,12 +63,11 @@ export function ProcedimientoForm({
   const [guardadoOffline, setGuardadoOffline] = useState(false);
   const [guardandoOffline, setGuardandoOffline] = useState(false);
 
-  /** Mismo mecanismo que NuevaActaForm — solo para altas nuevas, no para
-   * editar un procedimiento ya existente. */
+  /** Mismo mecanismo que NuevaActaForm — cubre alta y edición. */
   async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (procedimientoExistente) return;
     if (navigator.onLine) return;
-    if (!soportaIndexedDB() || !puestoOrigenId || !agenteId) return;
+    if (!soportaIndexedDB() || !agenteId) return;
+    if (procedimientoExistente ? false : !puestoOrigenId) return;
 
     e.preventDefault();
     setGuardandoOffline(true);
@@ -91,9 +90,10 @@ export function ProcedimientoForm({
     }
 
     await encolarProcedimiento({
-      id: crypto.randomUUID(),
+      id: procedimientoExistente?.id ?? crypto.randomUUID(),
+      accion: procedimientoExistente ? "editar" : "crear",
       campos,
-      puestoId: puestoOrigenId,
+      puestoId: puestoOrigenId ?? "",
       agenteId,
       creadoEnCliente: new Date().toISOString(),
     });
@@ -112,8 +112,9 @@ export function ProcedimientoForm({
           Guardado sin conexión
         </h2>
         <p className="text-body-md text-on-surface-variant">
-          El procedimiento quedó guardado en este celular. Se va a
-          sincronizar solo en cuanto vuelva la señal.
+          {procedimientoExistente
+            ? "Los cambios quedaron guardados en este celular. Se van a sincronizar solos en cuanto vuelva la señal."
+            : "El procedimiento quedó guardado en este celular. Se va a sincronizar solo en cuanto vuelva la señal."}
         </p>
         <Boton
           onClick={() => {

@@ -1,10 +1,19 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getAgenteActual, puedeCrearActaMunicipalEnJurisdiccion } from "@/lib/auth";
+import {
+  getAgenteActual,
+  puedeCrearActaMunicipalEnJurisdiccion,
+  puedeEditarActa,
+} from "@/lib/auth";
 
 type SincronizarActaInput = {
   id: string;
+  /** "editar": solo se tocan los campos de contenido, igual que
+   * `actualizarActa` online — modalidad/jurisdicción/puesto/guardia quedan
+   * como estaban, tal como ya no se vuelven a pedir en el formulario de
+   * edición (no renderiza `SelectorModalidadTrabajo`). */
+  accion: "crear" | "editar";
   campos: Record<string, string>;
   infraccionIds: string[];
   otraInfraccionId: string | null;
@@ -36,14 +45,6 @@ export async function sincronizarActaOffline(
 ): Promise<ResultadoSincronizacion> {
   const agente = await getAgenteActual();
 
-  const guardia = await prisma.guardia.findUnique({
-    where: { id: input.guardiaId },
-    include: { puesto: true },
-  });
-  if (!guardia || guardia.agenteId !== agente.id) {
-    return { ok: false, error: "La guardia de esta acta ya no es válida para tu usuario." };
-  }
-
   const c = input.campos;
   const texto = (k: string) => (c[k] ?? "").trim();
   const numero = (k: string, max?: number) => {
@@ -59,34 +60,15 @@ export async function sincronizarActaOffline(
   const porcentajeDescuento = 40;
   const montoConDescuento = Math.round(montoBase * (1 - porcentajeDescuento / 100));
 
-  const modalidadTrabajo = texto("modalidadTrabajo") === "OTRA_JURISDICCION"
-    ? ("OTRA_JURISDICCION" as const)
-    : ("HABITUAL" as const);
-  const jurisdiccionTexto = texto("jurisdiccion");
-  const JURISDICCIONES_VALIDAS = ["CAPITAL", "HUILLAPIMA", "LA_PUERTA"] as const;
-  const jurisdiccion = (
-    JURISDICCIONES_VALIDAS as readonly string[]
-  ).includes(jurisdiccionTexto)
-    ? (jurisdiccionTexto as (typeof JURISDICCIONES_VALIDAS)[number])
-    : null;
+  const detalleOtra = texto("detalleOtraInfraccion");
+  const nuevasInfracciones = input.infraccionIds.map((infraccionId) => ({
+    infraccionId,
+    detalleOperativo: infraccionId === input.otraInfraccionId ? detalleOtra || null : null,
+  }));
 
-  if (!puedeCrearActaMunicipalEnJurisdiccion(guardia.puesto, modalidadTrabajo, jurisdiccion)) {
-    return {
-      ok: false,
-      error: "Tu puesto no tiene esa jurisdicción municipal habitual asignada.",
-    };
-  }
-
-  const datosActa = {
-    tipo: "MUNICIPAL" as const,
-    guardiaId: guardia.id,
-    agenteId: agente.id,
-    puestoId: input.puestoId,
-    jurisdiccion,
-    modalidadTrabajo,
-    puestoTrabajoId: modalidadTrabajo === "OTRA_JURISDICCION" ? texto("puestoTrabajoId") || null : null,
-    motivoOtraJurisdiccion:
-      modalidadTrabajo === "OTRA_JURISDICCION" ? texto("motivoOtraJurisdiccion") || null : null,
+  // Campos de CONTENIDO — los únicos que se tocan al editar, igual que
+  // `actualizarActa` online (que no vuelve a pedir modalidad/jurisdicción).
+  const datosContenido = {
     lugarControl: texto("lugarControl") || null,
 
     conductorNombre: texto("conductorNombre"),
@@ -130,45 +112,105 @@ export async function sincronizarActaOffline(
     alcoholemiaGraduacion: numero("alcoholemiaGraduacion", 10),
   };
 
-  const detalleOtra = texto("detalleOtraInfraccion");
-  const crearInfracciones = input.infraccionIds.map((infraccionId) => ({
-    infraccionId,
-    detalleOperativo: infraccionId === input.otraInfraccionId ? detalleOtra || null : null,
-  }));
+  if (input.accion === "editar") {
+    try {
+      const actual = await prisma.acta.findUnique({ where: { id: input.id } });
+      if (!actual) {
+        return { ok: false, error: "El acta ya no existe en el servidor." };
+      }
+      if (!puedeEditarActa(agente, actual)) {
+        return { ok: false, error: "Ya no tenés permiso para editar esta acta." };
+      }
+
+      if (actual.updatedAt > new Date(input.creadoEnCliente)) {
+        await prisma.conflictoSincronizacion.create({
+          data: {
+            actaId: input.id,
+            agenteId: agente.id,
+            descartado: { ...datosContenido, infracciones: input.infraccionIds },
+            motivo:
+              "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
+          },
+        });
+        return { ok: true, actaId: actual.id, numero: actual.numero, conflicto: true };
+      }
+
+      const acta = await prisma.$transaction(async (tx) => {
+        const acta = await tx.acta.update({ where: { id: input.id }, data: datosContenido });
+        await tx.actaInfraccion.deleteMany({ where: { actaId: acta.id } });
+        if (nuevasInfracciones.length > 0) {
+          await tx.actaInfraccion.createMany({
+            data: nuevasInfracciones.map((i) => ({ actaId: acta.id, ...i })),
+          });
+        }
+        return acta;
+      });
+
+      console.info(
+        `[auditoria-actas] editada offline N°${acta.numero} por agente=${agente.legajo}`,
+      );
+      return { ok: true, actaId: acta.id, numero: acta.numero, conflicto: false };
+    } catch (err) {
+      console.error("[sync-acta] error al editar:", err);
+      return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };
+    }
+  }
+
+  const guardia = await prisma.guardia.findUnique({
+    where: { id: input.guardiaId },
+    include: { puesto: true },
+  });
+  if (!guardia || guardia.agenteId !== agente.id) {
+    return { ok: false, error: "La guardia de esta acta ya no es válida para tu usuario." };
+  }
+
+  const modalidadTrabajo = texto("modalidadTrabajo") === "OTRA_JURISDICCION"
+    ? ("OTRA_JURISDICCION" as const)
+    : ("HABITUAL" as const);
+  const jurisdiccionTexto = texto("jurisdiccion");
+  const JURISDICCIONES_VALIDAS = ["CAPITAL", "HUILLAPIMA", "LA_PUERTA"] as const;
+  const jurisdiccion = (
+    JURISDICCIONES_VALIDAS as readonly string[]
+  ).includes(jurisdiccionTexto)
+    ? (jurisdiccionTexto as (typeof JURISDICCIONES_VALIDAS)[number])
+    : null;
+
+  if (!puedeCrearActaMunicipalEnJurisdiccion(guardia.puesto, modalidadTrabajo, jurisdiccion)) {
+    return {
+      ok: false,
+      error: "Tu puesto no tiene esa jurisdicción municipal habitual asignada.",
+    };
+  }
+
+  const datosActa = {
+    tipo: "MUNICIPAL" as const,
+    guardiaId: guardia.id,
+    agenteId: agente.id,
+    puestoId: input.puestoId,
+    jurisdiccion,
+    modalidadTrabajo,
+    puestoTrabajoId: modalidadTrabajo === "OTRA_JURISDICCION" ? texto("puestoTrabajoId") || null : null,
+    motivoOtraJurisdiccion:
+      modalidadTrabajo === "OTRA_JURISDICCION" ? texto("motivoOtraJurisdiccion") || null : null,
+    ...datosContenido,
+  };
 
   try {
     const existente = await prisma.acta.findUnique({ where: { id: input.id } });
 
-    // "Última edición gana": si ya hay una versión en el servidor más nueva
-    // que el momento en que se escribió esto offline, no la pisamos — se
-    // guarda la que llegó offline como descartada, auditada, y gana la del
-    // servidor.
-    if (existente && existente.updatedAt > new Date(input.creadoEnCliente)) {
-      await prisma.conflictoSincronizacion.create({
-        data: {
-          actaId: input.id,
-          agenteId: agente.id,
-          descartado: { ...datosActa, infracciones: input.infraccionIds },
-          motivo:
-            "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
-        },
-      });
-      console.warn(
-        `[auditoria-sync] conflicto en acta ${input.id}: se descartó la versión offline de agente=${agente.legajo}`,
-      );
-      return { ok: true, actaId: existente.id, numero: existente.numero, conflicto: true };
+    // Idempotencia de alta: si el id ya existe es que un intento anterior
+    // ya tuvo éxito pero el cliente no llegó a enterarse — no se vuelve a
+    // crear ni se pisa nada (a diferencia de una edición, acá no hay
+    // "última versión" legítima con la que comparar).
+    if (existente) {
+      return { ok: true, actaId: existente.id, numero: existente.numero, conflicto: false };
     }
 
     const acta = await prisma.$transaction(async (tx) => {
-      const acta = await tx.acta.upsert({
-        where: { id: input.id },
-        create: { id: input.id, ...datosActa },
-        update: datosActa,
-      });
-      await tx.actaInfraccion.deleteMany({ where: { actaId: acta.id } });
-      if (crearInfracciones.length > 0) {
+      const acta = await tx.acta.create({ data: { id: input.id, ...datosActa } });
+      if (nuevasInfracciones.length > 0) {
         await tx.actaInfraccion.createMany({
-          data: crearInfracciones.map((i) => ({ actaId: acta.id, ...i })),
+          data: nuevasInfracciones.map((i) => ({ actaId: acta.id, ...i })),
         });
       }
       return acta;
@@ -187,6 +229,7 @@ export async function sincronizarActaOffline(
 
 type SincronizarActaContravencionalInput = {
   id: string;
+  accion: "crear" | "editar";
   campos: Record<string, string>;
   guardiaId: string;
   puestoId: string;
@@ -208,15 +251,66 @@ export async function sincronizarActaContravencionalOffline(
 ): Promise<ResultadoSincronizacion> {
   const agente = await getAgenteActual();
 
+  const c = input.campos;
+  const texto = (k: string) => (c[k] ?? "").trim();
+
+  const camposConfigurados = await prisma.campoContravencional.findMany({
+    where: { activo: true },
+  });
+  const datosDinamicos: Record<string, string> = {};
+  for (const campo of camposConfigurados) {
+    const valor = texto(campo.clave);
+    if (valor) datosDinamicos[campo.clave] = valor;
+  }
+
+  // Campos de CONTENIDO — los únicos que se tocan al editar, igual que
+  // `actualizarActaContravencional` online.
+  const datosContenido = {
+    lugarControl: texto("lugarControl") || null,
+    datosContravencional: datosDinamicos,
+    ...(input.fotoVehiculoUrl ? { fotoVehiculoUrl: input.fotoVehiculoUrl } : {}),
+    ...(input.fotoDocumentoUrl ? { fotoDocumentoUrl: input.fotoDocumentoUrl } : {}),
+  };
+
+  if (input.accion === "editar") {
+    try {
+      const actual = await prisma.acta.findUnique({ where: { id: input.id } });
+      if (!actual) {
+        return { ok: false, error: "El acta ya no existe en el servidor." };
+      }
+      if (!puedeEditarActa(agente, actual)) {
+        return { ok: false, error: "Ya no tenés permiso para editar esta acta." };
+      }
+      if (actual.updatedAt > new Date(input.creadoEnCliente)) {
+        await prisma.conflictoSincronizacion.create({
+          data: {
+            actaId: input.id,
+            agenteId: agente.id,
+            descartado: datosContenido,
+            motivo:
+              "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
+          },
+        });
+        return { ok: true, actaId: actual.id, numero: actual.numero, conflicto: true };
+      }
+
+      const acta = await prisma.acta.update({ where: { id: input.id }, data: datosContenido });
+      console.info(
+        `[auditoria-actas] editada contravencional offline N°${acta.numero} por agente=${agente.legajo}`,
+      );
+      return { ok: true, actaId: acta.id, numero: acta.numero, conflicto: false };
+    } catch (err) {
+      console.error("[sync-acta-contravencional] error al editar:", err);
+      return { ok: false, error: "No se pudo guardar en el servidor. Se reintenta más tarde." };
+    }
+  }
+
   const guardia = await prisma.guardia.findUnique({
     where: { id: input.guardiaId },
   });
   if (!guardia || guardia.agenteId !== agente.id) {
     return { ok: false, error: "La guardia de esta acta ya no es válida para tu usuario." };
   }
-
-  const c = input.campos;
-  const texto = (k: string) => (c[k] ?? "").trim();
 
   const modalidadTrabajo =
     texto("modalidadTrabajo") === "OTRA_JURISDICCION"
@@ -230,15 +324,6 @@ export async function sincronizarActaContravencionalOffline(
     return { ok: false, error: "Falta el motivo de \"Otra Jurisdicción\"." };
   }
 
-  const camposConfigurados = await prisma.campoContravencional.findMany({
-    where: { activo: true },
-  });
-  const datos: Record<string, string> = {};
-  for (const campo of camposConfigurados) {
-    const valor = texto(campo.clave);
-    if (valor) datos[campo.clave] = valor;
-  }
-
   const datosActa = {
     tipo: "CONTRAVENCIONAL" as const,
     guardiaId: guardia.id,
@@ -247,35 +332,16 @@ export async function sincronizarActaContravencionalOffline(
     modalidadTrabajo,
     puestoTrabajoId,
     motivoOtraJurisdiccion,
-    lugarControl: texto("lugarControl") || null,
-    datosContravencional: datos,
-    ...(input.fotoVehiculoUrl ? { fotoVehiculoUrl: input.fotoVehiculoUrl } : {}),
-    ...(input.fotoDocumentoUrl ? { fotoDocumentoUrl: input.fotoDocumentoUrl } : {}),
+    ...datosContenido,
   };
 
   try {
     const existente = await prisma.acta.findUnique({ where: { id: input.id } });
-    if (existente && existente.updatedAt > new Date(input.creadoEnCliente)) {
-      await prisma.conflictoSincronizacion.create({
-        data: {
-          actaId: input.id,
-          agenteId: agente.id,
-          descartado: datosActa,
-          motivo:
-            "Edición offline más vieja que la versión ya guardada en el servidor (última edición gana).",
-        },
-      });
-      console.warn(
-        `[auditoria-sync] conflicto en acta contravencional ${input.id}: se descartó la versión offline de agente=${agente.legajo}`,
-      );
-      return { ok: true, actaId: existente.id, numero: existente.numero, conflicto: true };
+    if (existente) {
+      return { ok: true, actaId: existente.id, numero: existente.numero, conflicto: false };
     }
 
-    const acta = await prisma.acta.upsert({
-      where: { id: input.id },
-      create: { id: input.id, ...datosActa },
-      update: datosActa,
-    });
+    const acta = await prisma.acta.create({ data: { id: input.id, ...datosActa } });
 
     console.info(
       `[auditoria-actas] sincronizada acta contravencional offline N°${acta.numero} por agente=${agente.legajo}`,

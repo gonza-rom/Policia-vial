@@ -4,6 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { soportaIndexedDB } from "@/lib/offline/db";
 import { listarActasPendientes } from "@/lib/offline/colaActas";
+import { listarProcedimientosPendientes } from "@/lib/offline/colaProcedimientos";
+import { listarRelevamientosPendientes } from "@/lib/offline/colaRelevamientos";
+import { listarRequerimientosPendientes } from "@/lib/offline/colaRequerimientos";
+import { listarCierresGuardiaPendientes } from "@/lib/offline/colaCierreGuardia";
+import { listarFirmasPendientes } from "@/lib/offline/colaFirmas";
 import { sincronizarCola, EVENTO_COLA_ACTUALIZADA } from "@/lib/offline/sincronizar";
 import { precargarRutasCriticas } from "@/lib/offline/precache";
 
@@ -19,9 +24,27 @@ export function SincronizadorOffline() {
 
   const refrescarContador = useCallback(async () => {
     if (!soportaIndexedDB()) return;
-    const cola = await listarActasPendientes();
-    setPendientes(cola.length);
-    setNecesitaLogin(cola.some((a) => a.ultimoError && /sesi[oó]n|login|auth/i.test(a.ultimoError)));
+    const [actas, procedimientos, relevamientos, requerimientos, cierresGuardia, firmas] =
+      await Promise.all([
+        listarActasPendientes(),
+        listarProcedimientosPendientes(),
+        listarRelevamientosPendientes(),
+        listarRequerimientosPendientes(),
+        listarCierresGuardiaPendientes(),
+        listarFirmasPendientes(),
+      ]);
+    const todas = [
+      ...actas,
+      ...procedimientos,
+      ...relevamientos,
+      ...requerimientos,
+      ...cierresGuardia,
+      ...firmas,
+    ];
+    setPendientes(todas.length);
+    setNecesitaLogin(
+      todas.some((a) => a.ultimoError && /sesi[oó]n|login|auth/i.test(a.ultimoError)),
+    );
   }, []);
 
   const sincronizarAhora = useCallback(async () => {
@@ -102,12 +125,12 @@ export function SincronizadorOffline() {
           {!online ? "cloud_off" : necesitaLogin ? "warning" : "cloud_sync"}
         </span>
         {!online
-          ? `Sin conexión${pendientes > 0 ? ` — ${pendientes} acta(s) guardada(s) en el celular` : ""}`
+          ? `Sin conexión${pendientes > 0 ? ` — ${pendientes} registro(s) guardado(s) en el celular` : ""}`
           : necesitaLogin
             ? "Sesión vencida — iniciá sesión de nuevo para sincronizar"
             : sincronizando
               ? "Sincronizando…"
-              : `${pendientes} acta(s) pendiente(s) de sincronizar`}
+              : `${pendientes} registro(s) pendiente(s) de sincronizar`}
       </span>
       {online && !sincronizando && (
         <button

@@ -273,19 +273,20 @@ function FormularioClasico({
   const [guardandoOffline, setGuardandoOffline] = useState(false);
 
   async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (relevamientoExistente) return;
     if (navigator.onLine) return;
-    if (!soportaIndexedDB() || !puestoOrigenId || !agenteId) return;
+    if (!soportaIndexedDB() || !agenteId) return;
+    if (relevamientoExistente ? false : !puestoOrigenId) return;
 
     e.preventDefault();
     setGuardandoOffline(true);
 
     const formData = new FormData(e.currentTarget);
     const cantidadRaw = Number(formData.get("cantidadPersonas"));
-    const id = crypto.randomUUID();
+    const id = relevamientoExistente?.id ?? crypto.randomUUID();
 
     await encolarRelevamiento({
       id,
+      accion: relevamientoExistente ? "editar" : "crear",
       registros: [
         {
           id,
@@ -299,7 +300,7 @@ function FormularioClasico({
           sexo: esDiaVirgen ? String(formData.get("sexo") ?? "") || null : null,
         },
       ],
-      puestoId: puestoOrigenId,
+      puestoId: puestoOrigenId ?? "",
       agenteId,
       creadoEnCliente: new Date().toISOString(),
     });
@@ -310,7 +311,13 @@ function FormularioClasico({
 
   if (guardadoOffline) {
     return (
-      <GuardadoOffline mensaje="El registro quedó guardado en este celular. Se va a sincronizar solo en cuanto vuelva la señal." />
+      <GuardadoOffline
+        mensaje={
+          relevamientoExistente
+            ? "Los cambios quedaron guardados en este celular. Se van a sincronizar solos en cuanto vuelva la señal."
+            : "El registro quedó guardado en este celular. Se va a sincronizar solo en cuanto vuelva la señal."
+        }
+      />
     );
   }
 

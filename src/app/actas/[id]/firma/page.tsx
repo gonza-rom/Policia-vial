@@ -97,13 +97,16 @@ export default async function FirmaActaPage({
           </Link>
           <div className="flex items-center gap-2">
             {puedeEditar && (
-              <Link
+              // <a> normal, no <Link>: la edición offline necesita que
+              // esto sea una navegación dura — ver sw.js.
+               
+              <a
                 href={`/actas/${acta.id}/editar`}
                 className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
               >
                 <span className="material-symbols-outlined text-[18px]">edit</span>
                 Editar
-              </Link>
+              </a>
             )}
             {esJefe(agente) && (
               <form action={eliminarActa}>

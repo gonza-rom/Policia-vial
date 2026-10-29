@@ -51,13 +51,14 @@ export default async function DetalleRequerimientoPage({
           </Link>
           <div className="flex items-center gap-2">
             {puedeEditar && (
-              <Link
+               
+              <a
                 href={`/requerimientos/${requerimiento.id}/editar`}
                 className="flex items-center gap-1 text-secondary text-label-sm font-label-sm uppercase"
               >
                 <span className="material-symbols-outlined text-[18px]">edit</span>
                 Editar
-              </Link>
+              </a>
             )}
             {esJefe(agente) && (
               <form action={eliminarRequerimiento}>

@@ -187,6 +187,7 @@ export default async function HistorialGuardiaPage() {
               />
             </div>
             <BotonCerrarGuardiaConConfirmacion
+              guardiaId={guardia.id}
               puestoNombre={guardia.puesto.nombre}
               variante="destructivo"
             />

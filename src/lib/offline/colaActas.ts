@@ -7,8 +7,12 @@ import { guardar, obtener, obtenerTodos, eliminar, STORE_ACTAS, STORE_FOTOS } fr
  * sincronizar.ts), así no se pierde lo que ya estaba guardado en el
  * celular de un agente al actualizar la app. */
 export type ActaOfflinePayload = {
-  id: string; // UUID generado en el cliente — va a ser el Acta.id
+  id: string; // UUID generado en el cliente (alta) o id real del acta (edición)
   tipo?: "MUNICIPAL" | "CONTRAVENCIONAL";
+  /** "editar" es nuevo — actas encoladas antes se tratan como "crear" (ver
+   * sincronizar.ts). En una edición, `id` es el id real del acta existente,
+   * no un UUID generado en el cliente. */
+  accion?: "crear" | "editar";
   campos: Record<string, string>;
   infraccionIds: string[];
   otraInfraccionId: string | null;

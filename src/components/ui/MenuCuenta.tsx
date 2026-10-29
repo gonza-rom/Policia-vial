@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BotonEnviar } from "./BotonEnviar";
+import { BotonCerrarSesion } from "./BotonCerrarSesion";
 import { BotonCerrarGuardiaConConfirmacion } from "./BotonCerrarGuardiaConConfirmacion";
 
 function iniciales(nombreApellido: string) {
@@ -18,6 +18,7 @@ export function MenuCuenta({
   nombreApellido,
   legajo,
   rolLabel,
+  guardiaId,
   guardiaPuesto,
   cerrarGuardia,
   cerrarSesion,
@@ -25,6 +26,7 @@ export function MenuCuenta({
   nombreApellido: string;
   legajo: string;
   rolLabel: string;
+  guardiaId: string | null;
   guardiaPuesto: string | null;
   cerrarGuardia: (formData: FormData) => void | Promise<void>;
   cerrarSesion: () => void | Promise<void>;
@@ -80,6 +82,7 @@ export function MenuCuenta({
             {guardiaPuesto && (
               <form action={cerrarGuardia}>
                 <BotonCerrarGuardiaConConfirmacion
+                  guardiaId={guardiaId ?? undefined}
                   puestoNombre={guardiaPuesto}
                   className="text-label-sm"
                 />
@@ -87,16 +90,15 @@ export function MenuCuenta({
             )}
 
             <form action={cerrarSesion}>
-              <BotonEnviar
+              <BotonCerrarSesion
                 variante="outline"
                 fullWidth
                 icono="logout"
                 className="text-label-sm text-error border-error"
-                textoEnviando="Cerrando sesión…"
                 onClick={() => setAbierto(false)}
               >
                 Cerrar Sesión
-              </BotonEnviar>
+              </BotonCerrarSesion>
             </form>
           </div>
         </>

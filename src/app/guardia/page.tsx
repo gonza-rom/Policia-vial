@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/ui/AppHeader";
 import { BottomNav } from "@/components/ui/BottomNav";
 import { BotonEnviar } from "@/components/ui/BotonEnviar";
+import { BotonCerrarSesion } from "@/components/ui/BotonCerrarSesion";
 import { BotonCerrarGuardiaConConfirmacion } from "@/components/ui/BotonCerrarGuardiaConConfirmacion";
 import { StatTile } from "@/components/ui/StatTile";
 import { formatoMoneda } from "@/lib/formato";
@@ -54,6 +55,7 @@ export default async function GuardiaPage() {
             icono="gpp_maybe"
             titulo="Requerimientos"
             descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
+            offline
           />
           <TarjetaAccion
             href="/procedimientos"
@@ -86,15 +88,14 @@ export default async function GuardiaPage() {
             />
           )}
           <form action={cerrarSesion}>
-            <BotonEnviar
+            <BotonCerrarSesion
               variante="outline"
               fullWidth
               icono="logout"
               className="text-error border-error"
-              textoEnviando="Cerrando sesión…"
             >
               Cerrar Sesión
-            </BotonEnviar>
+            </BotonCerrarSesion>
           </form>
         </main>
         <BottomNav verAgentes={esJefe(agente)} />
@@ -236,6 +237,7 @@ export default async function GuardiaPage() {
               icono="gpp_maybe"
               titulo="Requerimientos"
               descripcion="Pedidos de captura o secuestro sobre personas o vehículos."
+              offline
             />
             <TarjetaAccion
               href="/procedimientos"
@@ -273,18 +275,20 @@ export default async function GuardiaPage() {
 
         <div className="grid grid-cols-2 gap-pad-md">
           <form action={cerrarGuardia}>
-            <BotonCerrarGuardiaConConfirmacion puestoNombre={guardia.puesto.nombre} />
+            <BotonCerrarGuardiaConConfirmacion
+              guardiaId={guardia.id}
+              puestoNombre={guardia.puesto.nombre}
+            />
           </form>
           <form action={cerrarSesion}>
-            <BotonEnviar
+            <BotonCerrarSesion
               variante="outline"
               fullWidth
               icono="logout"
               className="text-error border-error"
-              textoEnviando="Cerrando sesión…"
             >
               Cerrar Sesión
-            </BotonEnviar>
+            </BotonCerrarSesion>
           </form>
         </div>
       </main>

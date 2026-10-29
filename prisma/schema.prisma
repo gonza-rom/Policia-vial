@@ -429,14 +429,24 @@ model Procedimiento {
 
 /// Registro de "última edición gana" cuando una sincronización offline pisa
 /// una edición más nueva que ya estaba en el servidor. La versión que
-/// prevalece queda en Acta; la descartada se guarda acá para no perderla.
+/// prevalece queda en Acta/Procedimiento/Relevamiento; la descartada se
+/// guarda acá para no perderla. `actaId` se mantiene como estaba (ya había
+/// filas en producción); `procedimientoId`/`relevamientoId` son nuevos,
+/// para cuando el conflicto es de esos otros tipos en vez de un acta —
+/// exactamente uno de los tres va a tener valor en cada fila.
 model ConflictoSincronizacion {
-  id         String   @id @default(cuid())
-  actaId     String
-  agenteId   String
-  descartado Json
-  motivo     String
-  creadoEn   DateTime @default(now())
+  id              String   @id @default(cuid())
+  actaId          String?
+  procedimientoId String?
+  relevamientoId  String?
+  requerimientoId String?
+  agenteId        String
+  descartado      Json
+  motivo          String
+  creadoEn        DateTime @default(now())
 
   @@index([actaId])
+  @@index([procedimientoId])
+  @@index([relevamientoId])
+  @@index([requerimientoId])
 }

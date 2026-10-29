@@ -3,33 +3,39 @@
 // navegador no soporta IndexedDB (se degrada a "no hay guardado local").
 
 const DB_NAME = "policia-vial-offline";
-// v2: agrega las colas de procedimientos y relevamientos (Módulo 6b — antes
-// solo cubría el acta municipal). Subir DB_VERSION dispara onupgradeneeded
-// incluso en un navegador que ya tenía la v1 guardada, sin tocar lo que ya
-// había en actas_pendientes/fotos_pendientes.
-const DB_VERSION = 2;
+// v3: agrega requerimientos, cierre de guardia y firma (Módulo 6c — antes
+// la v2 sumó procedimientos y relevamientos). Subir DB_VERSION dispara
+// onupgradeneeded incluso en un navegador que ya tenía una versión previa
+// guardada, sin tocar lo que ya había en las demás tiendas.
+const DB_VERSION = 3;
 
 export const STORE_ACTAS = "actas_pendientes";
 export const STORE_FOTOS = "fotos_pendientes";
 export const STORE_PROCEDIMIENTOS = "procedimientos_pendientes";
 export const STORE_RELEVAMIENTOS = "relevamientos_pendientes";
+export const STORE_REQUERIMIENTOS = "requerimientos_pendientes";
+export const STORE_CIERRES_GUARDIA = "cierres_guardia_pendientes";
+export const STORE_FIRMAS = "firmas_pendientes";
 
 function abrirDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains(STORE_ACTAS)) {
-        db.createObjectStore(STORE_ACTAS, { keyPath: "id" });
+      for (const store of [
+        STORE_ACTAS,
+        STORE_PROCEDIMIENTOS,
+        STORE_RELEVAMIENTOS,
+        STORE_REQUERIMIENTOS,
+        STORE_CIERRES_GUARDIA,
+        STORE_FIRMAS,
+      ]) {
+        if (!db.objectStoreNames.contains(store)) {
+          db.createObjectStore(store, { keyPath: "id" });
+        }
       }
       if (!db.objectStoreNames.contains(STORE_FOTOS)) {
         db.createObjectStore(STORE_FOTOS, { keyPath: "clave" });
-      }
-      if (!db.objectStoreNames.contains(STORE_PROCEDIMIENTOS)) {
-        db.createObjectStore(STORE_PROCEDIMIENTOS, { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains(STORE_RELEVAMIENTOS)) {
-        db.createObjectStore(STORE_RELEVAMIENTOS, { keyPath: "id" });
       }
     };
     req.onsuccess = () => resolve(req.result);

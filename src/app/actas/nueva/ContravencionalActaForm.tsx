@@ -80,9 +80,9 @@ export function ContravencionalActaForm({
    * acá los campos a juntar son dinámicos (`CampoContravencional`), así
    * que se arman desde la prop `campos` en vez de una lista fija. */
   async function manejarSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (actaExistente) return;
     if (navigator.onLine) return;
-    if (!soportaIndexedDB() || !guardiaId || !puestoId) return;
+    if (!soportaIndexedDB()) return;
+    if (actaExistente ? false : !guardiaId || !puestoId) return;
 
     e.preventDefault();
     setGuardandoOffline(true);
@@ -100,7 +100,7 @@ export function ContravencionalActaForm({
       camposValores[nombre] = String(formData.get(nombre) ?? "");
     }
 
-    const id = crypto.randomUUID();
+    const id = actaExistente?.id ?? crypto.randomUUID();
     const fotos: { actaId: string; campo: "fotoVehiculo" | "fotoDocumento"; blob: Blob; nombre: string; tipo: string }[] = [];
     for (const campo of ["fotoVehiculo", "fotoDocumento"] as const) {
       const archivo = formData.get(campo);
@@ -113,12 +113,13 @@ export function ContravencionalActaForm({
       {
         id,
         tipo: "CONTRAVENCIONAL",
+        accion: actaExistente ? "editar" : "crear",
         campos: camposValores,
         infraccionIds: [],
         otraInfraccionId: null,
         retencionPreventiva: false,
-        guardiaId,
-        puestoId,
+        guardiaId: guardiaId ?? "",
+        puestoId: puestoId ?? "",
         creadoEnCliente: new Date().toISOString(),
       },
       fotos,
@@ -138,8 +139,9 @@ export function ContravencionalActaForm({
           Guardado sin conexión
         </h2>
         <p className="text-body-md text-on-surface-variant">
-          El acta quedó guardada en este celular. Se va a sincronizar sola —
-          y vas a poder firmarla — en cuanto vuelva la señal.
+          {actaExistente
+            ? "Los cambios quedaron guardados en este celular. Se van a sincronizar solos en cuanto vuelva la señal."
+            : "El acta quedó guardada en este celular. Se va a sincronizar sola — y vas a poder firmarla — en cuanto vuelva la señal."}
         </p>
         <Boton
           onClick={() => {
